@@ -80,7 +80,7 @@ ${['master', 'doctor', 'bachelor'].includes(s.paper.typeId) ? textField('common.
     render: (s) => {
       let out = choice('common.topicKnown', s.common.topicKnown, [{ v: 'yes', t: '있어요', d: '제목이나 주제 문장을 적어 주세요' }, { v: 'no', t: '잘 모르겠어요', d: '관심 키워드로 추천 주제를 받아요' }], { cols: 2 });
       if (s.common.topicKnown === 'yes') {
-        out += `<div style="margin-top:20px">${textArea('common.title', s.common.title, { label: '논문 제목 또는 주제', placeholder: '예: 간호사의 직무스트레스가 이직의도에 미치는 영향: 회복탄력성의 매개효과', rows: 3, max: 200, required: true, cls: 'serif-in' })}<div class="parse-live" id="parseLive"></div></div>`;
+        out += `<div style="margin-top:20px">${textArea('common.title', s.common.title, { label: '논문 제목 또는 주제', placeholder: '예: 간호사의 직무스트레스와 회복탄력성이 이직의도에 미치는 영향', rows: 3, max: 200, required: true, cls: 'serif-in' })}<div class="parse-live" id="parseLive"></div></div>`;
       } else if (s.common.topicKnown === 'no') {
         out += `<div style="margin-top:20px">${textField('common.keywordsText', s.common.keywordsText, { label: '관심 키워드', placeholder: '예: 직무스트레스, 회복탄력성', hint: '쉼표로 1~3개를 적으면 아래에 추천 주제가 나타납니다. 마음에 드는 주제를 고르거나, 고르지 않으면 담당 연구진이 함께 정합니다.' })}<div id="suggestLive"></div></div>`;
       }

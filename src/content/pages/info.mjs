@@ -1,7 +1,7 @@
-import { faqBlock, ctaBand, crumbs, priceTable, price, statusTimeline, STATUS_STEPS, pageTiers, fullQuote } from '../../templates/parts.mjs';
+import { faqBlock, ctaBand, crumbs, priceTable, price, item, statusTimeline, STATUS_STEPS, pageTiers, fullQuote, shortExtra } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
 import { won } from '../../js/core/pricing.js';
-import { HOME_FAQ } from './home.mjs';
+import { HOME_FAQ, SUPPORT_FAQ } from './home.mjs';
 
 function pageHead(T, title, lead, path, label) {
   return `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], [label, path]])}<h1 class="h-1" style="margin-top:20px">${esc(title)}</h1><p class="lead" style="max-width:40em">${lead}</p></div></section>`;
@@ -11,11 +11,17 @@ export default function info({ T }) {
   const pages = [];
 
   // 가격
+  const W = (t, p) => won(fullQuote(t, p).total);
+  const U = (code) => won(item(code).unitPrice);
+  const qn = (t, p) => `<span data-q="${t}:${p}">${W(t, p).replace('원', '')}</span>원`;
   const pricingFaq = [
+    { q: '논문 작성 비용은 얼마인가요?', a: `논문 자동작성은 소논문 8쪽 ${W('short', 8)}, 학사 졸업논문 30쪽 ${W('bachelor', 30)}, 학술지 투고논문 20쪽 ${W('journal', 20)}, 석사학위논문 80쪽 ${W('master', 80)}, 박사학위논문 130쪽 ${W('doctor', 130)}입니다. 실존 참고문헌과 본문 인용, 석·박사 연구진 검수, 수정 1회가 모두 포함된 금액입니다.` },
+    { q: '석사논문 작성 비용은 쪽수에 따라 얼마나 달라지나요?', a: `석사학위논문은 기준 60쪽 ${price('P-MASTER-FULL')}에서 10쪽마다 ${U('P-MASTER-FULL')}이 더해져 80쪽이 ${W('master', 80)}, 100쪽이 ${W('master', 100)}입니다. 박사학위논문은 10쪽마다 ${U('P-DOCTOR-FULL')}, 소논문은 ${shortExtra()}이 더해집니다. 쪽수를 모르면 기준 분량으로 먼저 시작해도 됩니다.` },
+    { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 30쪽 ${price('P-MASTER-EDIT')}, 박사학위논문 40쪽 ${price('P-DOCTOR-EDIT')}, 학술지 논문 20쪽 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 20쪽 ${price('P-BACHELOR-EDIT')}입니다. 교수님 피드백 반영은 석사 10개 항목 ${price('P-MASTER-FB')}부터입니다.` },
+    { q: '논문 컨설팅 비용은 얼마인가요?', a: `연구 설계(연구모형, 가설, 목차, 표본 수)는 주문서에서 무료로 받아 볼 수 있고, 연구계획서 작성은 석사 ${price('P-MASTER-PROP')}, 박사 ${price('P-DOCTOR-PROP')}입니다. 필요한 단계만 골라 맡기는 방식이라 막힌 단계의 비용만 내면 됩니다.` },
+    { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 기본형 ${price('T-BASIC')}, 표준형 ${price('T-INTERP')}, 연구결과(4장) 작성까지 ${price('T-CHAPTER')}이고, 매개·조절효과 같은 심화 분석은 ${price('T-ADV')}이 더해집니다. 설문지 작성부터 통계 해석까지 맡기는 설문조사 원스톱은 ${price('S-FULL')}입니다.` },
     { q: '표시된 가격에 부가세가 포함되어 있나요?', a: '네. 모든 가격은 부가세를 포함한 금액입니다.' },
-    { q: '견적형 주문은 언제 결제하나요?', a: '응답자 모집, 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은 자료를 확인해 확정 견적을 드린 뒤에 결제합니다. 확정되지 않은 금액은 결제할 수 없습니다.' },
-    { q: '분량이 늘어나면 추가 비용이 있나요?', a: '상품마다 기준 분량이 있고, 초과분은 정해진 단위로 계산됩니다. 신청 화면에서 분량을 입력하면 총액에 바로 반영되고, 분량을 모르면 기준 분량으로 먼저 진행한 뒤 초과분이 있을 때만 안내합니다.' },
-    { q: '논문 자동작성은 분량별로 얼마인가요?', a: `소논문 8쪽은 ${won(fullQuote('short', 8).total)}(4쪽 추가마다 19,000원), 석사학위논문 80쪽은 ${won(fullQuote('master', 80).total)}, 박사학위논문 130쪽은 ${won(fullQuote('doctor', 130).total)}입니다. 기준 분량을 넘는 부분은 10쪽 단위로 더해지고, 참고문헌은 모두 실존 문헌으로 본문 인용까지 연결됩니다.` },
+    { q: '응답자 모집 같은 작업은 어떻게 결제하나요?', a: '응답자 모집, 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은 자료를 확인해 견적을 확정한 뒤에 결제합니다.' },
   ];
   const groups = [
     ['석사학위논문', ['P-MASTER-FULL', 'P-MASTER-PROP', 'P-MASTER-EDIT', 'P-MASTER-FB']],
@@ -32,13 +38,13 @@ export default function info({ T }) {
   ];
   pages.push({
     path: '/pricing/', kind: 'info', navTitle: '가격 안내', h1: '논문AI 가격 안내',
-    title: '논문AI 가격 | 논문 자동작성 분량별 요금, 첨삭·통계분석·설문조사 비용',
-    description: `논문 자동작성은 소논문 8쪽 ${won(fullQuote('short', 8).total)}, 석사 80쪽 ${won(fullQuote('master', 80).total)}, 박사 130쪽 ${won(fullQuote('doctor', 130).total)}. 첨삭, 교수님 피드백 반영, 연구계획서, 설문조사, 통계분석의 가격과 기본 납기를 결제 전에 한눈에 확인하세요.`,
-    keywords: ['논문 자동작성 가격', '논문 작성 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 첨삭 비용', '통계분석 비용', '설문조사 비용', '논문 컨설팅 가격'],
+    title: '논문AI 가격 | 논문 작성 비용, 논문 첨삭·컨설팅·통계분석 비용',
+    description: `논문 작성 비용: 석사논문 80쪽 ${won(fullQuote('master', 80).total)}, 박사논문 130쪽 ${won(fullQuote('doctor', 130).total)}, 소논문 8쪽 ${won(fullQuote('short', 8).total)}. 실존 참고문헌과 본문 인용, 석·박사 연구진 검수 포함. 논문 첨삭 비용, 논문 컨설팅 비용, 통계분석·설문조사 가격까지 한눈에 보세요.`,
+    keywords: ['논문 작성 비용', '논문 첨삭 비용', '논문 컨설팅 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 자동작성 가격', '논문 교정 비용', '논문 통계분석 비용', '설문조사 비용'],
     crumbs: [['홈', '/'], ['가격 안내', '/pricing/']], faq: pricingFaq, priority: '0.9', styles: ['site', 'home'], scripts: ['pricing'],
-    body: `${pageHead(T, '가격은 결제 전에 전부 보여 드립니다', '선택한 조건에 따라 총액이 자동으로 계산됩니다. 포함·제외 사항과 예상 납기를 확인한 뒤 결제하고, 조건에 따라 달라지는 작업은 확정 견적 후에만 결제합니다.', '/pricing/', '가격 안내')}
+    body: `${pageHead(T, '논문 한 편, 생각보다 가볍습니다', `석사학위논문 80쪽 ${qn('master', 80)}, 박사학위논문 130쪽 ${qn('doctor', 130)}. 실존 참고문헌과 본문 인용, 석·박사 연구진 검수가 모두 기본으로 들어 있습니다.`, '/pricing/', '가격 안내')}
 <section class="sec sec-tight" id="tiers" aria-labelledby="tiers-h"><div class="wrap">
-<div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 자동작성, 분량별 요금</h2><p>소논문 8쪽부터 석사 80쪽, 박사 130쪽까지. 쪽수를 고르면 총액과 납기가 바로 계산됩니다.</p></div>
+<div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 자동작성</h2><p>쪽수를 고르고 주제만 적으면 바로 시작합니다.</p></div>
 ${pageTiers(T)}
 </div></section>
 <section class="sec sec-alt"><div class="wrap">
@@ -46,7 +52,7 @@ ${pageTiers(T)}
 ${groups.map(([g, codes]) => `<div class="page-sec">${priceTable(T, codes, { caption: g })}</div>`).join('')}
 </div></section>
 ${faqBlock(T, pricingFaq, { title: '가격 관련 자주 묻는 질문' })}
-${ctaBand(T, { title: '내 조건의 총액을 바로 확인하세요', text: '신청 화면에서 조건을 고르면 금액과 예상 납기가 즉시 계산됩니다.', primary: ['논문 의뢰 시작', '/paper/new/'], secondary: ['통계분석 의뢰', '/statistics/new/'] })}`,
+${ctaBand(T, { title: '주제 한 줄이면 오늘 시작할 수 있습니다', text: '제목과 연구모형, 목차는 주문서에서 무료로 먼저 받아 봅니다. 마음에 들면 그때 결제하세요.', primary: ['논문 작성 시작', '/paper/new/'], secondary: ['통계분석 의뢰', '/statistics/new/'] })}`,
   });
   pages[pages.length - 1].geo = groups.map(([g, codes]) => `${g}: ${codes.map((c) => `${c} ${price(c) || '별도 견적'}`).join(', ')}`).join('\n');
 
@@ -97,10 +103,10 @@ ${ctaBand(T, { title: '지금 신청서를 열어 보세요', text: '제출 전�
     { q: '청소년 탐구논문도 신청할 수 있나요?', a: '네. 청소년 탐구논문 유형을 고르면 탐구 동기, 탐구 방법, 결과, 결론 구성으로 진행합니다. 만 14세 미만은 보호자 동의가 필요합니다.' },
     { q: '세금계산서나 영수증을 받을 수 있나요?', a: '결제는 운영사 성균관컨설팅을 통해 이루어지며, 결제 수단에 따른 영수증과 증빙을 발급받을 수 있습니다. 필요한 증빙은 주문 페이지 메시지로 요청해 주세요.' },
   ];
-  const allFaq = [...HOME_FAQ, ...extraFaq];
+  const allFaq = [...HOME_FAQ, ...SUPPORT_FAQ, ...extraFaq];
   pages.push({
     path: '/faq/', kind: 'info', navTitle: '자주 묻는 질문', h1: '자주 묻는 질문',
-    title: '자주 묻는 질문 | 논문AI', description: '논문AI 이용 방법, 결제와 환불, 진행 기간, 수정, 자료 보안, 연구윤리에 대해 자주 묻는 질문을 모았습니다.',
+    title: '자주 묻는 질문 | 논문 작성 AI 논문AI', description: '석사논문 작성 비용, 논문 자동작성 방식, 실존 참고문헌, 논문 첨삭·교정, 논문 컨설팅, 통계분석, 설문조사, 결제와 수정까지 논문AI에 자주 묻는 질문을 모았습니다.',
     crumbs: [['홈', '/'], ['자주 묻는 질문', '/faq/']], faq: allFaq,
     body: `${pageHead(T, '자주 묻는 질문', '찾는 답이 없다면 신청서의 요청 사항이나 주문 페이지 메시지로 남겨 주세요.', '/faq/', '자주 묻는 질문')}
 ${faqBlock(T, allFaq, { title: '전체 질문', id: 'all' })}

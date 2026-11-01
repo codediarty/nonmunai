@@ -53,13 +53,15 @@ for (const it of items) {
   if (it.addon) applies = { 'T-ADV': '논문 맞춤 통계분석과 설문 응답 분석 주문', 'A-FORMAT': '논문 작성·첨삭 주문', 'A-ENGLISH': '논문 전체 구성·초고 완성 주문' }[it.code] || '논문·설문조사·통계분석 주문 전체';
   products.push({ code: it.code, kind: it.addon ? 'addon' : 'main', service: it.service, family, lines, name: `[논문AI] ${it.name}`, price: it.price, days: it.days || 0, meta, includes: it.includes || [], excludes: it.excludes || [], unit: it.unitPrice ? { size: it.unitSize, label: it.unitLabel, price: it.unitPrice, base: it.baseUnits } : null, applies });
 }
-for (const price of Object.keys(unitUsers).map(Number).sort((a, b) => a - b)) {
-  const users = unitUsers[price];
+// 추가 분량 단가 상품: 지금 쓰는 단가와 이미 만들어 둔 단가(9천~5만9천 원)를 모두 유지한다
+const X_PRICES = [9000, 19000, 29000, 39000, 49000, 59000];
+for (const price of [...new Set([...X_PRICES, ...Object.keys(unitUsers).map(Number)])].sort((a, b) => a - b)) {
+  const users = unitUsers[price] || [];
   products.push({
     code: `X-${price}`, kind: 'extra', service: 'addon', family: '추가 분량', lines: ['추가 분량', `1단위 ${won(price)}`],
     name: `[논문AI] 추가 분량 1단위 (${won(price)})`, price, days: 0,
     meta: '기준 분량을 넘는 만큼 단위 수대로 담는 상품',
-    includes: users.map((u) => `${u.name}: ${u.unitSize}${u.unitLabel}마다 1단위`), excludes: [], unit: null, applies: users.map((u) => u.name).join(', '),
+    includes: users.length ? users.map((u) => `${u.name}: ${u.unitSize}${u.unitLabel}마다 1단위`) : [`논문AI 결제 화면에 ${won(price)} 단위 추가 결제가 안내되면 그 수량만큼 담아 결제합니다`], excludes: [], unit: null, applies: users.length ? users.map((u) => u.name).join(', ') : '논문AI 추가 결제',
     users: users.map((u) => u.code),
   });
 }
@@ -160,7 +162,7 @@ for (const p of products) {
   if (p.kind === 'extra') {
     body = hero(KICK(p), '기준 분량을 넘는 만큼만,<br>단위로 정확하게', `추가 분량 1단위 ${won(p.price)}`) + TRUST
       + sec('이렇게 담아 주세요', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">논문AI 주문서의 금액 안내에 <b>추가 분량 N단위</b>가 있으면, 이 상품을 <b>N개</b> 담아 본 상품과 함께 한 번에 결제해 주세요. 1단위는 <b>${won(p.price)}</b>입니다.</p>`)
-      + sec('이 단가를 쓰는 상품', checks(p.includes));
+      + sec(p.users.length ? '이 단가를 쓰는 상품' : '이럴 때 씁니다', checks(p.includes));
   } else if (p.kind === 'addon') {
     const pt = pitch(p);
     const isEn = p.code === 'A-ENGLISH';

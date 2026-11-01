@@ -821,7 +821,7 @@ async function tests() {
     const simNote = await text(p, '#wzStep .note-pen');
     has(simNote, '가상 데이터, 실제 연구 결과 아님', '시뮬레이션 안내');
     has(simNote, '실제로 수집한 결과처럼 제출하거나', '시뮬레이션 사용 제한');
-    await W.waitPrice(p, '49,000원', '시뮬레이션 금액');
+    await W.waitPrice(p, '19,000원', '시뮬레이션 금액');
     has(await W.side(p), '학습용 시뮬레이션', '오른쪽 표시');
     await W.pick(p, 'statistics.noDataPath', 'survey');
     hasNot(await text(p, '#wzStep'), '가상 데이터, 실제 연구 결과 아님', '실제 조사 선택인데 가상 데이터 안내');
@@ -964,7 +964,7 @@ async function tests() {
     } catch (e) {
       throw new Error(`필수 자료 목록이 모두 충족으로 바뀌지 않음: ${await p.$$eval('#wzSideIn .chk li.ok', (els) => els.map((x) => x.textContent.trim()).join(', '))}`);
     }
-    await W.waitPrice(p, '79,000원', '기존 분석 수정 금액');
+    await W.waitPrice(p, '39,000원', '기존 분석 수정 금액');
     await W.go(p, 'detail'); await W.go(p, 'contact'); await fillContact(p); await W.go(p, 'review');
     const order = await submitWizard(p);
     const o = await getOrder(order);
@@ -984,7 +984,7 @@ async function tests() {
   /* ---------------------------------------------------------------- 22 */
   await check(22, '논문: 유형·작업·분량·옵션을 바꿀 때마다 견적과 모바일 요약 금액이 바로 바뀜', async () => withCtx({}, async (p) => {
     await W.open(p, '/paper/new/', 'type');
-    for (const [t, price] of [['master', '399,000원'], ['doctor', '699,000원'], ['journal', '249,000원'], ['youth', '79,000원'], ['master', '399,000원']]) {
+    for (const [t, price] of [['master', '159,000원'], ['doctor', '299,000원'], ['journal', '99,000원'], ['youth', '39,000원'], ['master', '159,000원']]) {
       await W.pick(p, 'paper.typeId', t);
       await W.waitPrice(p, price, `${t} 유형 금액`);
       eq(await W.mbar(p), price, `${t} 유형 모바일 요약 금액`);
@@ -992,22 +992,22 @@ async function tests() {
     await W.go(p, 'field'); await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
     await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', '교사의 직무스트레스와 소진의 관계'); await W.go(p, 'toc');
     await W.pick(p, 'paper.hasToc', 'no'); await W.go(p, 'format'); await W.pick(p, 'paper.hasFormat', 'no'); await W.go(p, 'method'); await W.go(p, 'task');
-    for (const [task, price] of [['edit', '99,000원'], ['feedback', '129,000원'], ['proposal', '149,000원'], ['full', '399,000원']]) {
+    for (const [task, price] of [['edit', '49,000원'], ['feedback', '59,000원'], ['proposal', '69,000원'], ['full', '159,000원']]) {
       await W.pick(p, 'paper.task', task);
       await W.waitPrice(p, price, `${task} 작업 금액`);
     }
     await W.go(p, 'volume');
     await W.pick(p, 'paper.pagesMode', 'custom'); await W.fill(p, 'paper.pages', '85');
-    await W.waitPrice(p, '546,000원', '85쪽(기준 60쪽 + 10쪽 단위 3개)');
-    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '595,000원', '우선 처리 추가');
-    await p.selectOption('#wzStep [data-path="addons.revisions"]', '1'); await W.waitPrice(p, '624,000원', '추가 수정 1회');
-    await p.check('#wzStep [data-bool="addons.format"]'); await W.waitPrice(p, '663,000원', '양식 상세 적용');
-    await p.uncheck('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '614,000원', '우선 처리 해제');
-    eq(await W.mbar(p), '614,000원', '모바일 요약 금액');
+    await W.waitPrice(p, '216,000원', '85쪽(기준 60쪽 + 10쪽 단위 3개)');
+    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '245,000원', '우선 처리 추가');
+    await p.selectOption('#wzStep [data-path="addons.revisions"]', '1'); await W.waitPrice(p, '264,000원', '추가 수정 1회');
+    await p.check('#wzStep [data-bool="addons.format"]'); await W.waitPrice(p, '283,000원', '양식 상세 적용');
+    await p.uncheck('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '254,000원', '우선 처리 해제');
+    eq(await W.mbar(p), '254,000원', '모바일 요약 금액');
   }));
   await check(22, '설문: 의뢰 유형을 바꾸면 견적이 바뀌고, "+금액" 표시는 실제로 그만큼 더해짐', async () => withCtx({}, async (p) => {
     await surveyToMode(p);
-    for (const [mode, price] of [['full', '299,000원'], ['new', '79,000원'], ['edit', '59,000원'], ['analyze', '149,000원']]) {
+    for (const [mode, price] of [['full', '129,000원'], ['new', '39,000원'], ['edit', '29,000원'], ['analyze', '69,000원']]) {
       await W.pick(p, 'survey.mode', mode); await W.waitPrice(p, price, `${mode} 유형 금액`);
     }
     await W.go(p, 'materials'); await W.upload(p, 'data', [csv()]); await W.go(p, 'analysis');
@@ -1019,19 +1019,19 @@ async function tests() {
     await W.go(p, 'analysis');
     await surchargeLabelsHold(p, 'survey.analysis', '처음부터 끝까지');
     await W.go(p, 'deliver');
-    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '348,000원', '설문 우선 처리');
+    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '158,000원', '설문 우선 처리');
   }));
   await check(22, '통계: 결과물·분석 방법을 바꾸면 견적이 바뀌고, "+금액"·"별도 견적" 표시가 실제 견적과 일치', async () => withCtx({}, async (p) => {
     await statsToData(p);
     await W.pick(p, 'statistics.hasData', 'yes'); await W.upload(p, 'data', [csv()]);
-    await W.waitPrice(p, '149,000원', '데이터 있음 기본 금액');
+    await W.waitPrice(p, '69,000원', '데이터 있음 기본 금액');
     await W.go(p, 'methods');
     ok(await surchargeLabelsHold(p, 'statistics.methods', '데이터 있음 분석 방법') >= 2, '매개·조절 또는 구조방정식 표시가 없음');
     await W.go(p, 'output');
-    for (const [o, price] of [['table', '99,000원'], ['chapter', '249,000원'], ['revise', '79,000원'], ['interp', '149,000원']]) { await W.pick(p, 'statistics.output', o); await W.waitPrice(p, price, `${o} 결과물 금액`); }
+    for (const [o, price] of [['table', '49,000원'], ['chapter', '99,000원'], ['revise', '39,000원'], ['interp', '69,000원']]) { await W.pick(p, 'statistics.output', o); await W.waitPrice(p, price, `${o} 결과물 금액`); }
     await W.back(p, 'methods'); await W.back(p, 'data');
     await W.pick(p, 'statistics.hasData', 'no'); await W.pick(p, 'statistics.noDataPath', 'simulation');
-    await W.waitPrice(p, '49,000원', '시뮬레이션 금액');
+    await W.waitPrice(p, '19,000원', '시뮬레이션 금액');
     await W.go(p, 'methods');
     await surchargeLabelsHold(p, 'statistics.methods', '시뮬레이션 분석 방법');
   }));
@@ -1276,12 +1276,12 @@ async function tests() {
     await p.click('#wzStep [data-goto="task"]');
     await p.waitForSelector('#wzStep[data-step="task"]');
     await W.pick(p, 'paper.task', 'proposal');
-    await W.waitPrice(p, '149,000원', '연구계획서 금액');
+    await W.waitPrice(p, '69,000원', '연구계획서 금액');
     await W.go(p, 'volume'); await W.go(p, 'request'); await W.go(p, 'contact'); await W.go(p, 'review');
     const order = await submitWizard(p);
     const o = await getOrder(order);
     eq(o.input.paper.task, 'proposal', '서버에 접수된 작업');
-    eq(o.amount, 149000, '서버 주문 금액');
+    eq(o.amount, 69000, '서버 주문 금액');
     eq(o.files.customer.map((x) => x.name), ['E2E_수정후제출.docx'], '서버 파일');
   }));
 
@@ -1559,7 +1559,7 @@ async function tests() {
     ok(await p.isVisible('#wzMbar'), '하단 요약 막대가 보이지 않음');
     await waitText(p, '#wzMbar', '유형을 고르면 금액이 나옵니다');
     await W.pick(p, 'paper.typeId', 'master');
-    await p.waitForFunction(() => (document.querySelector('#wzMbar .mb-price b') || {}).textContent === '399,000원');
+    await p.waitForFunction(() => (document.querySelector('#wzMbar .mb-price b') || {}).textContent === '159,000원');
     const hidden = await p.$eval('#wzSide', (e) => e.getBoundingClientRect().top >= document.querySelector('#wzMbar').getBoundingClientRect().top - 1);
     ok(hidden, '견적 패널이 처음부터 화면을 가림');
     await p.click('#wzSheetBtn');
@@ -1568,7 +1568,7 @@ async function tests() {
       const bar = document.querySelector('#wzMbar').getBoundingClientRect();
       return document.querySelector('#wzSide').classList.contains('is-open') && r.bottom <= bar.top + 1 && r.top >= 0;
     });
-    has(await text(p, '#wzSide .pl-total'), '399,000원', '펼친 견적');
+    has(await text(p, '#wzSide .pl-total'), '159,000원', '펼친 견적');
     has(await text(p, '#wzSheetBtn'), '닫기', '닫기 버튼');
     await p.click('#wzSheetBtn');
     await p.waitForFunction(() => !document.querySelector('#wzSide').classList.contains('is-open'));
@@ -1831,19 +1831,19 @@ async function tests() {
   /* ---------------------------------------------------------------- 40 */
   await check(40, '가격표를 바꾸면 새 주문은 새 가격, 이미 접수된 주문은 원래 가격 그대로', async () => {
     const before = await makeOrder({ input: paperIn({ title: 'E2E 가격 변경 전 주문' }) });
-    eq(before.quote.total, 399000, '변경 전 주문 금액');
+    eq(before.quote.total, 159000, '변경 전 주문 금액');
     const stale = await newCtx();
     try {
       const sp = await stale.newPage();
       await W.open(sp, '/paper/new/', 'type');
       await W.pick(sp, 'paper.typeId', 'master');
-      await W.waitPrice(sp, '399,000원', '가격 변경 전 화면 금액');
+      await W.waitPrice(sp, '159,000원', '가격 변경 전 화면 금액');
       await withCtx({ admin: true }, async (ap) => {
         await ap.goto(`${BASE}/admin/#catalog`);
         await ap.waitForSelector('.ad-cat');
         const row = ap.locator('.ad-cat tbody tr', { has: ap.locator('td.ad-code', { hasText: /^P-MASTER-FULL/ }) });
         eq(await row.count(), 1, '가격표의 석사 전체 작성 줄');
-        await row.locator('[data-f="price"]').fill('459000');
+        await row.locator('[data-f="price"]').fill('179000');
         await ap.click('#catSave');
         await toast(ap, '가격표를 저장했습니다.');
       });
@@ -1851,15 +1851,15 @@ async function tests() {
       await withCtx({}, async (p) => {
         await W.open(p, '/paper/new/', 'type');
         await W.pick(p, 'paper.typeId', 'master');
-        await W.waitPrice(p, '459,000원', '가격 변경 뒤 새 고객 화면 금액');
+        await W.waitPrice(p, '179,000원', '가격 변경 뒤 새 고객 화면 금액');
         await W.go(p, 'field'); await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
         await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', 'E2E 가격 변경 뒤 주문: 교사의 수업 몰입'); await W.go(p, 'toc');
         await W.pick(p, 'paper.hasToc', 'no'); await W.go(p, 'format'); await W.pick(p, 'paper.hasFormat', 'no'); await W.go(p, 'method'); await W.go(p, 'task');
         await W.pick(p, 'paper.task', 'full'); await paperTaskToReview(p);
-        has(await text(p, '#wzStep .rv-price'), '459,000원', '확인 단계 견적');
+        has(await text(p, '#wzStep .rv-price'), '179,000원', '확인 단계 견적');
         const order = await submitWizard(p);
-        has(await text(p, '#app'), '459,000원', '결제 화면 금액');
-        eq((await getOrder(order)).amount, 459000, '서버 주문 금액');
+        has(await text(p, '#app'), '179,000원', '결제 화면 금액');
+        eq((await getOrder(order)).amount, 179000, '서버 주문 금액');
       });
       // 바뀌기 전 화면을 열어 둔 고객: 제출할 때 바뀐 금액을 알리고 확인을 받음
       await W.go(sp, 'field'); await W.pick(sp, 'common.fieldId', 'edu'); await W.go(sp, 'topic');
@@ -1869,23 +1869,23 @@ async function tests() {
       await sp.click('#wzNext');
       await sp.waitForSelector('#ssPriceOk', { timeout: 20000 });
       const note = await text(sp, '.modal');
-      has(note, '399,000원', '바뀌기 전 금액');
-      has(note, '459,000원', '바뀐 금액');
+      has(note, '159,000원', '바뀌기 전 금액');
+      has(note, '179,000원', '바뀐 금액');
       await Promise.all([sp.waitForURL(/\/checkout\/\?o=/, { timeout: 30000 }), sp.click('#ssPriceOk')]);
       await sp.waitForSelector('.ord-no');
-      has(await text(sp, '#app'), '459,000원', '확인 뒤 결제 화면 금액');
+      has(await text(sp, '#app'), '179,000원', '확인 뒤 결제 화면 금액');
       // 이미 접수된 주문은 그대로
       const old = await getOrder(before);
-      eq([old.amount, old.amountDue], [399000, 399000], '기존 주문 금액');
+      eq([old.amount, old.amountDue], [159000, 159000], '기존 주문 금액');
       await sp.goto(checkoutUrl(before));
       await sp.waitForSelector('.ord-no');
-      has(await text(sp, '#app'), '399,000원', '기존 주문 결제 화면 금액');
-      eq((await adminOrder(before.orderNo)).amount, 399000, '운영자 화면의 기존 주문 금액');
+      has(await text(sp, '#app'), '159,000원', '기존 주문 결제 화면 금액');
+      eq((await adminOrder(before.orderNo)).amount, 159000, '운영자 화면의 기존 주문 금액');
     } finally {
       await stale.close().catch(() => {});
       const cat = (await adminApi('adminGetCatalog')).catalog;
       const it = cat.items.find((i) => i.code === 'P-MASTER-FULL');
-      if (it && it.price !== 399000) { it.price = 399000; await adminApi('adminSaveCatalog', { catalog: cat }); }
+      if (it && it.price !== 159000) { it.price = 159000; await adminApi('adminSaveCatalog', { catalog: cat }); }
     }
   });
 }

@@ -1,4 +1,4 @@
-// 분량별 요금(소논문 8쪽·석사 80쪽·박사 130쪽 카드와 분량 계산기): 홈과 가격 안내에서 함께 씀
+// 논문 자동작성 가격 카드(소논문 8쪽·석사 80쪽·박사 130쪽)와 쪽수 계산기: 홈과 가격 안내에서 함께 씀
 import { computeQuote, DEFAULT_CATALOG } from '../core/pricing.js';
 import { $, $$, url } from '../ui/dom.js';
 
@@ -8,8 +8,8 @@ export const RANGES = { short: [8, 20, 8], personal: [8, 40, 8], bachelor: [20, 
 export function initTiers({ onCatalog } = {}) {
   let catalog = DEFAULT_CATALOG;
   const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
+  const perPage = (total, pages) => `쪽당 ${wonNum(total / Math.max(1, pages))}원`;
   const quote = (typeId, pages) => computeQuote(catalog, { service: 'paper', paper: { typeId, task: 'full', pages } });
-  const baseOf = (typeId) => ((catalog.items || []).find((i) => i.code === `P-${typeId.toUpperCase()}-FULL`) || {}).baseUnits || 0;
   const calc = $('#tierCalc');
   let update = () => {};
   if (calc) {
@@ -20,10 +20,9 @@ export function initTiers({ onCatalog } = {}) {
       const [min, max] = RANGES[typeId];
       const p = Math.max(min, Math.min(max, Number(range.value)));
       const q = quote(typeId, p);
-      const base = baseOf(typeId);
       $('#calcPages', calc).textContent = p;
       $('#calcTotal', calc).textContent = wonNum(q.total);
-      $('#calcNote', calc).textContent = `${p > base ? `기준 ${base}쪽 + 추가 ${p - base}쪽` : `기준 ${base}쪽까지 같은 금액`} · 영업일 ${q.days}일`;
+      $('#calcNote', calc).textContent = `${perPage(q.total, p)} · 영업일 ${q.days}일 완성`;
       $('#calcGo', calc).href = `${url('/paper/new/')}?${new URLSearchParams({ type: typeId, task: 'full', pages: String(p) })}`;
       range.style.setProperty('--fill', `${((p - min) / (max - min)) * 100}%`);
     };
@@ -59,7 +58,13 @@ export function initTiers({ onCatalog } = {}) {
     for (const card of $$('.tier[data-tier]')) {
       const q = quote(card.dataset.tier, Number(card.dataset.pages));
       const t = $('[data-tier-total]', card); if (t) t.textContent = wonNum(q.total);
-      const d = $('[data-tier-days]', card); if (d) d.textContent = `영업일 ${q.days}일`;
+      const d = $('[data-tier-days]', card); if (d) d.textContent = `영업일 ${q.days}일 완성`;
+      const pp = $('[data-tier-pp]', card); if (pp) pp.textContent = perPage(q.total, Number(card.dataset.pages));
+    }
+    // 문장 속 대표 금액: <span data-q="master:80">
+    for (const el of $$('[data-q]')) {
+      const [t, pg] = el.dataset.q.split(':');
+      el.textContent = wonNum(quote(t, Number(pg)).total);
     }
     update();
   }).catch(() => { /* 기본 가격 그대로 */ });

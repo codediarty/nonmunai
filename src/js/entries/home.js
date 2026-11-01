@@ -5,6 +5,7 @@ import { computeQuote, DEFAULT_CATALOG } from '../core/pricing.js';
 import { tocHtml } from '../core/render.js';
 import { $, $$, url, esc } from '../ui/dom.js';
 import { initTiers, RANGES } from '../app/tiers.js';
+import { keystrokes, createIme } from '../ui/hangul-typing.js';
 
 let CATALOG = DEFAULT_CATALOG;
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -103,7 +104,10 @@ if (win) {
   const verifyLabel = $('#hxVerifyLabel', win);
   const verifyNote = $('#hxVerifyNote', win);
   const meter = $('.hx-meter i', win);
+  const ghost = $('#hxGhost', win);
+  const promptText = text.value;
   let mode = 'demo';
+  let typing = null; // 입력 연출 중일 때 { stop() }
   let cycleTimer = null;
   let cycleIdx = 0;
   let paused = false;
@@ -120,7 +124,7 @@ if (win) {
   const startCycle = () => {
     stopCycle();
     if (reduce || mode !== 'demo') return;
-    const order = ['r1', 'r4', 'r3', 'r2'];
+    const order = ['r1', 'r2', 'r4', 'r3'];
     const step = () => { if (!paused && mode === 'demo') activate(order[cycleIdx++ % order.length]); };
     step();
     cycleTimer = setInterval(step, 2600);
@@ -155,27 +159,81 @@ if (win) {
     requestAnimationFrame(tick);
   });
 
-  // 첫 화면 연출: 단계가 차례로 끝나며 문헌이 확인되고, 지면이 채워진 뒤 인용이 문헌과 이어진다
-  const playDemo = async () => {
-    if (reduce) { startCycle(); return; }
-    win.classList.add('is-anim');
-    const blk = (sel, root = page) => $$(sel, root);
+  // 프롬프트 입력 연출: 두벌식으로 칠 때처럼 자모가 조합되며 글자가 써진다(칸을 누르면 바로 멈춤)
+  const promptBox = form;
+  const escT = (t) => esc(t).replace(/\n/g, '<br>');
+  const paint = (done, comp, ph = false) => {
+    ghost.innerHTML = ph
+      ? '<span class="hx-caret"></span><span class="hx-ph">전공, 주제, 분량을 한 줄로 적어 주세요</span>'
+      : `${escT(done)}${comp ? `<u>${escT(comp)}</u>` : ''}<span class="hx-caret"></span>`;
+  };
+  const endTyping = () => {
+    if (typing) { typing.stopped = true; typing = null; }
+    if (!promptBox.classList.contains('is-typing')) return;
+    promptBox.classList.remove('is-typing', 'is-keying');
+    text.value = promptText;
+  };
+  const typePrompt = async () => {
+    const run = { stopped: false };
+    typing = run;
+    const ime = createIme();
+    promptBox.classList.add('is-keying');
+    for (const k of keystrokes(promptText)) {
+      if (run.stopped) return false;
+      const st = ime.key(k);
+      paint(st.done, st.comp);
+      let d = 30 + Math.random() * 34;
+      if (k === ' ') d += 50 + Math.random() * 90;
+      if (k === ',' || k === '.') d += 200 + Math.random() * 120;
+      await wait(d);
+    }
+    if (run.stopped) return false;
+    paint(ime.end(), '');
+    promptBox.classList.remove('is-keying');
+    await wait(520);
+    return !run.stopped;
+  };
+  // 보내기 전 상태: 빈 프롬프트 칸에 깜박이는 커서, 빈 지면
+  const prime = () => {
+    win.classList.add('is-anim', 'is-idle');
     meter.style.width = '0%';
     verifyN.textContent = '0/42';
-    await wait(450);
+    promptBox.classList.add('is-typing');
+    paint('', '', true);
+  };
+
+  // 첫 화면 연출: 프롬프트를 치고 보내면 단계가 차례로 끝나며 문헌이 확인되고, 지면이 채워진 뒤 인용이 문헌과 이어진다
+  const alive = () => mode === 'demo';
+  const playDemo = async () => {
+    if (reduce) { startCycle(); return; }
+    const blk = (sel, root = page) => $$(sel, root);
+    await wait(650);
+    if (!alive()) return;
+    const typed = promptBox.classList.contains('is-typing') ? await typePrompt() : false;
+    if (!alive()) return;
+    if (typed) {
+      send.classList.add('is-press');
+      await wait(130);
+      send.classList.remove('is-press');
+    }
+    endTyping();
+    promptBox.classList.add('is-sent');
+    setTimeout(() => promptBox.classList.remove('is-sent'), 900);
+    win.classList.remove('is-idle');
     send.classList.add('is-pulse');
-    setStep(0, 'run'); await wait(650); setStep(0, 'done');
+    setStep(0, 'run'); await wait(650); if (!alive()) return; setStep(0, 'done');
     setStep(1, 'run');
     const refs = blk('li[data-ref]', refList);
     meter.style.width = '100%';
     const counting = countTo(42, 1300);
-    for (const li of refs) { reveal([li]); await wait(220); li.classList.add('is-ok'); }
+    for (const li of refs) { reveal([li]); await wait(220); if (!alive()) return; li.classList.add('is-ok'); }
     await counting;
+    if (!alive()) return;
     setStep(1, 'done');
-    setStep(2, 'run'); reveal(blk('.hx-meta, .hx-ttl')); await wait(420); reveal(blk('.hx-ch, .hx-sec')); await wait(300); setStep(2, 'done');
-    setStep(3, 'run'); reveal(blk('.hx-p')); await wait(1700); setStep(3, 'done');
+    setStep(2, 'run'); reveal(blk('.hx-meta, .hx-ttl')); await wait(420); if (!alive()) return; reveal(blk('.hx-ch, .hx-sec')); await wait(300); if (!alive()) return; setStep(2, 'done');
+    setStep(3, 'run'); reveal(blk('.hx-p')); await wait(1700); if (!alive()) return; setStep(3, 'done');
     setStep(4, 'run');
-    for (const c of $$('.hx-cite', page)) { c.classList.add('is-lit'); activate(c.dataset.ref); await wait(330); }
+    for (const c of $$('.hx-cite', page)) { c.classList.add('is-lit'); activate(c.dataset.ref); await wait(330); if (!alive()) return; }
     setStep(4, 'done');
     win.classList.add('is-ready');
     await wait(400);
@@ -192,6 +250,8 @@ if (win) {
 
   // 내 프롬프트로 작성: 설계(제목·목차)는 바로 보여 주고, 문헌·본문·인용은 주문 후 단계로 표시
   const runUser = async (fromPrompt = false) => {
+    endTyping();
+    win.classList.remove('is-idle');
     const raw = text.value.trim();
     if (raw.length < 4) {
       text.focus(); tag.textContent = '주제를 조금 더 적어 주세요';
@@ -249,7 +309,7 @@ if (win) {
 
   form.addEventListener('submit', (e) => { e.preventDefault(); runUser(true); });
   text.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); runUser(true); } });
-  text.addEventListener('focus', () => { paused = true; });
+  text.addEventListener('focus', () => { paused = true; endTyping(); });
   text.addEventListener('blur', () => { paused = false; });
   selType.addEventListener('change', () => {
     const r = RANGES[selType.value];
@@ -266,12 +326,23 @@ if (win) {
       paused = true;
       const r = win.getBoundingClientRect();
       if (r.top < 70 || r.bottom > window.innerHeight) win.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+      endTyping();
       text.focus({ preventScroll: true });
       text.select();
     });
   }
 
-  playDemo();
+  // 작성 화면이 화면에 들어올 때 연출을 시작한다(모바일에서 아래에 있어도 놓치지 않게)
+  if (reduce) playDemo();
+  else {
+    prime();
+    let started = false;
+    const go = () => { if (!started) { started = true; playDemo(); } };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { threshold: 0.3 });
+      io.observe(win);
+    } else go();
+  }
 }
 
 /* ------------------------------------------------------------ 분량별 요금 */

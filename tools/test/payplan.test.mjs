@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { cartPlan, linkForLine } from '../../src/js/app/pay-plan.js';
 import { DEFAULT_CATALOG, computeQuote } from '../../src/js/core/pricing.js';
 
-const links = { 'P-MASTER-FULL': 'https://skkc.co.kr/shop_view?idx=101', 'X-49000': 'https://skkc.co.kr/shop_view?idx=140', 'A-PRIORITY': 'https://skkc.co.kr/shop_view?idx=141', 'A-REVISION': 'https://skkc.co.kr/shop_view?idx=143' };
+const links = { 'P-MASTER-FULL': 'https://skkc.co.kr/shop_view?idx=101', 'X-19000': 'https://skkc.co.kr/shop_view?idx=140', 'A-PRIORITY': 'https://skkc.co.kr/shop_view?idx=141', 'A-REVISION': 'https://skkc.co.kr/shop_view?idx=143' };
 const settings = { skkcProducts: JSON.stringify(links) };
 const order = (quote, due, kind = 'main') => ({ quote, amountDue: due, payments: [{ status: 'requested', kind, amount: due }] });
 
@@ -13,12 +13,12 @@ export const tests = [
     const rows = cartPlan(order(q, q.total), settings, DEFAULT_CATALOG);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].url, links['P-MASTER-FULL']);
-    assert.equal(rows[0].amount, 399000);
+    assert.equal(rows[0].amount, 159000);
   } },
   { name: '추가 분량·옵션은 단가별 상품과 수량으로 나눔', fn() {
     const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'full', pages: 80 }, addons: { priority: true, revisions: 2 } });
     const rows = cartPlan(order(q, q.total), settings, DEFAULT_CATALOG);
-    assert.deepEqual(rows.map((r) => [r.url, r.qty]), [[links['P-MASTER-FULL'], 1], [links['X-49000'], 2], [links['A-PRIORITY'], 1], [links['A-REVISION'], 2]]);
+    assert.deepEqual(rows.map((r) => [r.url, r.qty]), [[links['P-MASTER-FULL'], 1], [links['X-19000'], 2], [links['A-PRIORITY'], 1], [links['A-REVISION'], 2]]);
     assert.equal(rows.reduce((a, r) => a + r.amount, 0), q.total);
   } },
   { name: '상품이 없는 줄이 있거나 추가 결제면 장바구니 안내를 하지 않음', fn() {
@@ -30,7 +30,7 @@ export const tests = [
   } },
   { name: '가격표의 결제 링크가 코드별 링크보다 먼저', fn() {
     const cat = { items: DEFAULT_CATALOG.items.map((i) => (i.code === 'P-MASTER-FULL' ? { ...i, payUrl: 'https://skkc.co.kr/shop_view?idx=999' } : i)) };
-    assert.equal(linkForLine({ code: 'P-MASTER-FULL', amount: 399000 }, links, cat), 'https://skkc.co.kr/shop_view?idx=999');
-    assert.equal(linkForLine({ code: 'P-MASTER-FULL-X', unitPrice: 49000, amount: 98000 }, links, cat), links['X-49000']);
+    assert.equal(linkForLine({ code: 'P-MASTER-FULL', amount: 159000 }, links, cat), 'https://skkc.co.kr/shop_view?idx=999');
+    assert.equal(linkForLine({ code: 'P-MASTER-FULL-X', unitPrice: 19000, amount: 38000 }, links, cat), links['X-19000']);
   } },
 ];

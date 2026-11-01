@@ -123,7 +123,7 @@ t('파일: 형식·내용 검사, 필수 자료 없으면 제출 불가', () => 
   assert.equal(up.file.slot, 'manuscript');
   const sub = x.ok('submitOrder', auth);
   assert.equal(sub.order.status, 'pending_payment');
-  assert.equal(sub.order.amountDue, 99000);
+  assert.equal(sub.order.amountDue, 49000);
   // 다른 주문 토큰으로는 볼 수 없음
   const r2 = paperOrder(x);
   x.fail('getOrder', { orderNo: r.orderNo, token: r2.token }, 'forbidden');
@@ -254,7 +254,7 @@ t('통계 학습용 시뮬레이션: 동의 필수, 결과 파일명에 가상 �
   const input = { common: { fieldId: 'social' }, statistics: { hasData: false, noDataPath: 'simulation', output: 'interp', methods: ['regression'] }, addons: {} };
   x.fail('createOrder', { service: 'statistics', input, contact: CONTACT, pin: '1357', consents: CONSENTS }, 'invalid');
   const r = x.ok('createOrder', { service: 'statistics', input, contact: CONTACT, pin: '1357', consents: { ...CONSENTS, simulation: true } });
-  assert.equal(r.quote.total, 49000);
+  assert.equal(r.quote.total, 19000);
   x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
   const token = x.login();
   const res = x.ok('adminUploadResult', { adminToken: token, orderNo: r.orderNo, name: '분석결과.xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data: XLSX });
