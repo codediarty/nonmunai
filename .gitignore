@@ -1,0 +1,7 @@
+node_modules/
+docs/
+docs-dev/
+upload/
+tmp/
+*.log
+.DS_Store

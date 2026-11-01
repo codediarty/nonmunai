@@ -1,0 +1,25 @@
+{
+  "siteName": "논문AI",
+  "siteUrl": "https://nonmunai.kr",
+  "basePath": "",
+  "apiUrl": "",
+  "brand": {
+    "operator": "성균관컨설팅",
+    "operatorUrl": "https://www.skkc.co.kr",
+    "ceo": "이채연",
+    "bizNo": "272-32-01885",
+    "mailOrderNo": "제 2026-경기송탄-0622 호",
+    "address": "경기도 수원시 장안구 서부로 2066 성균관대학교 브릿지팩토리 (16419)",
+    "phone": "010-9913-7771",
+    "email": "contact@skkc.co.kr",
+    "chatUrl": "https://skcdesk.channel.io/home"
+  },
+  "verification": {
+    "naver": "",
+    "google": ""
+  },
+  "analytics": {
+    "gaId": ""
+  },
+  "launchDate": "2026-11-01"
+}
