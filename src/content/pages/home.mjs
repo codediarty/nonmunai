@@ -5,9 +5,9 @@ export const HOME_FAQ = [
   { q: '논문AI는 어떤 서비스인가요?', a: '논문AI(논문 AI)는 논문, 설문조사, 통계분석을 잘 몰라도 간편하게 맡길 수 있는 원스톱 논문 작성 사이트입니다. 주제나 키워드를 입력하면 연구모형, 가설, 목차, 분석 방법, 표본 수를 바로 설계해 보여 드리고, AI 논문 작성 도구로 속도를 내되 원고 작성과 논문 통계분석은 석·박사 연구진이 진행하고 검수해 전달합니다.' },
   { q: '논문 주제도 정하지 못했는데 신청할 수 있나요?', a: '네. 주제를 모른다고 선택하고 관심 키워드만 적으시면 전공 분야에 맞는 추천 주제를 만들어 드립니다. 목차, 학교 양식, 연구방법, 분량도 모두 "잘 모르겠어요"로 진행할 수 있습니다.' },
   { q: 'AI가 자동으로 논문을 써 주는 건가요?', a: '연구 설계(연구모형, 가설, 목차, 분석 계획, 표본 수, 일정)는 입력하는 즉시 자동으로 산출됩니다. 원고 작성과 통계분석은 AI 도구를 활용하되 석·박사 연구진이 직접 작업하고 문헌·수치·형식을 검수한 뒤 전달합니다. 자동 결과를 그대로 넘기지 않는 것이 논문AI의 원칙입니다.' },
-  { q: '결과물은 얼마나 걸려서 받나요?', a: '부분 첨삭과 피드백 반영은 영업일 기준 1~3일, 석사학위논문 전체 초안은 5일 안팎이 기본 납기입니다. 결제가 확인되면 실제 작업 순서를 반영한 예상 전달일을 바로 알려 드리고, 우선 처리를 선택하면 가능한 범위에서 앞당겨 드립니다.' },
+  { q: '결과물은 얼마나 걸려서 받나요?', a: '부분 첨삭과 피드백 반영은 영업일 기준 1~3일, 석사학위논문 전체 구성·초고 완성은 5일 안팎이 기본 납기입니다. 결제가 확인되면 실제 작업 순서를 반영한 예상 전달일을 바로 알려 드리고, 우선 처리를 선택하면 가능한 범위에서 앞당겨 드립니다.' },
   { q: '결제는 어떻게 하나요?', a: '주문서를 제출하면 총액, 포함·제외 사항, 예상 납기를 먼저 확인하신 뒤 운영사 성균관컨설팅의 안전결제(카드, 간편결제, 계좌이체)로 결제합니다. 응답자 모집처럼 조건에 따라 비용이 달라지는 작업은 확정 견적을 받은 뒤에만 결제합니다.' },
-  { q: '수정은 몇 번 받을 수 있나요?', a: '전체 초안·연구계획서·설문 원스톱 상품에는 수정 1회가 포함되어 있고, 필요하면 추가 수정을 1회 단위로 더할 수 있습니다. 전달 후 주문 페이지에서 수정 내용을 적어 바로 요청하시면 됩니다.' },
+  { q: '수정은 몇 번 받을 수 있나요?', a: '전체 구성·초고 완성, 연구계획서, 설문 원스톱 상품에는 수정 1회가 포함되어 있고, 필요하면 추가 수정을 1회 단위로 더할 수 있습니다. 전달 후 주문 페이지에서 수정 내용을 적어 바로 요청하시면 됩니다.' },
   { q: '설문 응답자도 모아 주나요?', a: '네. "응답자 모집·배포까지 의뢰"를 선택하시면 대상, 응답 수, 모집 경로, 일정, 동의 절차를 확인해 별도 견적을 드립니다. 응답 수는 대상과 기간에 따라 달라지므로 특정 인원 확보를 미리 보장하지 않습니다.' },
   { q: '데이터가 없는데 통계분석을 맡길 수 있나요?', a: '실제 연구라면 설문조사부터 진행하는 통합 견적으로 안내해 드립니다. 분석 방법을 익히는 것이 목적이라면 학습용 시뮬레이션을 신청할 수 있으며, 이때 결과물에는 "가상 데이터, 실제 연구 결과 아님"이 표시되어 실제 연구 결과로 쓸 수 없습니다.' },
   { q: '올린 자료는 안전하게 관리되나요?', a: '자료는 주문별 비공개 폴더에 보관되며 주문번호와 조회 비밀번호가 있어야 볼 수 있습니다. 결과물 전달 후 90일이 지나면 자동으로 삭제되고, 그 전에도 주문 페이지에서 삭제를 요청할 수 있습니다.' },
@@ -40,7 +40,7 @@ export default function home({ T }) {
 <div class="svc-art" aria-hidden="true"><ol class="toc mini"><li class="ch"><span class="t">제1장 서론</span><span class="lead-dots"></span><span class="pg">1</span></li><li class="sec2"><span class="t">1. 연구의 필요성</span><span class="lead-dots"></span><span class="pg">1</span></li><li class="sec2"><span class="t">2. 연구의 목적</span><span class="lead-dots"></span><span class="pg">4</span></li><li class="ch"><span class="t">제2장 이론적 배경</span><span class="lead-dots"></span><span class="pg">7</span></li><li class="ch"><span class="t">제3장 연구 방법</span><span class="lead-dots"></span><span class="pg">24</span></li></ol></div>
 <h3 class="h-3">내 논문 만들기</h3>
 <p>석사·박사학위논문, 학술지 논문, 졸업논문까지. 주제가 없으면 추천 주제부터, 원고가 있으면 첨삭과 교수님 피드백 반영부터 시작합니다.</p>
-<p class="svc-price">부분 첨삭 ${price('P-YOUTH-EDIT')}부터 · 석사 전체 초안 ${price('P-MASTER-FULL')}</p>
+<p class="svc-price">부분 첨삭 ${price('P-YOUTH-EDIT')}부터 · 석사 전체 구성·초고 ${price('P-MASTER-FULL')}</p>
 <a class="btn btn-dark" href="${T.u('/paper/new/')}">논문 의뢰하기</a>
 </article>
 <article class="svc-item">
@@ -89,7 +89,7 @@ export default function home({ T }) {
 </ol>
 </div>
 <div class="flow-panel sheet">
-<div class="sheet-label"><strong>주문 NA261103-K7Q3</strong><span>석사 · 전체 초안 · 매개효과</span></div>
+<div class="sheet-label"><strong>주문 NA261103-K7Q3</strong><span>석사 · 초고 완성 · 매개효과</span></div>
 <div class="flow-panel-in">${statusTimeline(T, 3)}
 <div class="flow-eta"><span>예상 전달일</span><b>11월 10일(화)</b><small>작업 순서 2번째</small></div></div>
 </div>
@@ -103,7 +103,7 @@ export default function home({ T }) {
 <div class="tabs" data-tabs>
 <div class="tab-list" role="tablist" aria-label="결과물 예시">
 <button role="tab" aria-selected="true" aria-controls="out-1" id="tab-1">연구 설계서</button>
-<button role="tab" aria-selected="false" aria-controls="out-2" id="tab-2" tabindex="-1">장별 초안</button>
+<button role="tab" aria-selected="false" aria-controls="out-2" id="tab-2" tabindex="-1">장별 초고</button>
 <button role="tab" aria-selected="false" aria-controls="out-3" id="tab-3" tabindex="-1">통계표와 해석</button>
 <button role="tab" aria-selected="false" aria-controls="out-4" id="tab-4" tabindex="-1">수정 대조표</button>
 </div>
@@ -163,7 +163,7 @@ export default function home({ T }) {
 <div class="wrap price-sum">
 <div class="sec-head"><h2 class="h-2" id="price-h">가격은 결제 전에 전부 보여 드립니다</h2><p>선택한 조건에 따라 총액이 바로 계산되고, 포함·제외 사항과 예상 납기를 확인한 뒤 결제합니다. 할인율을 부풀리거나 마감 시간을 재촉하지 않습니다.</p></div>
 <div class="price-grid">
-${[['석사 전체 구성·초안', 'P-MASTER-FULL', '연구 설계서, 장별 초안 60쪽, 수정 1회'], ['부분 첨삭·수정', 'P-MASTER-EDIT', '석사 기준 30쪽, 수정 내역 표시본'], ['교수님 피드백 반영', 'P-MASTER-FB', '피드백 10개 항목, 수정 대조표'], ['연구계획서', 'P-MASTER-PROP', '목적·이론·방법·참고문헌'], ['설문조사 처음부터 끝까지', 'S-FULL', '설계·온라인 설문·통계·해석'], ['통계표+쉬운 해석', 'T-INTERP', '분석 추천과 실행, APA 표']].map(([n, c, d]) => `<div class="pg-item"><span class="pg-n">${esc(n)}</span><span class="pg-d">${esc(d)}</span><b class="num">${price(c)}</b></div>`).join('')}
+${[['석사 전체 구성·초고', 'P-MASTER-FULL', '연구 설계서, 장별 초고 60쪽, 수정 1회'], ['부분 첨삭·수정', 'P-MASTER-EDIT', '석사 기준 30쪽, 수정 내역 표시본'], ['교수님 피드백 반영', 'P-MASTER-FB', '피드백 10개 항목, 수정 대조표'], ['연구계획서', 'P-MASTER-PROP', '목적·이론·방법·참고문헌'], ['설문조사 처음부터 끝까지', 'S-FULL', '설계·온라인 설문·통계·해석'], ['통계표+쉬운 해석', 'T-INTERP', '분석 추천과 실행, APA 표']].map(([n, c, d]) => `<div class="pg-item"><span class="pg-n">${esc(n)}</span><span class="pg-d">${esc(d)}</span><b class="num">${price(c)}</b></div>`).join('')}
 </div>
 <p class="price-more"><a class="btn btn-ghost" href="${T.u('/pricing/')}">전체 가격표 보기</a></p>
 </div>
@@ -205,7 +205,7 @@ ${ctaBand(T, { title: '주제 한 줄이면 시작할 수 있습니다', text: '
     schema: [{
       '@context': 'https://schema.org', '@type': 'Service', name: '논문AI 원스톱 논문 지원', serviceType: '논문 작성 지원, 논문 첨삭, 설문조사, 통계분석', provider: { '@id': T.abs('/#organization') }, areaServed: { '@type': 'Country', name: 'KR' },
       hasOfferCatalog: { '@type': 'OfferCatalog', name: '논문AI 서비스', itemListElement: [
-        { '@type': 'Offer', name: '석사학위논문 전체 구성·초안 작성 지원', price: 399000, priceCurrency: 'KRW', url: T.abs('/master-thesis/') },
+        { '@type': 'Offer', name: '석사학위논문 전체 구성·초고 완성', price: 399000, priceCurrency: 'KRW', url: T.abs('/master-thesis/') },
         { '@type': 'Offer', name: '논문 부분 첨삭·수정', price: 99000, priceCurrency: 'KRW', url: T.abs('/thesis-editing/') },
         { '@type': 'Offer', name: '교수님 피드백 반영', price: 129000, priceCurrency: 'KRW', url: T.abs('/professor-feedback/') },
         { '@type': 'Offer', name: '설문조사 처음부터 끝까지', price: 299000, priceCurrency: 'KRW', url: T.abs('/survey/') },

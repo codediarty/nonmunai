@@ -53,7 +53,7 @@ function deliverables(s) {
   if (m === 'feedback') out.push('수정 대조표');
   if (m === 'full' || s.survey.recruit === 'us') out.push('익명화 응답 데이터');
   if (needsAnalysis(s)) out.push('통계표(APA 형식)', '결과를 읽는 쉬운 해석');
-  if (m === 'full') out.push('논문 결과장 정리 지원');
+  if (m === 'full') out.push('논문 결과장 정리');
   return out;
 }
 
@@ -92,7 +92,7 @@ ${s.common.topicKnown === 'no' ? `<div class="cond">${textField('common.keywords
     id: 'mode', title: '무엇을 맡기시겠어요?', help: '처음이라면 처음부터 끝까지 맡기기를 추천합니다.',
     render: (s) => {
       let out = choice('survey.mode', s.survey.mode, MODES.map((m) => { const it = findItem(CONFIG.catalog, m.code); return { v: m.v, t: m.t, d: m.d, badge: m.badge, side: it ? `${won(it.price)}부터` : '' }; }));
-      if (s.survey.mode === 'full') out += note('<b>처음부터 끝까지 맡기기 범위</b><br>① 연구 목적에 맞는 설문 설계와 척도 선정 ② 온라인 설문 제작과 참여 안내문 ③ 응답 수집(직접 수집 또는 모집 의뢰) ④ 응답 데이터 정리·익명화 ⑤ 통계분석과 쉬운 해석 ⑥ 논문 결과장 정리 지원. 응답자 모집을 맡기실 경우 모집 비용은 확정 견적 후 결제합니다.');
+      if (s.survey.mode === 'full') out += note('<b>처음부터 끝까지 맡기기 범위</b><br>① 연구 목적에 맞는 설문 설계와 척도 선정 ② 온라인 설문 제작과 참여 안내문 ③ 응답 수집(직접 수집 또는 모집 의뢰) ④ 응답 데이터 정리·익명화 ⑤ 통계분석과 쉬운 해석 ⑥ 논문 결과장 정리. 응답자 모집을 맡기실 경우 모집 비용은 확정 견적 후 결제합니다.');
       return out;
     },
     valid: (s) => (s.survey.mode ? null : '의뢰 유형을 골라 주세요.'),

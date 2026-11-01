@@ -366,6 +366,24 @@ t('가격표 편집이 서버 견적에 바로 반영', () => {
   assert.equal(cfg.catalog.items.find((i) => i.code === 'P-MASTER-FULL').payUrl, 'https://skkc.co.kr/shop_view/?idx=99');
 });
 
+t('가격표 문구 맞추기(syncCatalogText): 이름·포함 문구만 기본값으로, 가격과 결제 링크는 유지', () => {
+  const x = makeEnv();
+  const token = x.login();
+  const cat = x.ok('adminGetCatalog', { adminToken: token }).catalog;
+  const item = cat.items.find((i) => i.code === 'P-MASTER-FULL');
+  item.name = '석사학위논문 옛 이름'; item.includes = ['옛 포함 문구']; item.price = 459000; item.payUrl = 'https://skkc.co.kr/shop_view/?idx=99';
+  x.ok('adminSaveCatalog', { adminToken: token, catalog: cat });
+  const res = x.env.call('syncCatalogText');
+  assert.deepEqual(res.changed, ['P-MASTER-FULL']);
+  const after = x.ok('config').catalog.items.find((i) => i.code === 'P-MASTER-FULL');
+  const def = DEFAULT_CATALOG.items.find((i) => i.code === 'P-MASTER-FULL');
+  assert.equal(after.name, def.name);
+  assert.deepEqual(after.includes, def.includes);
+  assert.equal(after.price, 459000);
+  assert.equal(after.payUrl, 'https://skkc.co.kr/shop_view/?idx=99');
+  assert.deepEqual(x.env.call('syncCatalogText').changed, []);
+});
+
 t('토스페이먼츠: 승인 성공 시 결제 확정, 금액 위조 거부', () => {
   const x = makeEnv({
     toss: (url, params) => {

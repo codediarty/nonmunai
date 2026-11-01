@@ -83,7 +83,7 @@ export function isSimulation(o) {
   return !!(t && t.hasData === false && t.noDataPath === 'simulation') || (!o.input && !!o.quote && o.quote.mainCode === 'T-SIM');
 }
 
-const TASK_LABEL = { full: '전체 구성·초안 작성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
+const TASK_LABEL = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문조사 처음부터 끝까지', new: '설문지 새로 만들기', edit: '기존 설문지 수정', feedback: '설문지 피드백 반영', analyze: '모은 응답 분석' };
 const SURVEY_TARGET = { auto: '추천 받기', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인', nurse: '간호사' };
 const STAT_OUTPUT = { table: '통계표', interp: '통계표와 쉬운 해석', chapter: '논문 결과장 정리', revise: '기존 분석 수정' };

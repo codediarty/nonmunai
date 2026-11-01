@@ -662,7 +662,7 @@ async function tests() {
   await check(10, '처음부터 끝까지: 설계·모집(응답 수집)·분석·해석 범위를 안내하고 결과물에 반영', async () => {
     const f = await surveyS();
     for (const w of ['처음부터 끝까지 맡기기 범위', '설문 설계', '응답 수집', '모집', '통계분석', '해석']) has(f.fullNote, w, '범위 안내');
-    for (const d of ['설문지(Word)', '익명화 응답 데이터', '통계표(APA 형식)', '결과를 읽는 쉬운 해석', '논문 결과장 정리 지원']) ok(f.deliverables.includes(d), `받을 결과물에 "${d}" 없음: ${f.deliverables.join(', ')}`);
+    for (const d of ['설문지(Word)', '익명화 응답 데이터', '통계표(APA 형식)', '결과를 읽는 쉬운 해석', '논문 결과장 정리']) ok(f.deliverables.includes(d), `받을 결과물에 "${d}" 없음: ${f.deliverables.join(', ')}`);
     eq(f.planErr, '연구계획서가 있는지 골라 주세요.', '자료 단계 안내');
   });
   await check(14, "응답 수 '잘 모르겠어요'가 기본이고 그대로 다음 단계로 진행·접수", async () => {
@@ -1481,7 +1481,7 @@ async function tests() {
       const clip = await clipAfter(p, '.ad-card-h [data-act="copyBrief"]', `[논문AI 작업지시문] ${x.orderNo}`);
       await toast(p, '작업지시문을 복사했습니다.');
       eq(clip.trim(), shown.trim(), '복사한 내용과 화면의 지시문');
-      for (const s of [`[논문AI 작업지시문] ${x.orderNo}`, '석사학위논문 전체 구성·초안 작성 지원', 'E2E 지시문 주제: 요양보호사의 감정노동과 이직의도', 'E2E 요청: 표는 APA 7판으로', '[참고 자료] E2E_참고자료.docx', '요청 작업: 전체 구성·초안 작성']) has(clip, s, '복사한 작업지시문');
+      for (const s of [`[논문AI 작업지시문] ${x.orderNo}`, '석사학위논문 전체 구성·초고 완성', 'E2E 지시문 주제: 요양보호사의 감정노동과 이직의도', 'E2E 요청: 표는 APA 7판으로', '[참고 자료] E2E_참고자료.docx', '요청 작업: 전체 구성·초고 완성']) has(clip, s, '복사한 작업지시문');
       for (const s of ['홍길동이투이', x.contact.email, '010-9876-5432', '9876']) hasNot(clip, s, '복사한 작업지시문의 고객 개인정보');
       await p.goto(`${BASE}/admin/#order=${y.orderNo}`);
       await waitText(p, '#briefText', y.orderNo);

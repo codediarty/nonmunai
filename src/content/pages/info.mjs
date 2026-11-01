@@ -66,7 +66,7 @@ ${ctaBand(T, { title: '내 조건의 총액을 바로 확인하세요', text: '�
 <section class="sec sec-alt"><div class="wrap">
 <div class="sec-head"><h2 class="h-2">준비하면 좋은 자료</h2><p>필수 자료는 선택에 따라 신청 화면에서 정확히 안내합니다. 아래는 있으면 결과물이 더 정확해지는 자료입니다.</p></div>
 <div class="table-wrap"><table class="g-table"><thead><tr><th>의뢰</th><th>필수 자료</th><th>있으면 좋은 자료</th></tr></thead><tbody>
-<tr><td>논문 전체 초안</td><td>없음</td><td>연구계획서, 기존 자료, 학교 양식, 목차</td></tr>
+<tr><td>논문 전체 구성·초고</td><td>없음</td><td>연구계획서, 기존 자료, 학교 양식, 목차</td></tr>
 <tr><td>부분 첨삭</td><td>기존 원고</td><td>수정할 범위 메모, 학교 양식</td></tr>
 <tr><td>교수님 피드백 반영</td><td>기존 원고, 피드백(파일 또는 붙여넣기)</td><td>면담 메모</td></tr>
 <tr><td>설문지 수정·피드백 반영</td><td>기존 설문지(피드백 반영은 피드백 포함)</td><td>연구계획서</td></tr>

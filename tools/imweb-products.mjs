@@ -16,7 +16,7 @@ let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(execSync('npm root -g').toString().trim(), 'playwright')); }
 
 const TYPE = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 투고논문', bachelor: '학사·졸업논문', report: '일반 연구보고서', youth: '청소년 탐구논문', personal: '개인 관심연구' };
-const TASK = { full: '전체 구성·초안 작성', edit: '부분 첨삭·수정', feedback: '피드백 반영', proposal: '연구계획서 작성' };
+const TASK = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '피드백 반영', proposal: '연구계획서 작성' };
 const FEEDBACK_TASK = { journal: '심사 의견 반영', report: '검토 의견 반영', youth: '선생님 피드백 반영', master: '교수님 피드백 반영', doctor: '교수님 피드백 반영', bachelor: '교수님 피드백 반영', personal: '피드백 반영' };
 const items = DEFAULT_CATALOG.items;
 const find = (c) => items.find((i) => i.code === c);
@@ -43,7 +43,7 @@ for (const it of items) {
     meta = `기본 납기 영업일 ${it.days}일`;
   } else if (it.service === 'statistics') {
     family = it.addon ? '추가 옵션 · 통계분석' : '통계분석';
-    lines = { 'T-BASIC': ['기초 통계', '분석과 통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '정리 지원'], 'T-FB': ['기존 분석 수정', '교수님 피드백 반영'], 'T-SIM': ['학습용 시뮬레이션', '데이터 분석'], 'T-ADV': ['심화 분석 가산', '매개·조절효과'] }[it.code];
+    lines = { 'T-BASIC': ['기초 통계', '분석과 통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '작성'], 'T-FB': ['기존 분석 수정', '교수님 피드백 반영'], 'T-SIM': ['학습용 시뮬레이션', '데이터 분석'], 'T-ADV': ['심화 분석 가산', '매개·조절효과'] }[it.code];
     meta = it.addon ? '통계분석·응답 분석 주문에 더하는 옵션' : `기본 납기 영업일 ${it.days}일`;
   } else {
     family = '추가 옵션';
@@ -91,8 +91,8 @@ function pitch(p) {
     const t = p.code.split('-')[1].toLowerCase(), task = { FULL: 'full', EDIT: 'edit', FB: 'feedback', PROP: 'proposal' }[p.code.split('-')[2]];
     const n = TYPE_SHORT[t];
     return {
-      full: { head: `주제 한 줄에서 장별 초안까지, ${n}을 처음부터 함께 완성합니다`, who: [`주제는 정했지만 어디서부터 써야 할지 막막한 분`, `연구모형, 가설, 목차를 한 번에 제대로 잡고 싶은 분`, `일정이 빠듯해 탄탄한 초안이 빨리 필요한 분`] },
-      edit: { head: `${n}의 문장과 논리를 다듬어 제출할 수 있는 원고로 만듭니다`, who: [`초안은 있지만 문장과 흐름이 매끄럽지 않은 분`, `인용과 형식을 꼼꼼하게 점검받고 싶은 분`, `제출 전에 전문가의 눈으로 마지막 점검을 받고 싶은 분`] },
+      full: { head: `주제 한 줄에서 장별 초고까지, ${n}을 처음부터 함께 완성합니다`, who: [`주제는 정했지만 어디서부터 써야 할지 막막한 분`, `연구모형, 가설, 목차를 한 번에 제대로 잡고 싶은 분`, `일정이 빠듯해 탄탄한 초고가 빨리 필요한 분`] },
+      edit: { head: `${n}의 문장과 논리를 다듬어 제출할 수 있는 원고로 만듭니다`, who: [`원고는 있지만 문장과 흐름이 매끄럽지 않은 분`, `인용과 형식을 꼼꼼하게 점검받고 싶은 분`, `제출 전에 전문가의 눈으로 마지막 점검을 받고 싶은 분`] },
       feedback: { head: `${teacher(t)} 의견을 항목별로 정확하게 반영합니다`, who: [`${teacher(t)} 의견을 받았는데 어떻게 고쳐야 할지 막막한 분`, `정해진 일정 안에 수정본을 내야 하는 분`, `무엇을 어디서 고쳤는지 한눈에 정리해 보여 드려야 하는 분`] },
       proposal: { head: `연구 목적부터 분석 계획까지, 설득력 있는 연구계획서를 세웁니다`, who: [`연구계획서 심사를 앞둔 분`, `주제는 있지만 연구 방법을 정하지 못한 분`, `선행연구와 연구모형을 체계적으로 정리해야 하는 분`] },
     }[task];
@@ -105,7 +105,7 @@ function pitch(p) {
     'S-ANALYZE': { head: '모은 응답으로 신뢰도부터 가설 검증까지 분석합니다', who: ['응답은 모았지만 분석을 어떻게 할지 막막한 분', '가설 검증 결과를 논문 형식으로 정리하고 싶은 분', '통계표를 읽고 해석하는 데 도움이 필요한 분'] },
     'T-BASIC': { head: '데이터를 정리하고 요청하신 분석을 APA 통계표로 드립니다', who: ['분석 방법은 정했고 실행과 표 작성이 필요한 분', 'SPSS를 다루기 어려운 분', '논문 형식에 맞는 통계표가 필요한 분'] },
     'T-INTERP': { head: 'SPSS를 몰라도 됩니다. 통계표와 쉬운 해석까지 드립니다', who: ['어떤 분석을 해야 할지부터 막막한 분', '결과표를 받아도 읽고 설명하기 어려운 분', '지도교수님께 결과를 자신 있게 설명하고 싶은 분'] },
-    'T-CHAPTER': { head: '분석부터 논문 결과장(4장) 서술 초안까지 완성합니다', who: ['데이터는 있고 결과장을 써야 하는 분', '통계표와 본문 서술을 함께 맞춰야 하는 분', '표·그림 번호와 형식까지 정리하고 싶은 분'] },
+    'T-CHAPTER': { head: '분석부터 논문 결과장(4장) 서술 초고까지 완성합니다', who: ['데이터는 있고 결과장을 써야 하는 분', '통계표와 본문 서술을 함께 맞춰야 하는 분', '표·그림 번호와 형식까지 정리하고 싶은 분'] },
     'T-FB': { head: '교수님 의견대로 다시 분석하고 통계표를 고칩니다', who: ['분석 방법을 바꾸라는 의견을 받은 분', '표 형식이나 수치 보고를 고쳐야 하는 분', '수정 내용을 대조표로 정리해 보여 드려야 하는 분'] },
     'T-SIM': { head: '가상 데이터로 분석 절차를 직접 익히는 학습용 실습입니다', who: ['데이터를 모으기 전에 분석 흐름을 미리 익히고 싶은 분', '분석 방법이 연구에 맞는지 먼저 확인하고 싶은 분', '통계 수업 과제나 연습이 필요한 분'] },
   };
@@ -132,31 +132,34 @@ const WHY = [
   ['안심할 수 있는 자료 관리', '올린 자료와 결과물은 주문자만 열람할 수 있도록 안전하게 관리합니다.'],
 ];
 const whyHtml = `<table style="width:100%;border-collapse:separate;border-spacing:10px"><tr>${WHY.slice(0, 2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr><tr>${WHY.slice(2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr></table>`;
-const TRUST = `<div style="margin:0 0 40px;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI는 성균관컨설팅이 운영하는 논문 전문 서비스입니다. 결제와 영수증, 카드 명세서는 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리됩니다.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '석·박사 연구진 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
+const TRUST = `<div style="margin:0;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI는 성균관컨설팅이 운영하는 논문 전문 서비스입니다. 결제와 영수증, 카드 명세서는 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리됩니다.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '석·박사 연구진 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
 const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${LINE};font-size:13px;line-height:1.7;color:#8A93A6">논문AI는 성균관컨설팅이 운영합니다 · 성균관대학교 RISE사업 지원 기업 · 사업자등록번호 272-32-01885 · contact@skkc.co.kr</p>`;
 const SAMPLE = { paper: ['sample-paper.png', '논문AI 연구 설계서와 목차 결과물 예시'], survey: ['sample-survey.png', '논문AI 설문지와 응답 분석 결과물 예시'], statistics: ['sample-stats.png', '논문AI 통계표와 해석 결과물 예시'] };
+// 상세 맨 위: 표지와 같은 남색 머리(구분, 한 줄 소개, 상품 기본 정보)
+const hero = (kicker, head, sub) => `<div style="margin:0 0 28px;padding:46px 30px 42px;border-radius:18px;background:${NAVY};text-align:center"><p style="margin:0;font-size:15px;font-weight:700;letter-spacing:.06em;color:#9DB0FF">${esc(kicker)}</p><h2 style="margin:14px 0 0;font-size:30px;line-height:1.42;font-weight:800;color:#FFFFFF;letter-spacing:-.03em">${head}</h2>${sub ? `<p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#C6CEE6">${esc(sub)}</p>` : ''}</div>`;
+const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCase()] : p.kind === 'extra' ? '추가 옵션' : p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.service === 'survey' ? '설문조사' : '통계분석');
 for (const p of products) {
   let body = '';
   if (p.kind === 'extra') {
-    body = `<p style="margin:0;font-size:15px;font-weight:700;color:${GOLD};letter-spacing:.06em">논문AI 추가 분량</p><h2 style="margin:10px 0 0;font-size:30px;line-height:1.35;font-weight:800;color:${NAVY};letter-spacing:-.03em">기준 분량을 넘는 만큼만, 단위로 정확하게</h2>`
+    body = hero(KICK(p), '기준 분량을 넘는 만큼만,<br>단위로 정확하게', `추가 분량 1단위 ${won(p.price)}`) + TRUST
       + sec('이렇게 담아 주세요', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">논문AI 주문서의 금액 안내에 <b>추가 분량 N단위</b>가 있으면, 이 상품을 <b>N개</b> 담아 본 상품과 함께 한 번에 결제해 주세요. 1단위는 <b>${won(p.price)}</b>입니다.</p>`)
       + sec('이 단가를 쓰는 상품', checks(p.includes));
   } else if (p.kind === 'addon') {
-    body = `<p style="margin:0;font-size:15px;font-weight:700;color:${GOLD};letter-spacing:.06em">논문AI 추가 옵션</p><h2 style="margin:10px 0 0;font-size:30px;line-height:1.35;font-weight:800;color:${NAVY};letter-spacing:-.03em">${esc(p.lines.join(' '))}</h2>`
+    body = hero(KICK(p), esc(p.lines.join(' ')), `${p.name.replace('[논문AI] ', '')} · ${won(p.price)}`) + TRUST
       + sec('무엇이 달라지나요', checks(p.includes))
       + sec('함께 결제하는 법', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">${esc(p.applies)}에 더할 수 있습니다. 논문AI 주문서에서 이 옵션을 고르면 결제 화면에 본 상품과 함께 안내되니, 장바구니에 함께 담아 한 번에 결제해 주세요.</p>`);
   } else {
     const pt = pitch(p);
     const inc = p.includes.filter((x) => !/수정 \d+회/.test(x)).map((x) => x.replace(/\s*\(.*?\)\s*/g, ' ').trim());
-    body = `<p style="margin:0;font-size:15px;font-weight:700;color:${GOLD};letter-spacing:.02em">${esc(p.family)}</p><h2 style="margin:10px 0 0;font-size:30px;line-height:1.35;font-weight:800;color:${NAVY};letter-spacing:-.03em">${esc(pt.head)}</h2><p style="margin:14px 0 0;font-size:17px;line-height:1.75;color:${INK2}">${esc(p.name.replace('[논문AI] ', ''))}</p>`
+    body = hero(KICK(p), esc(pt.head).replace(/, /, ',<br>'), `${p.name.replace('[논문AI] ', '')} · ${p.meta}`) + TRUST
       + (pt.who.length ? sec('이런 분께 맞습니다', checks(pt.who)) : '')
       + sec('받는 결과물', checks(inc)) + (SAMPLE[p.service] ? img(SAMPLE[p.service][0], SAMPLE[p.service][1]) : '')
       + (p.code === 'T-SIM' ? `<p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">교육과 연습을 위한 가상 데이터로 진행합니다.</p>` : '')
-      + sec('함께 고르면 좋은 옵션', spec(optionRows(p)));
+      + sec('함께 고르면 좋은 옵션', spec(optionRows(p)))
+      + sec('진행 순서', cards(STEPS))
+      + sec('논문AI가 다른 점', whyHtml);
   }
-  body += sec('진행 순서', cards(STEPS) + img('process.png', '논문AI 진행 순서'))
-    + (p.kind === 'main' ? sec('논문AI가 다른 점', whyHtml) : '') + FOOT;
-  p.html = `<div style="max-width:780px;margin:0 auto;padding:8px 4px 24px;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:16px;color:${INK2}">${TRUST}${body}</div>`;
+  p.html = `<div style="max-width:780px;margin:0 auto;padding:8px 4px 24px;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:16px;line-height:1.7;color:${INK2};word-break:keep-all">${body}${FOOT}</div>`;
 }
 
 // 이미지 그리기: docs/ 글꼴을 잠깐 서비스한다
@@ -170,89 +173,77 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(file).pipe(res);
 }).listen(0);
 const base = `http://localhost:${server.address().port}`;
-const MARK = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="44" height="44"><rect x="5" y="3.5" width="19" height="25" rx="2.5" fill="none" stroke="#0F1B3D" stroke-width="2.2"/><path d="M9.5 10h10M9.5 14.5h10M9.5 19h6" stroke="#0F1B3D" stroke-width="2.2" stroke-linecap="round"/><circle cx="24.5" cy="23.5" r="5.5" fill="#2346E8"/><path d="M22.2 23.6l1.6 1.6 3-3.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const CHECK = '<svg viewBox="0 0 20 20" width="26" height="26"><circle cx="10" cy="10" r="10" fill="#EEF2FF"/><path d="M5.6 10.3l2.9 2.9 5.9-6.3" fill="none" stroke="#2346E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-// 상품 이미지: 논문AI 사이트와 같은 디자인(밝은 바탕, 로고, 파란 포인트, 연구 설계 시트). 글자는 최소로
-const ACCENT = { paper: '#2346E8', survey: '#0E8A5F', statistics: '#4B3BD1', addon: '#0F1B3D' };
-const TASK_TITLE = { full: ['전체 구성·', '초안 작성'], edit: ['부분 첨삭·', '수정'], proposal: ['연구계획서', '작성'] };
+const mark = (doc, dot, size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${size}" height="${size}"><rect x="5" y="3.5" width="19" height="25" rx="2.5" fill="none" stroke="${doc}" stroke-width="2.2"/><path d="M9.5 10h10M9.5 14.5h10M9.5 19h6" stroke="${doc}" stroke-width="2.2" stroke-linecap="round"/><circle cx="24.5" cy="23.5" r="5.5" fill="${dot}"/><path d="M22.2 23.6l1.6 1.6 3-3.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const MARK = mark('#0F1B3D', '#2346E8', 44);
+// 상품 이미지: 논문 표지처럼 위에 구분(학위·서비스), 가운데 제목, 아래 논문AI. 남색 바탕에 글자만 쓰고 그림은 넣지 않는다
+const TASK_TITLE = { full: ['전체 구성·', '초고 완성'], edit: ['부분 첨삭·', '수정'], proposal: ['연구계획서', '작성'] };
 const FB_TITLE = { journal: ['심사 의견', '반영'], report: ['검토 의견', '반영'], youth: ['선생님 피드백', '반영'], personal: ['피드백', '반영'] };
 const TAG = {
-  full: '주제 한 줄에서 장별 초안까지', edit: '문장과 논리를 제출 수준으로', proposal: '목적부터 분석 계획까지 탄탄하게',
+  full: '주제 한 줄에서 장별 초고까지', edit: '문장과 논리를 제출 수준으로', proposal: '목적부터 분석 계획까지 탄탄하게',
   'S-FULL': '설계부터 해석까지 한 번에', 'S-NEW': '검증된 척도로 새로 구성', 'S-EDIT': '문항과 척도를 정교하게', 'S-FB': '의견을 항목별로 정확하게', 'S-ANALYZE': '신뢰도부터 가설 검증까지',
-  'T-BASIC': 'APA 통계표로 깔끔하게', 'T-INTERP': '통계표에 쉬운 해석까지', 'T-CHAPTER': '분석부터 결과장 초안까지', 'T-FB': '의견대로 다시 분석', 'T-SIM': '분석 흐름을 미리 익히는 실습', 'T-ADV': '매개·조절효과까지 깊이 있게',
-  'A-PRIORITY': '작업 순서를 앞당겨 더 빠르게', 'A-FORMAT': '제출 양식까지 빈틈없이', 'A-REVISION': '한 번 더 다듬는 수정',
+  'T-BASIC': 'APA 통계표로 깔끔하게', 'T-INTERP': '통계표에 쉬운 해석까지', 'T-CHAPTER': '분석부터 결과장 초고까지', 'T-FB': '의견대로 다시 분석', 'T-SIM': '분석 흐름을 미리 익히는 실습', 'T-ADV': '매개·조절효과까지 깊이 있게',
+  'A-PRIORITY': '작업 순서를 앞당겨 더 빠르게', 'A-FORMAT': '제출 양식까지 빈틈없이', 'A-REVISION': '결과물을 한 번 더 다듬습니다',
 };
 const STITLE = { 'S-FULL': ['처음부터', '끝까지'], 'S-NEW': ['설문지', '새로 만들기'], 'S-EDIT': ['기존 설문지', '수정'], 'S-FB': ['설문지', '피드백 반영'], 'S-ANALYZE': ['모은 응답', '분석·해석'],
-  'T-BASIC': ['기초 통계와', '통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '정리'], 'T-FB': ['기존 분석', '수정'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절'],
+  'T-BASIC': ['기초 통계와', '통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '작성'], 'T-FB': ['기존 분석', '수정'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절'],
   'A-PRIORITY': ['우선 처리'], 'A-FORMAT': ['양식', '상세 적용'], 'A-REVISION': ['추가 수정'] };
+const TEACHER_TAG = { journal: '심사', report: '검토', youth: '선생님', personal: '받은' };
 function cover(p) {
   if (p.service === 'paper') {
     const [, t, k] = p.code.split('-'); const type = t.toLowerCase(), task = { FULL: 'full', EDIT: 'edit', FB: 'feedback', PROP: 'proposal' }[k];
     const title = task === 'feedback' ? (FB_TITLE[type] || ['교수님 피드백', '반영']) : TASK_TITLE[task];
-    const tag = task === 'feedback' ? `${type === 'journal' ? '심사' : type === 'report' ? '검토' : type === 'youth' ? '선생님' : type === 'personal' ? '받은' : '교수님'} 의견을 항목별로 정확하게` : TAG[task];
-    return { kicker: TYPE[type], title, tag, art: 'paper' };
+    const tag = task === 'feedback' ? `${TEACHER_TAG[type] || '교수님'} 의견을 항목별로 정확하게` : TAG[task];
+    return { kicker: TYPE[type], title, tag };
   }
-  if (p.kind === 'extra') return { kicker: '추가 분량', title: ['추가 분량'], tag: `1단위 ${won(p.price)}`, art: 'extra' };
-  return { kicker: p.kind === 'addon' ? '추가 옵션' : p.service === 'survey' ? '설문조사' : '통계분석', title: STITLE[p.code], tag: TAG[p.code], art: p.kind === 'addon' ? 'addon' : p.service };
+  if (p.kind === 'extra') return { kicker: '추가 옵션', title: ['추가 분량'], tag: `1단위 ${won(p.price)}` };
+  return { kicker: p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.service === 'survey' ? '설문조사' : '통계분석', title: STITLE[p.code], tag: TAG[p.code] };
 }
-const ART = {
-  paper: (a) => `<svg viewBox="0 0 390 170" width="372" height="162"><defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#41506B"/></marker></defs><rect x="0" y="95" width="104" height="46" rx="23" fill="#EEF2FF" stroke="${a}" stroke-width="2"/><rect x="143" y="10" width="104" height="46" rx="23" fill="#E8F7F1" stroke="#0E9F6E" stroke-width="2"/><rect x="286" y="95" width="104" height="46" rx="23" fill="#F1F4F9" stroke="#0F1B3D" stroke-width="2"/><path d="M60 95L170 58" stroke="#41506B" stroke-width="2.2" marker-end="url(#ar)"/><path d="M222 58L330 95" stroke="#41506B" stroke-width="2.2" marker-end="url(#ar)"/><path d="M106 118H282" stroke="#41506B" stroke-width="2.2" stroke-dasharray="6 6" marker-end="url(#ar)"/></svg>`,
-  survey: (a) => `<svg viewBox="0 0 372 170" width="372" height="170">${[0, 1, 2, 3].map((r) => `<rect x="0" y="${r * 42 + 10}" width="${[150, 128, 160, 118][r]}" height="10" rx="5" fill="#E3E8F1"/>${[0, 1, 2, 3, 4].map((c) => `<circle cx="${200 + c * 36}" cy="${r * 42 + 15}" r="11" fill="${c === [3, 4, 2, 3][r] ? a : '#fff'}" stroke="${c === [3, 4, 2, 3][r] ? a : '#C9D3E3'}" stroke-width="2"/>`).join('')}`).join('')}</svg>`,
-  statistics: (a) => `<svg viewBox="0 0 372 170" width="372" height="170"><path d="M0 2H372M0 34H372M0 168H372" stroke="#0F1B3D" stroke-width="2.4"/>${[0, 1, 2].map((r) => `<rect x="6" y="${r * 40 + 52}" width="${[96, 120, 84][r]}" height="10" rx="5" fill="#E3E8F1"/><rect x="170" y="${r * 40 + 52}" width="46" height="10" rx="5" fill="#E3E8F1"/><rect x="246" y="${r * 40 + 52}" width="40" height="10" rx="5" fill="${r === 1 ? a : '#E3E8F1'}"/><rect x="316" y="${r * 40 + 52}" width="44" height="10" rx="5" fill="#E3E8F1"/>`).join('')}<rect x="6" y="14" width="64" height="10" rx="5" fill="#C9D3E3"/><rect x="170" y="14" width="30" height="10" rx="5" fill="#C9D3E3"/><rect x="246" y="14" width="22" height="10" rx="5" fill="#C9D3E3"/><rect x="316" y="14" width="22" height="10" rx="5" fill="#C9D3E3"/></svg>`,
-  addon: (a, code) => {
-    const icon = { 'A-PRIORITY': '<circle cx="60" cy="60" r="34" fill="none" stroke="#2346E8" stroke-width="6"/><path d="M60 40v22l14 9" fill="none" stroke="#2346E8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>', 'A-FORMAT': '<rect x="30" y="26" width="60" height="70" rx="6" fill="none" stroke="#2346E8" stroke-width="6"/><path d="M42 46h36M42 60h36M42 74h22" stroke="#2346E8" stroke-width="6" stroke-linecap="round"/>', 'A-REVISION': '<path d="M36 84l8-22 34-34 14 14-34 34z" fill="none" stroke="#2346E8" stroke-width="6" stroke-linejoin="round"/><path d="M36 92h50" stroke="#2346E8" stroke-width="6" stroke-linecap="round"/>', 'T-ADV': '<rect x="22" y="70" width="18" height="24" rx="3" fill="#2346E8"/><rect x="51" y="50" width="18" height="44" rx="3" fill="#2346E8" opacity=".75"/><rect x="80" y="30" width="18" height="64" rx="3" fill="#2346E8" opacity=".5"/>' }[code] || '';
-    return `<svg viewBox="0 0 120 120" width="210" height="210"><circle cx="60" cy="60" r="58" fill="#EEF2FF"/>${icon}</svg>`;
-  },
-  extra: () => `<svg viewBox="0 0 120 120" width="210" height="210"><circle cx="60" cy="60" r="58" fill="#EEF2FF"/><rect x="40" y="24" width="46" height="60" rx="5" fill="#fff" stroke="#C9D3E3" stroke-width="4"/><rect x="32" y="34" width="46" height="60" rx="5" fill="#fff" stroke="#2346E8" stroke-width="5"/><path d="M55 52v24M43 64h24" stroke="#2346E8" stroke-width="5" stroke-linecap="round"/></svg>`,
-};
 const imgHtml = (p) => {
   const c = cover(p);
-  const a = ACCENT[p.kind === 'main' ? p.service : 'addon'];
-  const longest = Math.max(...c.title.map((l) => l.length));
-  const fs = longest > 7 ? 84 : 96;
-  const isSheet = c.art === 'paper' || c.art === 'survey' || c.art === 'statistics';
-  const art = isSheet ? `<div class="sheet">${[50, 78].map((y, i) => `<span class="ln" style="top:${y}px;width:${[230, 290][i]}px"></span>`).join('')}<div class="art">${ART[c.art](a)}</div>${[380, 408].map((y, i) => `<span class="ln" style="top:${y}px;width:${[280, 230][i]}px"></span>`).join('')}</div>` : `<div class="badge">${ART[c.art](a, p.code)}</div>`;
+  const longest = Math.max(...c.title.map((l) => l.replace(/\s/g, '').length));
+  const size = longest >= 6 ? 112 : longest === 5 ? 124 : 132;
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/site.css"><style>
-html,body{margin:0;width:1000px;height:1000px;overflow:hidden;background:#F5F7FB}
-.c{position:relative;width:1000px;height:1000px;box-sizing:border-box;padding:78px 80px;font-family:var(--sans);color:#0F1B3D;overflow:hidden;background:radial-gradient(90% 70% at 0% 0%,#FFFFFF 0,#F5F7FB 55%,#EDF1F8 100%)}
-.top{position:relative;z-index:2;display:flex;align-items:center;gap:14px;font-weight:800;font-size:40px;letter-spacing:-.02em}.top b{color:#2346E8}
-.k{position:relative;z-index:2;margin:118px 0 0;font-size:32px;font-weight:700;color:${a};letter-spacing:-.01em}
-h1{position:relative;z-index:2;font-family:var(--serif);font-weight:700;font-size:${fs}px;line-height:1.16;letter-spacing:-.045em;margin:20px 0 0;word-break:keep-all}
+html,body{margin:0;width:1000px;height:1000px;overflow:hidden;background:#0F1B3D}
+.c{position:relative;width:1000px;height:1000px;box-sizing:border-box;font-family:var(--sans);color:#FFFFFF;overflow:hidden;background:radial-gradient(90% 75% at 50% 0%,#1E3170 0,#0F1B3D 66%);text-align:center}
+.frame{position:absolute;inset:36px;border:1.5px solid rgba(157,176,255,.26);border-radius:4px}
+.k{position:absolute;left:0;right:0;top:128px;margin:0;font-size:40px;font-weight:700;letter-spacing:.06em;color:#9DB0FF}
+.mid{position:absolute;left:80px;right:80px;top:210px;bottom:250px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+h1{margin:0;font-family:var(--serif);font-weight:700;font-size:${size}px;line-height:1.17;letter-spacing:-.05em;word-break:keep-all}
 h1 span{display:block}
-.tag{position:relative;z-index:2;margin:30px 0 0;font-size:31px;font-weight:600;color:#41506B;letter-spacing:-.02em;max-width:560px;word-break:keep-all}
-.sheet{position:absolute;right:-50px;bottom:-200px;width:540px;height:640px;background:#fff;border:1px solid #DDE3EE;border-radius:12px;box-shadow:0 50px 90px -40px rgba(15,27,61,.42),0 2px 6px rgba(15,27,61,.05);transform:rotate(-5deg);z-index:1}
-.sheet .ln{position:absolute;left:56px;height:12px;border-radius:6px;background:#E7EBF3}
-.sheet .art{position:absolute;left:46px;top:150px;transform:scale(1.18);transform-origin:0 0}
-.badge{position:absolute;right:70px;bottom:74px;z-index:1;width:330px;height:330px;background:#fff;border:1px solid #DDE3EE;border-radius:28px;box-shadow:0 50px 90px -40px rgba(15,27,61,.42);transform:rotate(-5deg);display:flex;align-items:center;justify-content:center}
-.url{position:absolute;left:80px;bottom:70px;z-index:2;font-size:22px;font-weight:600;color:#7A8499;letter-spacing:.01em}
-</style></head><body><div class="c">
-<div class="top">${MARK.replace('width="44" height="44"', 'width="52" height="52"')}<span>논문<b>AI</b></span></div>
+.rule{width:56px;height:4px;border-radius:2px;background:#9DB0FF;margin:50px 0 0}
+.g{margin:32px 0 0;font-size:35px;font-weight:500;letter-spacing:-.02em;color:#C6CEE6;word-break:keep-all}
+.brand{position:absolute;left:0;right:0;bottom:116px;display:flex;align-items:center;justify-content:center;gap:12px;font-weight:800;font-size:40px;letter-spacing:-.02em}
+.brand b{color:#9DB0FF}
+.url{position:absolute;left:0;right:0;bottom:76px;font-size:22px;font-weight:600;letter-spacing:.05em;color:#8592BA}
+</style></head><body><div class="c"><div class="frame"></div>
 <p class="k">${esc(c.kicker)}</p>
-<h1>${c.title.map((l) => `<span>${esc(l)}</span>`).join('')}</h1>
-<p class="tag">${esc(c.tag)}</p>
-${art}
+<div class="mid"><h1>${c.title.map((l) => `<span>${esc(l)}</span>`).join('')}</h1><div class="rule"></div><p class="g">${esc(c.tag)}</p></div>
+<div class="brand">${mark('#FFFFFF', '#4D6BFF', 50)}<span>논문<b>AI</b></span></div>
 <span class="url">nonmunai.kr</span>
 </div></body></html>`;
 };
 
+// 디지털 상품 파일(결제 뒤 내려받는 안내 이미지): 표지와 같은 남색 머리, 본문은 밝게
 const guideHtml = () => `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/site.css"><style>
 html,body{margin:0;width:1000px;height:1400px;overflow:hidden;background:#F5F7FB}
-.c{box-sizing:border-box;width:1000px;height:1400px;padding:80px 84px;font-family:var(--sans);color:#0F1B3D;display:flex;flex-direction:column}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:34px}.brand b{color:#2346E8}
-h1{font-family:var(--serif);font-size:62px;line-height:1.25;letter-spacing:-.04em;margin:56px 0 18px}
-.lead{font-size:28px;line-height:1.6;color:#2B3654;margin:0 0 44px;word-break:keep-all}
-ol{list-style:none;margin:0;padding:0;display:grid;gap:22px;counter-reset:s}
-li{counter-increment:s;background:#fff;border:1px solid #DDE3EE;border-radius:16px;padding:28px 32px 28px 104px;position:relative;font-size:26px;line-height:1.55;color:#2B3654;word-break:keep-all}
-li:before{content:counter(s);position:absolute;left:32px;top:26px;width:48px;height:48px;border-radius:50%;background:#2346E8;color:#fff;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center}
-li b{display:block;color:#0F1B3D;font-size:29px;margin-bottom:6px}
-.foot{margin-top:auto;font-size:22px;line-height:1.6;color:#5B6478}
+.c{box-sizing:border-box;width:1000px;height:1400px;font-family:var(--sans);color:#0F1B3D;display:flex;flex-direction:column}
+.hd{background:radial-gradient(90% 120% at 50% 0%,#1E3170 0,#0F1B3D 70%);color:#fff;padding:76px 84px 70px;text-align:center}
+.brand{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:800;font-size:36px;letter-spacing:-.02em}.brand b{color:#9DB0FF}
+h1{font-family:var(--serif);font-weight:700;font-size:66px;line-height:1.25;letter-spacing:-.045em;margin:52px 0 0}
+.lead{font-size:28px;line-height:1.6;color:#C6CEE6;margin:22px auto 0;max-width:720px;word-break:keep-all}
+.bd{flex:1;display:flex;flex-direction:column;padding:56px 84px 64px}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:20px;counter-reset:s}
+li{counter-increment:s;background:#fff;border:1px solid #DDE3EE;border-radius:16px;padding:30px 34px 30px 108px;position:relative;font-size:26px;line-height:1.6;color:#2B3654;word-break:keep-all}
+li:before{content:counter(s);position:absolute;left:34px;top:30px;width:48px;height:48px;border-radius:50%;background:#0F1B3D;color:#fff;font-weight:800;font-size:25px;display:flex;align-items:center;justify-content:center}
+li b{display:block;color:#0F1B3D;font-size:30px;margin-bottom:8px;letter-spacing:-.02em}
+.foot{margin-top:auto;padding-top:28px;border-top:1px solid #DDE3EE;font-size:22px;line-height:1.7;color:#5B6478;text-align:center}
 .foot b{color:#0F1B3D}
-</style></head><body><div class="c"><div class="brand">${MARK}<span>논문<b>AI</b></span></div>
-<h1>결제해 주셔서<br>감사합니다</h1><p class="lead">논문AI 주문은 주문 페이지에서 진행 상황을 확인하고 결과물을 받습니다. 아래 순서대로 이어 가 주세요.</p>
-<ol><li><b>주문 화면으로 돌아가기</b>nonmunai.kr 결제 화면에서 '결제를 마쳤어요'를 눌러 주세요. 담당자가 결제를 확인하면 작업 순서에 배정됩니다.</li>
-<li><b>아직 주문서를 내지 않았다면</b>nonmunai.kr 에서 주문서를 작성해 주세요. 결제한 상품 이름과 결제자 이름을 요청 사항에 적으면 이 결제와 연결해 드립니다.</li>
-<li><b>진행 상황과 결과물</b>단계가 바뀔 때마다 메일로 알려 드리고, 결과물은 주문 페이지에서 내려받습니다. 주문 조회는 nonmunai.kr/orders 에서 주문번호와 조회 비밀번호로 할 수 있습니다.</li></ol>
-<p class="foot"><b>문의</b> contact@skkc.co.kr · 성균관컨설팅 상담 채널<br>운영 성균관컨설팅 · 사업자등록번호 272-32-01885</p></div></body></html>`;
+</style></head><body><div class="c"><div class="hd"><div class="brand">${mark('#FFFFFF', '#4D6BFF', 46)}<span>논문<b>AI</b></span></div>
+<h1>결제해 주셔서 감사합니다</h1><p class="lead">진행 상황과 결과물은 논문AI 주문 페이지에서 확인합니다.</p></div>
+<div class="bd"><ol><li><b>결제 화면으로 돌아가 알려 주세요</b>nonmunai.kr 결제 화면에서 '결제를 마쳤어요'를 누르면 바로 작업 순서에 배정되고, 예상 전달일을 알려 드립니다.</li>
+<li><b>아직 주문서를 내지 않았다면</b>nonmunai.kr에서 주문서를 작성해 주세요. 요청 사항에 결제한 상품 이름과 결제자 이름을 적으면 이 결제와 연결해 드립니다.</li>
+<li><b>진행 상황과 결과물</b>단계가 바뀔 때마다 메일로 알려 드리고, 결과물은 주문 페이지에서 내려받습니다. 주문 조회는 nonmunai.kr/orders에서 주문번호와 조회 비밀번호로 할 수 있습니다.</li></ol>
+<p class="foot"><b>문의</b> contact@skkc.co.kr · 성균관컨설팅 상담 채널<br>논문AI 운영 성균관컨설팅 · 사업자등록번호 272-32-01885</p></div></div></body></html>`;
 
 const browser = await playwright.chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1000, height: 1000 }, deviceScaleFactor: 1 });
@@ -266,7 +257,7 @@ for (const p of products) {
 }
 await page.setViewportSize({ width: 1000, height: 1400 });
 await page.setContent(guideHtml(), { waitUntil: 'networkidle' });
-await loadFonts('결제해 주셔서 감사합니다 논문AI 주문 화면으로 돌아가기 아직 주문서를 내지 않았다면 진행 상황과 결과물 문의 운영 성균관컨설팅');
+await loadFonts('결제해 주셔서 감사합니다 논문AI 결제 화면으로 돌아가 알려 주세요 아직 주문서를 내지 않았다면 진행 상황과 결과물 문의 운영 성균관컨설팅');
 await page.waitForTimeout(150);
 await page.screenshot({ path: path.join(out, '논문AI-주문-안내.png'), type: 'png' });
 await browser.close();

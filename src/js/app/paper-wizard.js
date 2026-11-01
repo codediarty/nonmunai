@@ -13,10 +13,10 @@ import { designReportHtml, designSnapshot } from '../ui/report.js';
 import { $, toast } from '../ui/dom.js';
 
 const TASKS = [
-  { v: 'full', t: '전체 구성·초안 작성 지원', d: '주제·설계부터 장별 초안까지. 기존 자료가 있으면 함께 올려 주세요.' },
+  { v: 'full', t: '전체 구성·초고 완성', d: '주제·설계부터 장별 초고까지. 기존 자료가 있으면 함께 올려 주세요.' },
   { v: 'edit', t: '부분 첨삭·수정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
   { v: 'feedback', t: '교수님 피드백 반영', d: '피드백을 항목별로 반영하고 수정 대조표를 드립니다. 원고와 피드백이 필요합니다.' },
-  { v: 'proposal', t: '연구계획서 작성 지원', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
+  { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
 ];
 const PROPOSAL_TYPES = ['master', 'doctor', 'bachelor'];
 

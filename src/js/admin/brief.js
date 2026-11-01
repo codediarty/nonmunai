@@ -6,10 +6,10 @@ import { classifyFeedback } from '../core/feedback.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { won } from '../core/render.js';
 
-const TASK = { full: '전체 구성·초안 작성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
+const TASK = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문조사 처음부터 끝까지(설계·제작·배포·분석)', new: '설문지 새로 만들기', edit: '기존 설문지 수정', feedback: '설문지 피드백 반영', analyze: '모은 응답 분석·해석' };
 const TARGET = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
-const OUTPUT = { table: '통계표(APA)', interp: '통계표 + 쉬운 해석', chapter: '논문 결과장(4장) 서술 초안', revise: '기존 분석 수정·피드백 반영' };
+const OUTPUT = { table: '통계표(APA)', interp: '통계표 + 쉬운 해석', chapter: '논문 결과장(4장) 서술 초고', revise: '기존 분석 수정·피드백 반영' };
 const SLOT = { manuscript: '기존 원고', materials: '참고 자료', toc: '목차', format: '양식', feedback: '피드백', questionnaire: '설문지', proposal: '연구계획서', data: '데이터', prevResult: '기존 분석 결과', codebook: '변수 설명', other: '기타', result: '결과물' };
 
 const line = (k, v) => (v === undefined || v === null || v === '' ? '' : `- ${k}: ${v}`);

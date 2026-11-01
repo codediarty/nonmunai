@@ -14,7 +14,7 @@ const PURPOSES = [['degree', '학위논문'], ['journal', '학술지 논문'], [
 const OUTPUTS = [
   { v: 'table', t: '통계표만', d: 'APA 형식 통계표와 분석 출력 파일', code: 'T-BASIC' },
   { v: 'interp', t: '통계표 + 쉬운 해석', d: '표마다 결과를 읽는 방법과 해석 문장', code: 'T-INTERP', badge: '추천' },
-  { v: 'chapter', t: '논문 결과장 정리 지원', d: '논문 4장(연구결과)에 넣을 서술 초안까지', code: 'T-CHAPTER' },
+  { v: 'chapter', t: '논문 결과장 작성', d: '논문 4장(연구결과)에 넣을 서술 초고까지', code: 'T-CHAPTER' },
   { v: 'revise', t: '기존 분석 수정·교수님 피드백 반영', d: '데이터, 기존 결과, 교수님 의견이 필요합니다', code: 'T-FB' },
 ];
 

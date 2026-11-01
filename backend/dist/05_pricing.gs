@@ -9,32 +9,32 @@ var DEFAULT_CATALOG = {
   currency: 'KRW',
   items: [
     // 논문: 유형별 4개 작업. unit = 추가 분량 과금 단위
-    { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 전체 구성·초안 작성 지원', price: 399000, baseUnits: 60, unitLabel: '쪽', unitSize: 10, unitPrice: 49000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 초안(기준 60쪽 내외)', 'APA 7판 참고문헌 정리', '수정 1회'] },
+    { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 전체 구성·초고 완성', price: 399000, baseUnits: 60, unitLabel: '쪽', unitSize: 10, unitPrice: 49000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 초고(기준 60쪽 내외)', 'APA 7판 참고문헌 정리', '수정 1회'] },
     { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 부분 첨삭·수정', price: 99000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 2, includes: ['요청 범위 문장·논리 첨삭(기준 30쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
     { code: 'P-MASTER-FB', service: 'paper', type: 'master', task: 'feedback', name: '석사학위논문 교수님 피드백 반영', price: 129000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 29000, days: 2, includes: ['피드백 항목별 수정(기준 10개 항목)', '수정 대조표(피드백·수정 내용·위치)', '수정 반영본'] },
-    { code: 'P-MASTER-PROP', service: 'paper', type: 'master', task: 'proposal', name: '석사학위논문 연구계획서 작성 지원', price: 149000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 29000, days: 3, includes: ['연구 주제·제목 확정안', '연구 목적과 필요성', '이론적 배경 요약과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
-    { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 전체 구성·초안 작성 지원', price: 699000, baseUnits: 120, unitLabel: '쪽', unitSize: 10, unitPrice: 59000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 초안(기준 120쪽 내외)', 'APA 7판 참고문헌 정리', '수정 1회'] },
+    { code: 'P-MASTER-PROP', service: 'paper', type: 'master', task: 'proposal', name: '석사학위논문 연구계획서 작성', price: 149000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 29000, days: 3, includes: ['연구 주제·제목 확정안', '연구 목적과 필요성', '이론적 배경 요약과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
+    { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 전체 구성·초고 완성', price: 699000, baseUnits: 120, unitLabel: '쪽', unitSize: 10, unitPrice: 59000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 초고(기준 120쪽 내외)', 'APA 7판 참고문헌 정리', '수정 1회'] },
     { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 부분 첨삭·수정', price: 149000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 3, includes: ['요청 범위 문장·논리 첨삭(기준 40쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
     { code: 'P-DOCTOR-FB', service: 'paper', type: 'doctor', task: 'feedback', name: '박사학위논문 교수님 피드백 반영', price: 199000, baseUnits: 15, unitLabel: '항목', unitSize: 5, unitPrice: 29000, days: 3, includes: ['피드백 항목별 수정(기준 15개 항목)', '수정 대조표', '수정 반영본'] },
-    { code: 'P-DOCTOR-PROP', service: 'paper', type: 'doctor', task: 'proposal', name: '박사학위논문 연구계획서 작성 지원', price: 249000, baseUnits: 25, unitLabel: '쪽', unitSize: 5, unitPrice: 29000, days: 4, includes: ['연구 주제·제목 확정안', '연구 목적과 독창성', '이론적 배경과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
-    { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 전체 구성·초안 작성 지원', price: 249000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 39000, days: 4, includes: ['투고 학술지 형식 기준 원고 초안(기준 20쪽)', '국문·영문 초록', '참고문헌 정리', '수정 1회'] },
+    { code: 'P-DOCTOR-PROP', service: 'paper', type: 'doctor', task: 'proposal', name: '박사학위논문 연구계획서 작성', price: 249000, baseUnits: 25, unitLabel: '쪽', unitSize: 5, unitPrice: 29000, days: 4, includes: ['연구 주제·제목 확정안', '연구 목적과 독창성', '이론적 배경과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
+    { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 전체 구성·초고 완성', price: 249000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 39000, days: 4, includes: ['투고 학술지 형식 기준 원고 초고(기준 20쪽)', '국문·영문 초록', '참고문헌 정리', '수정 1회'] },
     { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 부분 첨삭·수정', price: 79000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '투고 규정 형식 점검', '수정 내역 표시본'] },
-    { code: 'P-JOURNAL-FB', service: 'paper', type: 'journal', task: 'feedback', name: '학술지 심사 의견 반영(수정 보완)', price: 99000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 29000, days: 2, includes: ['심사 의견별 수정', '심사 의견 답변서(Response letter) 초안', '수정 반영본'] },
-    { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사·졸업논문 전체 구성·초안 작성 지원', price: 199000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 3, includes: ['주제·목차 구성', '장별 초안(기준 30쪽)', '참고문헌 정리', '수정 1회'] },
+    { code: 'P-JOURNAL-FB', service: 'paper', type: 'journal', task: 'feedback', name: '학술지 심사 의견 반영(수정 보완)', price: 99000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 29000, days: 2, includes: ['심사 의견별 수정', '심사 의견 답변서(Response letter) 작성', '수정 반영본'] },
+    { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사·졸업논문 전체 구성·초고 완성', price: 199000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 3, includes: ['주제·목차 구성', '장별 초고(기준 30쪽)', '참고문헌 정리', '수정 1회'] },
     { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 부분 첨삭·수정', price: 59000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
     { code: 'P-BACHELOR-FB', service: 'paper', type: 'bachelor', task: 'feedback', name: '학사·졸업논문 교수님 피드백 반영', price: 79000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 19000, days: 2, includes: ['피드백 항목별 수정', '수정 대조표', '수정 반영본'] },
-    { code: 'P-BACHELOR-PROP', service: 'paper', type: 'bachelor', task: 'proposal', name: '학사·졸업논문 연구계획서 작성 지원', price: 79000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 19000, days: 2, includes: ['주제·제목 확정안', '연구 목적과 방법', '목차안', '참고문헌'] },
-    { code: 'P-REPORT-FULL', service: 'paper', type: 'report', task: 'full', name: '일반 연구보고서 전체 구성·초안 작성 지원', price: 149000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 3, includes: ['보고서 구성안', '본문 초안(기준 20쪽)', '참고자료 정리', '수정 1회'] },
+    { code: 'P-BACHELOR-PROP', service: 'paper', type: 'bachelor', task: 'proposal', name: '학사·졸업논문 연구계획서 작성', price: 79000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 19000, days: 2, includes: ['주제·제목 확정안', '연구 목적과 방법', '목차안', '참고문헌'] },
+    { code: 'P-REPORT-FULL', service: 'paper', type: 'report', task: 'full', name: '일반 연구보고서 전체 구성·초고 완성', price: 149000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 3, includes: ['보고서 구성안', '본문 초고(기준 20쪽)', '참고자료 정리', '수정 1회'] },
     { code: 'P-REPORT-EDIT', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 부분 첨삭·수정', price: 49000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
     { code: 'P-REPORT-FB', service: 'paper', type: 'report', task: 'feedback', name: '일반 연구보고서 검토 의견 반영', price: 69000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 19000, days: 2, includes: ['의견 항목별 수정', '수정 대조표'] },
-    { code: 'P-YOUTH-FULL', service: 'paper', type: 'youth', task: 'full', name: '청소년 탐구논문 구성·초안 작성 지원', price: 79000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 2, includes: ['탐구 주제·질문 정리', '탐구 보고서 초안(기준 10쪽)', '참고자료 정리', '수정 1회'] },
+    { code: 'P-YOUTH-FULL', service: 'paper', type: 'youth', task: 'full', name: '청소년 탐구논문 구성·초고 완성', price: 79000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 2, includes: ['탐구 주제·질문 정리', '탐구 보고서 초고(기준 10쪽)', '참고자료 정리', '수정 1회'] },
     { code: 'P-YOUTH-EDIT', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 부분 첨삭·수정', price: 29000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 1, includes: ['원고 첨삭(기준 10쪽)', '수정 내역 표시본'] },
     { code: 'P-YOUTH-FB', service: 'paper', type: 'youth', task: 'feedback', name: '청소년 탐구논문 선생님 피드백 반영', price: 39000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 1, includes: ['피드백 항목별 수정', '수정 반영본'] },
-    { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초안 작성 지원', price: 99000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 질문 정리', '연구 원고 초안(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
+    { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초고 완성', price: 99000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 질문 정리', '연구 원고 초고(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
     { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 부분 첨삭·수정', price: 39000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 49000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 2, includes: ['의견 항목별 수정', '수정 반영본'] },
     // 설문조사
-    { code: 'S-FULL', service: 'survey', task: 'full', name: '설문조사 처음부터 끝까지', price: 299000, days: 4, includes: ['연구 목적에 맞는 설문지 설계', '온라인 설문(배포용 링크) 제작', '응답 데이터 정리·익명화', '통계표와 쉬운 해석', '논문 결과장 정리 지원'], excludes: ['응답자 모집·사례비(모집 의뢰 시 별도 견적)'] },
+    { code: 'S-FULL', service: 'survey', task: 'full', name: '설문조사 처음부터 끝까지', price: 299000, days: 4, includes: ['연구 목적에 맞는 설문지 설계', '온라인 설문(배포용 링크) 제작', '응답 데이터 정리·익명화', '통계표와 쉬운 해석', '논문 결과장 정리'], excludes: ['응답자 모집·사례비(모집 의뢰 시 별도 견적)'] },
     { code: 'S-NEW', service: 'survey', task: 'new', name: '설문지 새로 만들기', price: 79000, days: 2, includes: ['연구 변인별 척도 선정과 문항 구성', '인구통계 문항 구성', '설문지 파일(Word)', '배포용 온라인 설문 링크'] },
     { code: 'S-EDIT', service: 'survey', task: 'edit', name: '기존 설문지 수정', price: 59000, days: 1, includes: ['문항 구성·표현 점검과 수정', '척도 구성 점검', '수정본과 수정 내역'] },
     { code: 'S-FB', service: 'survey', task: 'feedback', name: '설문지 교수님 피드백 반영', price: 59000, days: 1, includes: ['피드백 항목별 수정', '수정 대조표', '수정본'] },
@@ -43,7 +43,7 @@ var DEFAULT_CATALOG = {
     // 통계분석
     { code: 'T-BASIC', service: 'statistics', task: 'table', name: '통계분석: 기초 통계·표', price: 99000, days: 2, includes: ['데이터 점검·정리', '요청 분석 실행', 'APA 형식 통계표'] },
     { code: 'T-INTERP', service: 'statistics', task: 'interp', name: '통계분석: 통계표+쉬운 해석', price: 149000, days: 3, includes: ['데이터 점검·정리', '분석 방법 추천과 실행', 'APA 형식 통계표', '결과를 읽는 쉬운 해석'] },
-    { code: 'T-CHAPTER', service: 'statistics', task: 'chapter', name: '통계분석: 논문 결과장 정리 지원', price: 249000, days: 4, includes: ['분석 실행과 통계표', '논문 결과장(4장) 서술 초안', '표·그림 번호 정리'] },
+    { code: 'T-CHAPTER', service: 'statistics', task: 'chapter', name: '통계분석: 논문 결과장 작성', price: 249000, days: 4, includes: ['분석 실행과 통계표', '논문 결과장(4장) 서술 초고', '표·그림 번호 정리'] },
     { code: 'T-FB', service: 'statistics', task: 'revise', name: '기존 분석 수정·교수님 피드백 반영', price: 79000, days: 2, includes: ['피드백 항목별 재분석·수정', '수정된 통계표', '수정 대조표'] },
     { code: 'T-SIM', service: 'statistics', task: 'simulation', name: '학습용 시뮬레이션 데이터 분석', price: 49000, days: 2, includes: ['교육용 가상 데이터 생성', '분석 절차 실습 결과와 해설'], excludes: ['실제 연구 결과로 사용 불가(가상 데이터 표시)'] },
     { code: 'T-ADV', service: 'statistics', task: 'advanced', name: '심화 분석 가산(매개·조절)', price: 39000, days: 1, addon: true, includes: ['PROCESS Macro 매개·조절효과 분석'] },
@@ -59,7 +59,7 @@ var DEFAULT_CATALOG = {
   },
 };
 
-var TASK_LABELS = { full: '전체 구성·초안 작성 지원', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성 지원' };
+var TASK_LABELS = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 
 function findItem(catalog, code) {
   var items = (catalog && catalog.items) || [];

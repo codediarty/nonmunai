@@ -92,6 +92,25 @@ function setup() {
   } finally { lock.releaseLock(); }
 }
 
+/* 편집기에서 직접 실행: 가격표의 상품명·포함·제외 문구만 기본 가격표에 맞춘다(가격, 결제 링크, 사용 여부는 그대로 둠) */
+function syncCatalogText() {
+  var cur = catalogFromSheet_();
+  if (!cur) { writeCatalog_(DEFAULT_CATALOG); log_('catalog', 'created from default'); return { created: true }; }
+  var def = {};
+  DEFAULT_CATALOG.items.forEach(function (it) { def[it.code] = it; });
+  var changed = [];
+  cur.items.forEach(function (it) {
+    var d = def[it.code];
+    if (!d) return;
+    var inc = (d.includes || []).slice(), exc = (d.excludes || []).slice();
+    if (it.name !== d.name || it.includes.join('\n') !== inc.join('\n') || it.excludes.join('\n') !== exc.join('\n')) changed.push(it.code);
+    it.name = d.name; it.includes = inc; it.excludes = exc;
+  });
+  if (changed.length) writeCatalog_(cur);
+  log_('catalog', 'text synced ' + changed.length + (changed.length ? ': ' + changed.join(',') : ''));
+  return { changed: changed };
+}
+
 function installTriggers_() {
   var handlers = ['dailyDigest', 'hourlyJob'];
   ScriptApp.getProjectTriggers().forEach(function (t) { if (handlers.indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
