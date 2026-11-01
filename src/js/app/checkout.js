@@ -124,7 +124,7 @@ function render(root, o, cfg, token) {
     const link = skkcLink(o, s, cfg.catalog || { items: [] });
     const blocks = [];
     if (methods.includes('toss')) blocks.push(`<div class="pay-m is-main"><h3>카드·간편결제</h3><div id="tossMethods"></div><div id="tossAgree"></div><button class="btn btn-primary btn-lg" type="button" id="tossPay">${won(o.amountDue)} 결제하기</button></div>`);
-    if (methods.includes('skkc')) blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>성균관컨설팅 안전결제</h3><p>운영사 성균관컨설팅의 결제 페이지에서 카드, 간편결제, 계좌이체로 결제합니다. 결제 내역에는 '성균관컨설팅'으로 표시됩니다.</p>
+    if (methods.includes('skkc')) blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>안전결제</h3><p>논문AI는 <b>성균관컨설팅</b>이 운영하는 논문 전문 서비스입니다. 결제는 운영사 결제 페이지(skkc.co.kr)에서 카드, 간편결제, 계좌이체로 안전하게 진행되고, 영수증과 카드 명세서에도 성균관컨설팅으로 표시됩니다.</p><ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
 ${link.cart && link.cart.length > 1 ? cartHtml(link.cart, o)
     : link.exact ? `<p class="small">결제 페이지에 이 주문 금액(${won(o.amountDue)})의 상품이 열립니다. 요청사항에 주문번호를 적고, 주문자 이름은 신청서와 같게 적어 주세요.</p>`

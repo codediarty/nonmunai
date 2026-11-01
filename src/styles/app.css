@@ -370,3 +370,6 @@
 .cart-list li a { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .cart-q { color: var(--muted, #5B6478); font-size: 13px; }
 .cart-total { display: flex; justify-content: space-between; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line, #DDE3EE); font-size: 14px; }
+
+.trust-chips { list-style: none; margin: 10px 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.trust-chips li { font-size: 12px; font-weight: 700; color: var(--blue, #2346E8); background: var(--blue-soft, #EEF2FF); border-radius: 999px; padding: 5px 10px; }

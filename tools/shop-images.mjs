@@ -28,8 +28,8 @@ const base = `http://localhost:${server.address().port}`;
 const head = (w, extra = '') => `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/app.css"><style>
 html,body{margin:0;width:${w}px;background:#E9ECF2}
 .scene{position:relative;box-sizing:border-box;padding:56px 48px;font-family:var(--sans);color:#0F1B3D;background:radial-gradient(120% 80% at 20% 0,#F5F7FB 0,#E6EAF1 70%)}
-.tag{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#B8924A;margin:0 0 12px}
-.tag i{width:8px;height:8px;border-radius:50%;background:#B8924A}
+.tag{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:#2346E8;margin:0 0 12px}
+.tag i{width:8px;height:8px;border-radius:50%;background:#2346E8}
 .ttl{font-family:var(--serif);font-size:34px;font-weight:800;letter-spacing:-.035em;line-height:1.3;margin:0 0 30px;word-break:keep-all}
 .sheet{background:#fff;border:1px solid #DDE3EE;border-radius:8px;box-shadow:0 26px 50px -30px rgba(15,27,61,.45)}
 .note{margin:22px 0 0;font-size:14px;color:#6B7487}
