@@ -1,7 +1,7 @@
 // 설문조사 의뢰 신청서
 import { createWizard, choice, textField, textArea, uploader, note, hasSlot, submitOrder, priceLinesHtml, ICON } from './wizard.js';
 import { contactStep, reviewSummary, etaHtml, sideShell, deadlineMin, quickChecklist } from './common-steps.js';
-import { loadConfig } from './api.js';
+import { loadConfig, peekConfig } from './api.js';
 import { FIELDS } from '../core/kb.js';
 import { computeQuote, findItem } from '../core/pricing.js';
 import { surveyPlan } from '../core/plans.js';
@@ -158,7 +158,8 @@ ${note('응답 수는 대상과 모집 기간에 따라 달라지므로 특정 �
       { v: 'auto', t: '잘 모르겠어요 (추천)', d: '주제에 맞는 분석을 추천합니다', rec: true },
       { v: 'basic', t: '기초 통계', d: '응답 분포, 평균·표준편차, 신뢰도' },
       { v: 'relation', t: '관계·차이 분석', d: '상관, t검정·분산분석, 회귀분석' },
-      { v: 'advanced', t: '심화 분석', d: '매개·조절효과(PROCESS), 필요 시 구조방정식', side: `+${won((findItem(CONFIG.catalog, 'T-ADV') || {}).price || 0)}` },
+      // 심화 분석 가산은 '모은 응답 분석'에만 붙는다(처음부터 끝까지는 기본 금액에 포함)
+      { v: 'advanced', t: '심화 분석', d: '매개·조절효과(PROCESS), 필요 시 구조방정식', side: s.survey.mode === 'analyze' ? `+${won((findItem(CONFIG.catalog, 'T-ADV') || {}).price || 0)}` : '' },
     ]),
     valid: () => null,
   },
@@ -242,12 +243,13 @@ function mobileSummary(s) {
 
 let CUR = null;
 export async function startSurveyWizard(root) {
-  CONFIG = await loadConfig();
-  if (!CONFIG.catalog) CONFIG = { ...CONFIG, catalog: (await import('../core/pricing.js')).DEFAULT_CATALOG };
+  // 서버 설정을 기다리지 않고 바로 그린 뒤, 설정이 오면 견적만 다시 계산한다
+  CONFIG = peekConfig();
   const params = new URLSearchParams(location.search);
   CUR = createWizard({
     root, key: 'survey', title: '설문조사 의뢰하기', steps, defaults, sidePanel, mobileSummary, settings: () => CONFIG.settings || {},
     prefill: (s) => { if (params.get('title')) { s.common.topicKnown = 'yes'; s.common.title = params.get('title').slice(0, 200); } if (params.get('mode')) s.survey.mode = params.get('mode'); },
     onSubmit: (s) => submitOrder({ service: 'survey', state: s, input: toInput(s), design: (() => { const p = plan(s); return { title: s.common.title || (s.common.keywords || []).join(', '), designLabel: p.design.designLabel, methodLabel: '설문조사', population: p.design.parsed.population, sampleText: p.nLabel, vars: {}, hypotheses: [], titleCandidates: [] }; })(), quote: computeQuote(CONFIG.catalog, quoteInput(s)), draftKey: 'draft:survey' }),
   });
+  loadConfig().then((c) => { if (c && c.catalog) { CONFIG = c; CUR.refreshSide(); } });
 }

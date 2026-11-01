@@ -10,7 +10,8 @@ import { loadGuides } from './guides.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.resolve(root, process.env.OUT_DIR || 'docs');
 const site = JSON.parse(fs.readFileSync(path.join(root, 'site.config.json'), 'utf8'));
-if (process.env.SITE_URL) site.siteUrl = process.env.SITE_URL;
+// Pages가 도메인 연결 직후 http 주소를 알려 주더라도 대표 주소는 항상 https로 쓴다
+if (process.env.SITE_URL) site.siteUrl = process.env.SITE_URL.replace(/^http:\/\/(?!localhost|127\.0\.0\.1)/, 'https://').replace(/\/+$/, '');
 if (process.env.API_URL !== undefined) site.apiUrl = process.env.API_URL;
 if (process.env.BASE_PATH !== undefined) site.basePath = process.env.BASE_PATH;
 const assetVersion = process.env.ASSET_VERSION || crypto.createHash('md5').update(String(Date.now())).digest('hex').slice(0, 8);
@@ -102,7 +103,10 @@ for (const p of pages) {
 const today = new Date().toISOString().slice(0, 10);
 const indexable = pages.filter((p) => !p.noindex && p.path !== '/404.html');
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${T.abs(p.path)}</loc><lastmod>${p.modified || p.published || today}</lastmod><changefreq>${p.changefreq || 'weekly'}</changefreq><priority>${p.priority || (p.path === '/' ? '1.0' : '0.7')}</priority></url>`).join('\n')}\n</urlset>\n`);
-write('robots.txt', `User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /orders/\nDisallow: /checkout/\n\n# AI 검색·답변 엔진 허용\nUser-agent: GPTBot\nAllow: /\nDisallow: /admin/\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nUser-agent: ChatGPT-User\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\nDisallow: /admin/\n\nUser-agent: Claude-SearchBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: Yeti\nAllow: /\nDisallow: /admin/\n\nUser-agent: Daumoa\nAllow: /\n\nSitemap: ${T.abs('/sitemap.xml')}\n`);
+// 검색·AI 답변 엔진은 모두 허용하되, 주문·결제·운영자 화면은 어느 봇에게도 열지 않는다
+const BOTS = ['Yeti', 'Daumoa', 'Googlebot', 'Bingbot', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot'];
+const PRIVATE = ['/admin/', '/orders/', '/checkout/'].map((p) => `Disallow: ${site.basePath}${p}`).join('\n');
+write('robots.txt', `User-agent: *\nAllow: /\n${PRIVATE}\n\n# 검색엔진·AI 검색·답변 엔진 허용\n${BOTS.map((b) => `User-agent: ${b}\nAllow: /\n${PRIVATE}\n`).join('\n')}\nSitemap: ${T.abs('/sitemap.xml')}\n`);
 const guides = ctx.guides.slice().sort((a, b) => (a.date < b.date ? 1 : -1));
 const rssItems = guides.map((g) => `<item><title>${T.esc(g.title)}</title><link>${T.abs(`/guide/${g.slug}/`)}</link><guid>${T.abs(`/guide/${g.slug}/`)}</guid><pubDate>${new Date(g.date + 'T09:00:00+09:00').toUTCString()}</pubDate><description>${T.esc(g.description)}</description><category>${T.esc(g.category)}</category></item>`).join('');
 write('rss.xml', `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>논문AI 가이드</title><link>${T.abs('/guide/')}</link><description>논문 작성, 설문조사, 통계분석을 처음 하는 분을 위한 실전 가이드</description><language>ko</language>${rssItems}</channel></rss>\n`);
@@ -112,4 +116,5 @@ write('llms-full.txt', llms.llmsFull(ctx, pages));
 write('site.webmanifest', JSON.stringify({ name: '논문AI', short_name: '논문AI', start_url: site.basePath + '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#0F1B3D', icons: [{ src: site.basePath + '/assets/img/logo-192.png', sizes: '192x192', type: 'image/png' }, { src: site.basePath + '/assets/img/logo-512.png', sizes: '512x512', type: 'image/png' }] }));
 write('.nojekyll', '');
 write('assets/config.json', JSON.stringify({ apiUrl: site.apiUrl, version: assetVersion }));
+if (site.indexNowKey) write(`${site.indexNowKey}.txt`, site.indexNowKey);
 console.log(`site: ${pages.length} pages, ${indexable.length} indexable, assets v=${assetVersion} → ${path.relative(root, out)}/`);

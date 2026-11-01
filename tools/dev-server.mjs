@@ -88,8 +88,14 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (u.pathname === '/__dev') {
+    // queued: 하루 메일 할당량(에뮬레이터 100통)을 넘어 메일대기 시트에 쌓인 메일
+    let queued = [];
+    try {
+      const ss = env.findSpreadsheetByName('논문AI 운영 시트');
+      if (ss) queued = env.sheetValues(ss.getId(), '메일대기').slice(1).filter((r) => r[4] !== 'sent').slice(-30).map((r) => ({ to: String(r[1]), subject: String(r[2]), status: String(r[4]) }));
+    } catch { queued = []; }
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    return res.end(JSON.stringify({ password: setup.password, seeded, mails: env.state.mails.slice(-30).map((m) => ({ to: m.to, subject: m.subject })) }, null, 2));
+    return res.end(JSON.stringify({ password: setup.password, seeded, mails: env.state.mails.slice(-30).map((m) => ({ to: m.to, subject: m.subject })), queued }, null, 2));
   }
   if (u.pathname === '/__clock' && req.method === 'POST') {
     env.clock.advance(Number(u.searchParams.get('days') || 1) * 86400000);

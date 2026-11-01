@@ -59,8 +59,10 @@ var DEFAULT_SETTINGS = {
   replyTo: ['contact@skkc.co.kr', '고객이 메일에 답장하면 받을 주소'],
   ntfyTopic: ['', '휴대폰 푸시(ntfy 앱) 토픽 이름, 비우면 사용 안 함'],
   skkcEnabled: ['true', '성균관컨설팅(skkc.co.kr) 결제 연결 사용'],
-  skkcCustomUrl: ['https://skkc.co.kr/pricing', '금액이 맞는 결제 링크가 없을 때 안내할 결제 페이지'],
+  skkcCustomUrl: ['', '금액이 맞는 결제 링크가 없을 때 안내할 결제 페이지(비우면 상담 채널에서 결제 링크를 받도록 안내)'],
   skkcLinks: ['[]', '금액별 결제 링크 목록(JSON: [{"amount":399000,"url":"https://skkc.co.kr/shop_view?idx=..."}])'],
+  skkcUnitUrl: ['', '금액 단위 결제 상품 링크(예: 1,000원 상품). 수량을 금액에 맞춰 결제'],
+  skkcUnitPrice: ['1000', '금액 단위 결제 상품의 1개 가격(원)'],
   bankEnabled: ['false', '무통장입금 안내 사용'],
   bankName: ['', '은행명'],
   bankAccount: ['', '계좌번호'],
@@ -86,10 +88,10 @@ var DEFAULT_SETTINGS = {
   bizPhone: ['010-9913-7771', '대표 전화'],
   bizEmail: ['contact@skkc.co.kr', '대표 메일'],
   noticeBanner: ['', '사이트 상단 공지(비우면 숨김)'],
-  addonServices: ['[{"key":"aicheck","name":"AI 유사도 점검(카피클린)","url":"https://www.skkc.co.kr/ai-detector","enabled":true},{"key":"humanize","name":"문장 다듬기(휴머나이징)","url":"https://copyhuman.kr/","enabled":false}]', '전달 후 함께 안내할 후속 서비스(JSON)'],
+  addonServices: ['[{"key":"aicheck","name":"AI 사용 여부 점검(카피클린)","url":"https://www.skkc.co.kr/ai-detector","desc":"제출 전 AI 작성 의심 구간 확인","enabled":true},{"key":"humanize","name":"문장 다듬기(카피휴먼)","url":"https://copyhuman.kr/","desc":"AI 문체를 사람 문장으로 다듬기","enabled":true}]', '전달 후 함께 안내할 후속 서비스(JSON)'],
 };
 
-var PUBLIC_SETTING_KEYS = ['siteName', 'siteUrl', 'skkcEnabled', 'skkcCustomUrl', 'skkcLinks', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey',
+var PUBLIC_SETTING_KEYS = ['siteName', 'siteUrl', 'skkcEnabled', 'skkcCustomUrl', 'skkcLinks', 'skkcUnitUrl', 'skkcUnitPrice', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey',
   'dailyCapacity', 'holidays', 'maxFileMB', 'bizName', 'bizCeo', 'bizNo', 'bizMailOrder', 'bizAddress', 'bizPhone', 'bizEmail', 'noticeBanner', 'addonServices', 'retentionDays', 'revisionDays', 'replyTo'];
 
 /* ------------------------------------------------------------------ 속성·저장소 */
@@ -946,6 +948,26 @@ function revisionAllowance_(o) {
   return allowed;
 }
 
+// 마지막 '전달 완료' 시각(ms). 전달한 적이 없으면 0
+function lastDeliveredAt_(o, history) {
+  var t = 0;
+  (history || historyFor_(o.orderNo)).forEach(function (h) {
+    if (h.status !== 'delivered') return;
+    var d = new Date(h.at).getTime();
+    if (d > t) t = d;
+  });
+  if (!t && o.deliveredAt) t = o.deliveredAt.getTime();
+  return t;
+}
+
+// 고객에게 공개된 결과물: 마지막 전달 완료 이전에 올린 것만. 수정 중에 새로 올린 파일은 다시 전달할 때 공개된다
+function isPublishedResult_(o, f, history) {
+  if (f.kind !== 'result') return false;
+  var cut = lastDeliveredAt_(o, history);
+  // 이력 시각은 초 단위로 남으므로 올린 시각도 초 단위로 비교한다
+  return !!cut && !!f.uploadedAt && Math.floor(f.uploadedAt.getTime() / 1000) * 1000 <= cut;
+}
+
 function orderView_(o, opts) {
   opts = opts || {};
   var data = orderData_(o);
@@ -955,7 +977,7 @@ function orderView_(o, opts) {
   var msgs = messagesFor_(o.orderNo);
   var retention = settingNum_('retentionDays', 90);
   var customerFiles = files.filter(function (f) { return f.kind === 'customer'; }).map(function (f) { return fileView_(f, o.orderNo, true); });
-  var results = files.filter(function (f) { return f.kind === 'result'; }).map(function (f) { return fileView_(f, o.orderNo, true); });
+  var results = files.filter(function (f) { return f.kind === 'result' && (opts.admin || isPublishedResult_(o, f, history)); }).map(function (f) { return fileView_(f, o.orderNo, true); });
   var due = 0;
   payments.forEach(function (p) { if (p.status === 'requested') due += p.amount; });
   var view = {
@@ -1263,6 +1285,8 @@ function api_downloadFile(req) {
   if (!verifyFileTicket_(o.orderNo, String(req.fileId), req.ticket)) throw appError_('forbidden', '내려받기 권한이 만료되었습니다. 주문 페이지를 새로 고침해 주세요.');
   var f = filesFor_(o.orderNo).filter(function (x) { return x.id === String(req.fileId); })[0];
   if (!f) throw appError_('not_found', '파일이 삭제되었거나 보관 기간이 지났습니다.');
+  // 결과물은 전달 완료로 공개된 것만 내려받을 수 있다
+  if (f.kind === 'result' && !isPublishedResult_(o, f)) throw appError_('forbidden', '아직 전달되지 않은 파일입니다.');
   var blob = DriveApp.getFileById(f.id).getBlob();
   return { name: f.name, mime: f.mime || blob.getContentType(), size: f.size, data: Utilities.base64Encode(blob.getBytes()) };
 }
@@ -1281,7 +1305,7 @@ function api_claimPayment(req) {
   var advance = String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
   if (p.kind === 'main' && advance && ['pending_payment', 'payment_review'].indexOf(o.status) >= 0) {
     o.payStatus = 'claimed';
-    startWork_(o, '결제 완료 알림이 접수되었습니다. 결제 확인과 함께 작업 순서에 배정되었습니다.');
+    startWork_(o, '결제 완료 알림을 받았습니다. 결제 내역은 담당자가 확인합니다.', { claimed: true });
   } else if (p.kind === 'main' && ['pending_payment'].indexOf(o.status) >= 0) {
     o.status = 'payment_review';
     o.payStatus = 'claimed';
@@ -1394,14 +1418,16 @@ function computeEta_(o) {
   return etaDate(now_(), Math.max(1, (q.days || 2) + delay), holidays_());
 }
 
-function startWork_(o, message) {
+// opts.claimed: 고객의 결제 완료 알림만 받은 상태(담당자 확인 전). 고객 안내에 '결제가 확인되었다'고 쓰지 않는다
+function startWork_(o, message, opts) {
+  opts = opts || {};
   var target = setting_('advanceOnPayment') === 'received' ? 'received' : 'in_progress';
   var missing = missingMaterials_(o);
   o.eta = o.eta || computeEta_(o);
   if (missing.length) {
     o.status = 'needs_materials';
     saveOrder_(o);
-    addHistory_(o.orderNo, 'needs_materials', '결제가 확인되었습니다. 작업에 필요한 자료가 있어 보완을 부탁드립니다: ' + missing.join(', '), 'system');
+    addHistory_(o.orderNo, 'needs_materials', (opts.claimed ? '결제 완료 알림을 받았습니다. ' : '결제가 확인되었습니다. ') + '작업에 필요한 자료가 있어 보완을 부탁드립니다: ' + missing.join(', '), 'system');
     mailCustomer_(o, 'materials', { items: missing });
     return;
   }
@@ -1417,7 +1443,7 @@ function startWork_(o, message) {
     var pos = queuePosition_(o);
     addHistory_(o.orderNo, 'in_progress', '작업 순서에 배정되었습니다' + (pos ? '(현재 ' + pos + '번째)' : '') + '. 예상 전달일은 ' + korDate_(o.eta) + '입니다.', 'system');
   }
-  mailCustomer_(o, 'started');
+  mailCustomer_(o, 'started', { claimed: !!opts.claimed });
 }
 
 function confirmPayment_(o, p, method, memo) {
@@ -1974,9 +2000,16 @@ function mailCustomer_(o, kind, extra) {
       button = { label: '견적 확인하고 결제하기', url: link };
       break;
     case 'started':
-      subject = '[논문AI] 결제가 확인되어 작업이 시작되었습니다 (' + o.orderNo + ')';
-      title = '작업이 시작되었습니다';
-      body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      if (extra.claimed) {
+        // 고객이 '결제를 마쳤어요'만 누른 단계: 담당자 확인 전이므로 결제 확인이라고 쓰지 않는다
+        subject = '[논문AI] 작업 순서에 배정되었습니다 (' + o.orderNo + ')';
+        title = '작업 순서에 배정되었습니다';
+        body = '<p>' + name + '님, 결제 완료 알림을 받아 작업 순서에 배정했습니다. 결제 내역은 담당자가 확인하며, 확인되면 메일로 다시 알려 드립니다.</p><p>진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      } else {
+        subject = '[논문AI] 결제가 확인되어 작업이 시작되었습니다 (' + o.orderNo + ')';
+        title = '작업이 시작되었습니다';
+        body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      }
       card = orderCard_(o, [['진행 단계', escHtml_(STATUS[o.status])], ['예상 전달일', '<span style="color:#2346E8">' + (o.eta ? korDate_(o.eta) : '안내 예정') + '</span>']]);
       break;
     case 'paid':
@@ -2013,6 +2046,13 @@ function mailCustomer_(o, kind, extra) {
       body = '<p>' + name + '님, 아래 사유로 추가 결제를 요청드립니다. 결제가 확인되면 이어서 진행합니다.</p>';
       card = orderCard_(o, [['사유', escHtml_(extra.reason || '')], ['금액', '<span style="color:#2346E8">' + won(extra.amount) + '</span>']]);
       button = { label: '추가 결제하기', url: link };
+      break;
+    case 'cancelled':
+      subject = '[논문AI] 주문이 자동 취소되었습니다 (' + o.orderNo + ')';
+      title = '주문이 자동 취소되었습니다';
+      body = '<p>' + name + '님, 주문서를 제출하신 뒤 ' + (extra.days || 30) + '일 동안 결제가 진행되지 않아 주문을 자동으로 취소했습니다. 올려 주신 자료도 함께 삭제했습니다.</p><p>다시 맡기시려면 논문AI에서 새로 신청해 주세요. 이미 결제하셨다면 이 메일에 답장으로 알려 주세요.</p>';
+      card = orderCard_(o, [['상태', '취소']]);
+      button = { label: '새로 신청하기', url: siteUrl_() + '/' };
       break;
     case 'message':
       subject = '[논문AI] 담당자 메시지가 도착했습니다 (' + o.orderNo + ')';
@@ -2220,6 +2260,7 @@ function maintenance_() {
       o.status = 'cancelled'; saveOrder_(o);
       paymentsFor_(o.orderNo).forEach(function (p) { if (p.status === 'requested') { p.status = 'cancelled'; updatePayment_(p); } });
       addHistory_(o.orderNo, 'cancelled', '결제가 진행되지 않아 주문이 자동 취소되었습니다. 올리신 자료는 삭제했습니다.', 'system');
+      mailCustomer_(o, 'cancelled', { days: unpaidDays });
       if (!o.paidAmount && o.deletedState.indexOf('content') < 0) purgeOrderContent_(o, '미결제 ' + unpaidDays + '일 자동 취소');
       stats.unpaid++;
       return;

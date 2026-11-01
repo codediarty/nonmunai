@@ -1,5 +1,5 @@
 // 운영자 주문 상세: 다음 할 일, 작업지시문, 파일, 기록, 결제·상태 처리
-import { aapi, esc, won, toast, fmtAt, etaChip, pill, METHOD_LABEL, STATUS_LABEL, copyText, confirmBox, busy } from './core.js';
+import { aapi, esc, won, toast, fmtAt, etaChip, pill, METHOD_LABEL, STATUS_LABEL, copyText, confirmBox, busy, authLost } from './core.js';
 import { workBrief, aiPrompts, customerTemplates, designOf } from './brief.js';
 import { designReportHtml } from '../ui/report.js';
 import { orderFacts, factsTable, orderTitle, isSimulation } from '../app/order-view.js';
@@ -12,7 +12,7 @@ const PAY_ST = { requested: '결제 대기', claimed: '확인 필요', confirmed
 export async function renderOrder(root, orderNo, go) {
   root.innerHTML = '<div class="ad-loading"><span class="spin spin-dark"></span> 주문을 불러오는 중입니다</div>';
   let o;
-  try { o = (await aapi('adminGetOrder', { orderNo })).order; } catch (e) { root.innerHTML = `<div class="ad-empty">${esc(e.message)} <a href="#orders">목록으로</a></div>`; return; }
+  try { o = (await aapi('adminGetOrder', { orderNo })).order; } catch (e) { if (!authLost(e)) root.innerHTML = `<div class="ad-empty">${esc(e.message)} <a href="#orders">목록으로</a></div>`; return; }
   const view = new AdminOrder(root, o, go);
   view.render();
 }
@@ -238,7 +238,7 @@ ${(o.paymentsAll || []).length ? `<ul class="ad-pays">${o.paymentsAll.map((p) =>
       case 'setStatus': {
         const status = r.querySelector('#stSel').value;
         if (status === o.status) { toast('지금과 같은 단계입니다.', { error: true }); return; }
-        this.run(b, 'adminUpdateStatus', { status, message: r.querySelector('#stMsg').value.trim(), notify: r.querySelector('#stNotify').checked }, `${STATUS_LABEL[status]}(으)로 바꿨습니다.`.replace('(으)로', '단계로'));
+        this.run(b, 'adminUpdateStatus', { status, message: r.querySelector('#stMsg').value.trim(), notify: r.querySelector('#stNotify').checked }, `${STATUS_LABEL[status]} 단계로 바꿨습니다.`);
         break;
       }
       case 'setEta': {

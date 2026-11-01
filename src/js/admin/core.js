@@ -14,6 +14,8 @@ export const auth = {
 
 let onLogout = () => {};
 export function setLogoutHandler(fn) { onLogout = fn; }
+// 로그인이 풀려 로그인 창으로 바뀐 경우: 화면을 오류 문구로 덮어쓰지 않는다
+export const authLost = (e) => !!e && e.code === 'admin_required';
 
 export async function aapi(action, payload = {}, opts = {}) {
   try {

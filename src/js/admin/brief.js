@@ -70,6 +70,8 @@ export function workBrief(o) {
     line('양식 상세 적용', i.addons && i.addons.format ? '예' : ''),
     line('포함 수정', o.revisions ? `${o.revisions.allowed}회 (사용 ${o.revisions.used}회)` : ''),
     line('연구 분야', field ? `${field.label}${c.fieldText ? ` (${c.fieldText})` : ''}` : c.fieldText),
+    line('연구 주제', c.title),
+    line('관심 키워드', (c.keywords || []).join(', ')),
     line('학교·학과', [c.school, c.dept].filter(Boolean).join(' ')),
     line('목적', c.purpose),
   ]));
@@ -162,7 +164,7 @@ function statsBrief(o) {
   const sim = t.hasData === false && t.noDataPath === 'simulation';
   out.push(block('작업', [
     line('데이터', t.hasData === false ? (t.noDataPath === 'survey' ? '없음: 설문 조사부터 진행' : '없음: 학습용 시뮬레이션') : '고객 데이터 있음'),
-    line('결과물', OUTPUT[t.output] || t.output),
+    line('결과물', sim ? '학습용 분석 실습 결과와 해설(모든 표·파일에 가상 데이터 표시)' : t.hasData === false ? '설문 조사 후 분석(응답 수집 포함 통합 견적)' : (OUTPUT[t.output] || t.output)),
     line('분석 방법', (t.methods || []).map((m) => METHOD_LABELS[m] || m).join(', ') || (o.design && o.design.methodLabel)),
     line('변수 설명', t.variables),
     line('데이터 정보', t.dataInfo),

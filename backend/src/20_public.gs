@@ -118,6 +118,26 @@ function revisionAllowance_(o) {
   return allowed;
 }
 
+// 마지막 '전달 완료' 시각(ms). 전달한 적이 없으면 0
+function lastDeliveredAt_(o, history) {
+  var t = 0;
+  (history || historyFor_(o.orderNo)).forEach(function (h) {
+    if (h.status !== 'delivered') return;
+    var d = new Date(h.at).getTime();
+    if (d > t) t = d;
+  });
+  if (!t && o.deliveredAt) t = o.deliveredAt.getTime();
+  return t;
+}
+
+// 고객에게 공개된 결과물: 마지막 전달 완료 이전에 올린 것만. 수정 중에 새로 올린 파일은 다시 전달할 때 공개된다
+function isPublishedResult_(o, f, history) {
+  if (f.kind !== 'result') return false;
+  var cut = lastDeliveredAt_(o, history);
+  // 이력 시각은 초 단위로 남으므로 올린 시각도 초 단위로 비교한다
+  return !!cut && !!f.uploadedAt && Math.floor(f.uploadedAt.getTime() / 1000) * 1000 <= cut;
+}
+
 function orderView_(o, opts) {
   opts = opts || {};
   var data = orderData_(o);
@@ -127,7 +147,7 @@ function orderView_(o, opts) {
   var msgs = messagesFor_(o.orderNo);
   var retention = settingNum_('retentionDays', 90);
   var customerFiles = files.filter(function (f) { return f.kind === 'customer'; }).map(function (f) { return fileView_(f, o.orderNo, true); });
-  var results = files.filter(function (f) { return f.kind === 'result'; }).map(function (f) { return fileView_(f, o.orderNo, true); });
+  var results = files.filter(function (f) { return f.kind === 'result' && (opts.admin || isPublishedResult_(o, f, history)); }).map(function (f) { return fileView_(f, o.orderNo, true); });
   var due = 0;
   payments.forEach(function (p) { if (p.status === 'requested') due += p.amount; });
   var view = {
@@ -435,6 +455,8 @@ function api_downloadFile(req) {
   if (!verifyFileTicket_(o.orderNo, String(req.fileId), req.ticket)) throw appError_('forbidden', '내려받기 권한이 만료되었습니다. 주문 페이지를 새로 고침해 주세요.');
   var f = filesFor_(o.orderNo).filter(function (x) { return x.id === String(req.fileId); })[0];
   if (!f) throw appError_('not_found', '파일이 삭제되었거나 보관 기간이 지났습니다.');
+  // 결과물은 전달 완료로 공개된 것만 내려받을 수 있다
+  if (f.kind === 'result' && !isPublishedResult_(o, f)) throw appError_('forbidden', '아직 전달되지 않은 파일입니다.');
   var blob = DriveApp.getFileById(f.id).getBlob();
   return { name: f.name, mime: f.mime || blob.getContentType(), size: f.size, data: Utilities.base64Encode(blob.getBytes()) };
 }
@@ -453,7 +475,7 @@ function api_claimPayment(req) {
   var advance = String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
   if (p.kind === 'main' && advance && ['pending_payment', 'payment_review'].indexOf(o.status) >= 0) {
     o.payStatus = 'claimed';
-    startWork_(o, '결제 완료 알림이 접수되었습니다. 결제 확인과 함께 작업 순서에 배정되었습니다.');
+    startWork_(o, '결제 완료 알림을 받았습니다. 결제 내역은 담당자가 확인합니다.', { claimed: true });
   } else if (p.kind === 'main' && ['pending_payment'].indexOf(o.status) >= 0) {
     o.status = 'payment_review';
     o.payStatus = 'claimed';
@@ -566,14 +588,16 @@ function computeEta_(o) {
   return etaDate(now_(), Math.max(1, (q.days || 2) + delay), holidays_());
 }
 
-function startWork_(o, message) {
+// opts.claimed: 고객의 결제 완료 알림만 받은 상태(담당자 확인 전). 고객 안내에 '결제가 확인되었다'고 쓰지 않는다
+function startWork_(o, message, opts) {
+  opts = opts || {};
   var target = setting_('advanceOnPayment') === 'received' ? 'received' : 'in_progress';
   var missing = missingMaterials_(o);
   o.eta = o.eta || computeEta_(o);
   if (missing.length) {
     o.status = 'needs_materials';
     saveOrder_(o);
-    addHistory_(o.orderNo, 'needs_materials', '결제가 확인되었습니다. 작업에 필요한 자료가 있어 보완을 부탁드립니다: ' + missing.join(', '), 'system');
+    addHistory_(o.orderNo, 'needs_materials', (opts.claimed ? '결제 완료 알림을 받았습니다. ' : '결제가 확인되었습니다. ') + '작업에 필요한 자료가 있어 보완을 부탁드립니다: ' + missing.join(', '), 'system');
     mailCustomer_(o, 'materials', { items: missing });
     return;
   }
@@ -589,7 +613,7 @@ function startWork_(o, message) {
     var pos = queuePosition_(o);
     addHistory_(o.orderNo, 'in_progress', '작업 순서에 배정되었습니다' + (pos ? '(현재 ' + pos + '번째)' : '') + '. 예상 전달일은 ' + korDate_(o.eta) + '입니다.', 'system');
   }
-  mailCustomer_(o, 'started');
+  mailCustomer_(o, 'started', { claimed: !!opts.claimed });
 }
 
 function confirmPayment_(o, p, method, memo) {

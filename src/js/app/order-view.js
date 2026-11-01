@@ -32,10 +32,10 @@ function fmtAt(iso) {
 export { fmtAt };
 
 // 사람이 따로 기록하지 않아도 시스템이 이미 끝낸 단계(주문서 제출 때 자동 검사·설계)
+// 품질 검토처럼 사람이 해야 하는 단계는 기록이 없으면 완료했다고 적지 않고 단계 설명만 보여 준다
 function autoDone(o, s) {
   if (s === 'checking') return '필수 자료 자동 확인 완료';
   if (s === 'preparing') return o.service === 'paper' ? '연구 설계안 자동 생성 완료' : '작업 범위 자동 확정';
-  if (s === 'review') return '검토 완료';
   return '';
 }
 
@@ -52,7 +52,7 @@ export function timelineHtml(o) {
     const r = reached[s];
     const cls = pre ? 'todo' : i < curIdx ? 'done' : i === curIdx ? (o.status === 'delivered' || o.status === 'completed' || o.status === 'revision' ? 'done' : 'now') : 'todo';
     const isNow = !pre && i === curIdx;
-    return `<li class="${cls}"><span class="tl-dot" aria-hidden="true">${cls === 'done' ? ICON.check.replace('class="i"', 'class="i" style="width:15px;height:15px;color:#fff"') : ''}</span><span class="tl-txt"><b>${STEP_LABEL[s]}${o.status === 'needs_materials' && isNow ? ' · 자료 보완 필요' : ''}</b><small>${r ? fmtAt(r.at) : cls === 'done' ? autoDone(o, s) : STEP_DESC[s]}</small>${isNow && lastMsg ? `<p>${esc(lastMsg.message)}</p>` : ''}</span></li>`;
+    return `<li class="${cls}"><span class="tl-dot" aria-hidden="true">${cls === 'done' ? ICON.check.replace('class="i"', 'class="i" style="width:15px;height:15px;color:#fff"') : ''}</span><span class="tl-txt"><b>${STEP_LABEL[s]}${o.status === 'needs_materials' && isNow ? ' · 자료 보완 필요' : ''}</b><small>${r ? fmtAt(r.at) : cls === 'done' ? (autoDone(o, s) || STEP_DESC[s]) : STEP_DESC[s]}</small>${isNow && lastMsg ? `<p>${esc(lastMsg.message)}</p>` : ''}</span></li>`;
   }).join('')}</ol>`;
 }
 
@@ -79,7 +79,8 @@ export function priceSummary(o) {
 
 export function isSimulation(o) {
   const t = o.input && o.input.statistics;
-  return !!(t && t.hasData === false && t.noDataPath === 'simulation');
+  // 자료가 삭제되면 입력 내용은 지워지고 견적만 남으므로 견적의 상품 코드로도 판별한다
+  return !!(t && t.hasData === false && t.noDataPath === 'simulation') || (!o.input && !!o.quote && o.quote.mainCode === 'T-SIM');
 }
 
 const TASK_LABEL = { full: '전체 구성·초안 작성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };

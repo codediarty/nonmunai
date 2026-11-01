@@ -31,7 +31,7 @@ export function priceTable(T, codes, { caption = '' } = {}) {
     const it = item(c);
     if (!it) return '';
     const unit = it.baseUnits ? `기준 ${it.baseUnits}${it.unitLabel}` : '';
-    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${it.unitLabel}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num">${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
+    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${it.unitLabel}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="price-table">${caption ? `<caption>${esc(caption)}</caption>` : ''}<thead><tr><th scope="col">상품</th><th scope="col">기본 납기</th><th scope="col">가격(부가세 포함)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }

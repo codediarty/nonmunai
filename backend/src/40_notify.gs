@@ -105,9 +105,16 @@ function mailCustomer_(o, kind, extra) {
       button = { label: '견적 확인하고 결제하기', url: link };
       break;
     case 'started':
-      subject = '[논문AI] 결제가 확인되어 작업이 시작되었습니다 (' + o.orderNo + ')';
-      title = '작업이 시작되었습니다';
-      body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      if (extra.claimed) {
+        // 고객이 '결제를 마쳤어요'만 누른 단계: 담당자 확인 전이므로 결제 확인이라고 쓰지 않는다
+        subject = '[논문AI] 작업 순서에 배정되었습니다 (' + o.orderNo + ')';
+        title = '작업 순서에 배정되었습니다';
+        body = '<p>' + name + '님, 결제 완료 알림을 받아 작업 순서에 배정했습니다. 결제 내역은 담당자가 확인하며, 확인되면 메일로 다시 알려 드립니다.</p><p>진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      } else {
+        subject = '[논문AI] 결제가 확인되어 작업이 시작되었습니다 (' + o.orderNo + ')';
+        title = '작업이 시작되었습니다';
+        body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+      }
       card = orderCard_(o, [['진행 단계', escHtml_(STATUS[o.status])], ['예상 전달일', '<span style="color:#2346E8">' + (o.eta ? korDate_(o.eta) : '안내 예정') + '</span>']]);
       break;
     case 'paid':
@@ -144,6 +151,13 @@ function mailCustomer_(o, kind, extra) {
       body = '<p>' + name + '님, 아래 사유로 추가 결제를 요청드립니다. 결제가 확인되면 이어서 진행합니다.</p>';
       card = orderCard_(o, [['사유', escHtml_(extra.reason || '')], ['금액', '<span style="color:#2346E8">' + won(extra.amount) + '</span>']]);
       button = { label: '추가 결제하기', url: link };
+      break;
+    case 'cancelled':
+      subject = '[논문AI] 주문이 자동 취소되었습니다 (' + o.orderNo + ')';
+      title = '주문이 자동 취소되었습니다';
+      body = '<p>' + name + '님, 주문서를 제출하신 뒤 ' + (extra.days || 30) + '일 동안 결제가 진행되지 않아 주문을 자동으로 취소했습니다. 올려 주신 자료도 함께 삭제했습니다.</p><p>다시 맡기시려면 논문AI에서 새로 신청해 주세요. 이미 결제하셨다면 이 메일에 답장으로 알려 주세요.</p>';
+      card = orderCard_(o, [['상태', '취소']]);
+      button = { label: '새로 신청하기', url: siteUrl_() + '/' };
       break;
     case 'message':
       subject = '[논문AI] 담당자 메시지가 도착했습니다 (' + o.orderNo + ')';

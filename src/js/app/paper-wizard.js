@@ -1,7 +1,7 @@
 // 논문 의뢰 신청서
 import { createWizard, choice, textField, textArea, selectField, uploader, note, hasSlot, submitOrder, priceLinesHtml, ICON } from './wizard.js';
 import { contactStep, reviewSummary, etaHtml, sideShell, deadlineMin, quickChecklist } from './common-steps.js';
-import { loadConfig } from './api.js';
+import { loadConfig, peekConfig } from './api.js';
 import { buildDesign, suggestTitles } from '../core/engine.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { computeQuote, findItem, paperItemCode } from '../core/pricing.js';
@@ -307,8 +307,8 @@ function mobileSummary(s) {
 }
 
 export async function startPaperWizard(root) {
-  CONFIG = await loadConfig();
-  if (!CONFIG.catalog) CONFIG = { ...CONFIG, catalog: (await import('../core/pricing.js')).DEFAULT_CATALOG };
+  // 서버 설정을 기다리지 않고 바로 그린 뒤, 설정이 오면 견적만 다시 계산한다
+  CONFIG = peekConfig();
   const params = new URLSearchParams(location.search);
   const wctx = createWizard({
     root, key: 'paper', title: '논문 의뢰하기', steps, defaults, sidePanel, mobileSummary,
@@ -341,6 +341,7 @@ export async function startPaperWizard(root) {
       toast(`분량을 약 ${wctx.state.docInfo.pages}쪽으로 반영했습니다.`);
     }
   });
+  loadConfig().then((c) => { if (c && c.catalog) { CONFIG = c; wctx.refreshSide(); } });
 }
 
 export { design as paperDesign, quoteInput as paperQuoteInput, CONFIG as PAPER_CONFIG };

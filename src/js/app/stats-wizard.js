@@ -1,13 +1,14 @@
 // 통계분석 의뢰 신청서
 import { createWizard, choice, textField, textArea, uploader, note, hasSlot, submitOrder, priceLinesHtml, ICON } from './wizard.js';
 import { contactStep, reviewSummary, etaHtml, sideShell, deadlineMin, quickChecklist } from './common-steps.js';
-import { loadConfig } from './api.js';
+import { loadConfig, peekConfig } from './api.js';
 import { FIELDS } from '../core/kb.js';
 import { computeQuote, findItem } from '../core/pricing.js';
 import { statsPlan, METHOD_LABELS } from '../core/plans.js';
 import { diagnoseFile } from '../core/diagnose-data.js';
 import { classifyFeedback } from '../core/feedback.js';
 import { esc, won } from '../core/render.js';
+import { url } from '../ui/dom.js';
 
 const PURPOSES = [['degree', '학위논문'], ['journal', '학술지 논문'], ['report', '보고서'], ['course', '과제'], ['study', '학습·연습']];
 const OUTPUTS = [
@@ -41,9 +42,11 @@ function quoteInput(s) {
 
 function toInput(s) {
   const q = quoteInput(s);
+  // 데이터 없음(시뮬레이션·조사부터)에서는 결과물 형태를 고르지 않으므로, 앞서 데이터 있음에서 골랐던 값(예: 논문 결과장)을 보내지 않는다
+  const t = hasData(s) ? s.statistics : { ...s.statistics, output: '', feedbackText: '' };
   return {
     common: { ...s.common },
-    statistics: { ...s.statistics, hasData: q.statistics.hasData, advanced: q.statistics.advanced, sem: q.statistics.sem, dataInfo: s.dataInfo ? JSON.stringify(compactInfo(s.dataInfo)).slice(0, 1900) : '' },
+    statistics: { ...t, hasData: q.statistics.hasData, advanced: q.statistics.advanced, sem: q.statistics.sem, dataInfo: s.dataInfo ? JSON.stringify(compactInfo(s.dataInfo)).slice(0, 1900) : '' },
     addons: q.addons,
   };
 }
@@ -80,7 +83,7 @@ const steps = [
         out += `<div class="cond">${choice('statistics.noDataPath', s.statistics.noDataPath, [
           { v: 'survey', t: '실제 응답 조사부터 의뢰', d: '설문 설계와 응답 수집, 분석을 통합 견적으로 진행합니다. 실제 연구라면 이 방법입니다' },
           { v: 'simulation', t: '연습·방법 확인용 시뮬레이션', d: `교육용 가상 데이터로 분석 절차를 익힙니다 (${won((findItem(CONFIG.catalog, 'T-SIM') || {}).price || 0)})` },
-        ])}${isSim(s) ? note('<b>가상 데이터, 실제 연구 결과 아님</b><br>시뮬레이션 결과물에는 파일 이름과 모든 표에 이 표시가 붙습니다. 논문, 보고서, 과제에 실제로 수집한 결과처럼 제출하거나 실증 결과로 사용할 수 없습니다.', 'pen') : ''}${isSurveyPath(s) ? note('설문 설계부터 응답 수집, 분석까지 이어서 진행합니다. 모집 비용을 포함한 확정 견적을 받은 뒤 결제합니다. <a href="/survey/new/">설문조사 신청서로 바로 가기</a>도 가능합니다.') : ''}</div>`;
+        ])}${isSim(s) ? note('<b>가상 데이터, 실제 연구 결과 아님</b><br>시뮬레이션 결과물에는 파일 이름과 모든 표에 이 표시가 붙습니다. 논문, 보고서, 과제에 실제로 수집한 결과처럼 제출하거나 실증 결과로 사용할 수 없습니다.', 'pen') : ''}${isSurveyPath(s) ? note(`설문 설계부터 응답 수집, 분석까지 이어서 진행합니다. 모집 비용을 포함한 확정 견적을 받은 뒤 결제합니다. <a href="${url('/survey/new/')}">설문조사 신청서로 바로 가기</a>도 가능합니다.`) : ''}</div>`;
       }
       return out;
     },
@@ -94,7 +97,8 @@ const steps = [
   {
     id: 'methods', title: '어떤 분석이 필요하세요?', help: '모르시면 연구 주제와 가설에 맞게 추천합니다. 여러 개를 고를 수 있습니다.', when: (s) => !isSurveyPath(s),
     normalizeMulti: normalizeMethods,
-    render: (s) => `${choice('statistics.methods', s.statistics.methods, Object.entries(METHOD_LABELS).map(([v, t]) => ({ v, t, rec: v === 'auto', d: { auto: '주제와 가설에 맞게 추천', basic: '빈도, 평균·표준편차', group: 't검정, 분산분석', correg: '상관, 다중·위계적 회귀', reliability: '신뢰도, 탐색적 요인분석', medmod: 'PROCESS Macro 매개·조절', sem: '확인적 요인분석, 구조모형', other: '요청 사항에 적어 주세요' }[v], side: v === 'medmod' ? `+${won((findItem(CONFIG.catalog, 'T-ADV') || {}).price || 0)}` : v === 'sem' ? '별도 견적' : '' })), { multi: true, cols: 2, compact: true })}${(s.statistics.methods || []).includes('sem') ? note('구조방정식은 모형과 데이터 구조를 확인한 뒤 확정 견적을 드리고, 확정 전에는 결제하지 않습니다.', 'amber') : ''}`,
+    // 추가 금액·별도 견적 표시는 실제 견적에 반영되는 경우에만(데이터 있음, 매개·조절은 기존 분석 수정 제외). 학습용 시뮬레이션은 정액
+    render: (s) => `${choice('statistics.methods', s.statistics.methods, Object.entries(METHOD_LABELS).map(([v, t]) => ({ v, t, rec: v === 'auto', d: { auto: '주제와 가설에 맞게 추천', basic: '빈도, 평균·표준편차', group: 't검정, 분산분석', correg: '상관, 다중·위계적 회귀', reliability: '신뢰도, 탐색적 요인분석', medmod: 'PROCESS Macro 매개·조절', sem: '확인적 요인분석, 구조모형', other: '요청 사항에 적어 주세요' }[v], side: v === 'medmod' && hasData(s) && s.statistics.output !== 'revise' ? `+${won((findItem(CONFIG.catalog, 'T-ADV') || {}).price || 0)}` : v === 'sem' && hasData(s) ? '별도 견적' : '' })), { multi: true, cols: 2, compact: true })}${hasData(s) && (s.statistics.methods || []).includes('sem') ? note('구조방정식은 모형과 데이터 구조를 확인한 뒤 확정 견적을 드리고, 확정 전에는 결제하지 않습니다.', 'amber') : ''}${isSim(s) ? note(`학습용 시뮬레이션은 고른 분석 방법과 관계없이 ${won((findItem(CONFIG.catalog, 'T-SIM') || {}).price || 0)}입니다.`) : ''}`,
     valid: () => null,
   },
   {
@@ -184,9 +188,9 @@ function mobileSummary(s) {
 }
 
 export async function startStatsWizard(root) {
-  CONFIG = await loadConfig();
-  if (!CONFIG.catalog) CONFIG = { ...CONFIG, catalog: (await import('../core/pricing.js')).DEFAULT_CATALOG };
-  createWizard({
+  // 서버 설정을 기다리지 않고 바로 그린 뒤, 설정이 오면 견적만 다시 계산한다
+  CONFIG = peekConfig();
+  const wctx = createWizard({
     root, key: 'statistics', title: '통계분석 의뢰하기', steps, defaults, sidePanel, mobileSummary, settings: () => CONFIG.settings || {},
     onFileAdded: async (slot, file, s) => {
       if (slot === 'data') {
@@ -196,5 +200,6 @@ export async function startStatsWizard(root) {
     },
     onSubmit: (s) => submitOrder({ service: 'statistics', state: s, input: toInput(s), design: { title: s.common.title, designLabel: isSim(s) ? '학습용 시뮬레이션' : '통계분석', methodLabel: (s.statistics.methods || []).map((m) => METHOD_LABELS[m]).join(', '), population: '', sampleText: s.dataInfo && s.dataInfo.ok ? `응답 ${s.dataInfo.n}명` : '', vars: {}, hypotheses: [], titleCandidates: [] }, quote: computeQuote(CONFIG.catalog, quoteInput(s)), draftKey: 'draft:statistics' }),
   });
+  loadConfig().then((c) => { if (c && c.catalog) { CONFIG = c; wctx.refreshSide(); } });
 }
 void classifyFeedback;

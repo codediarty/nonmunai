@@ -228,7 +228,14 @@ export function createWizard(opts) {
       const er = vs[i].valid ? vs[i].valid(state) : null;
       if (er) { cur = i; render(); setTimeout(() => { const el = $('#wzErr', root); if (el) el.textContent = er; }, 60); return; }
     }
-    onSubmit(state, ctx);
+    // 지금 고른 분기에 보이는 파일 칸만 보낸다. 중간에 분기를 바꾸기 전에 올린 파일은 빼고 접수한다
+    const html = vs.map((x) => { try { return x.render(state, ctx); } catch { return ''; } }).join('');
+    const slots = new Set([...html.matchAll(/data-up="([^"]+)"/g)].map((m) => m[1]));
+    const keepFile = (f) => slots.has(f.slot);
+    const view = { files: (state.files || []).filter(keepFile), links: (state.links || []).filter(keepFile), dropped: (state.files || []).filter((f) => !keepFile(f)).map((f) => f.id) };
+    // 읽을 때만 걸러 보이고, 제출 중 기록(_pending 등)은 원래 상태에 그대로 남는다
+    const sub = new Proxy(state, { get: (t, k) => (k in view ? view[k] : t[k]) });
+    onSubmit(sub, ctx);
   });
 
   async function addFiles(slot, list) {
@@ -259,6 +266,12 @@ export function createWizard(opts) {
 }
 
 /* ------------------------------------------------------------------ 제출 */
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+}
+
 export async function submitOrder({ service, state, input, design, quote, draftKey }) {
   if (!apiReady()) {
     modal({ title: '접수 서버 연결 준비 중', html: `<p>온라인 접수 서버를 연결하는 중입니다. 작성하신 내용은 이 브라우저에 그대로 저장되어 있으니 잠시 후 다시 제출해 주세요.</p><p class="muted small">급한 의뢰는 contact@skkc.co.kr 로 연락 주세요.</p>` });
@@ -272,7 +285,7 @@ export async function submitOrder({ service, state, input, design, quote, draftK
 <li data-s="files"><span class="ss-dot"></span><span>자료 파일 올리기 <em id="ssFiles">${files.length ? `0 / ${files.length}` : '없음'}</em></span></li>
 <li data-s="submit"><span class="ss-dot"></span><span>필수 자료 확인과 접수</span></li></ol>
 <ul class="sub-files" id="ssList">${files.map((f) => `<li data-fid="${f.id}"><span>${esc(f.name)}</span><b class="muted">대기</b></li>`).join('')}</ul>
-<p class="wz-err" id="ssErr" role="alert"></p><div class="sub-actions" id="ssAct"></div><p class="hint">큰 파일은 올리는 데 시간이 걸릴 수 있습니다. 이 창을 닫지 말아 주세요.</p></div></div>`;
+<p class="wz-err" id="ssErr" role="alert"></p><div id="ssNote"></div><div class="sub-actions" id="ssAct"></div><p class="hint">큰 파일은 올리는 데 시간이 걸릴 수 있습니다. 이 창을 닫지 말아 주세요.</p></div></div>`;
   document.body.appendChild(host);
   const mark = (s, st) => { const li = host.querySelector(`[data-s="${s}"]`); li.className = st; };
   const fileMark = (id, txt, cls = '') => { const li = host.querySelector(`[data-fid="${id}"] b`); if (li) { li.textContent = txt; li.className = cls; } };
@@ -282,18 +295,35 @@ export async function submitOrder({ service, state, input, design, quote, draftK
     host.querySelector('#ssRetry').addEventListener('click', () => { host.querySelector('#ssErr').textContent = ''; host.querySelector('#ssAct').innerHTML = ''; retry(); });
     host.querySelector('#ssClose').addEventListener('click', () => host.remove());
   };
-  let order = state._pending || null;
+  // 서버 견적이 화면 견적과 다르면(가격표 변경 등) 바뀐 금액을 알리고 확인을 받은 뒤에만 이어 간다
+  const confirmPrice = (total) => new Promise((resolve) => {
+    host.querySelector('#ssNote').innerHTML = note(`가격표가 바뀌어 주문 금액이 <b>${won(quote.total)}</b>에서 <b>${won(total)}</b>으로 다시 계산되었습니다. 이 금액으로 제출하려면 계속을 눌러 주세요. 결제는 다음 화면에서 금액을 확인한 뒤 진행합니다.`, 'amber');
+    host.querySelector('#ssAct').innerHTML = `<button class="btn btn-primary" type="button" id="ssPriceOk">바뀐 금액으로 계속</button><button class="btn btn-ghost" type="button" id="ssClose">닫기</button>`;
+    host.querySelector('#ssPriceOk').addEventListener('click', () => { host.querySelector('#ssNote').innerHTML = ''; host.querySelector('#ssAct').innerHTML = ''; resolve(true); });
+    host.querySelector('#ssClose').addEventListener('click', () => { host.remove(); resolve(false); });
+  });
+  // 실패 뒤 다시 제출할 때는 내용이 같을 때만 앞서 만든 주문을 이어서 쓴다(내용을 고쳤다면 고친 내용으로 새로 접수)
+  const sig = hashStr(JSON.stringify([service, input, design || null, state.links || [], state.contact || {}, state.pin || '', state.consents || {}, quote.total]));
+  const keep = () => store.set(draftKey, { ...state, touched: true, stepId: 'review' });
+  let order = state._pending && state._pending.sig === sig ? state._pending : null;
   const run = async () => {
     try {
       if (!order) {
         mark('create', 'is-now');
         const r = await api('createOrder', { service, input, contact: state.contact, pin: state.pin, consents: state.consents, design, links: state.links || [], clientQuote: { total: quote.total }, hp: state.hp || '' }, { retries: 1 });
-        order = { orderNo: r.orderNo, token: r.token, uploaded: [] };
+        order = { orderNo: r.orderNo, token: r.token, uploaded: [], sig, total: r.quote && typeof r.quote.total === 'number' ? r.quote.total : quote.total };
         state._pending = order;
-        store.set(draftKey, { ...state, touched: true });
+        keep();
         myOrders.put(r.orderNo, { token: r.token, service, product: quote.mainName || '' });
       }
       mark('create', 'is-done');
+      if (typeof order.total === 'number' && order.total !== quote.total && !order.priceOk) {
+        try { sessionStorage.removeItem('nm:config'); } catch { /* 무시 */ }
+        if (!(await confirmPrice(order.total))) return;
+        order.priceOk = true;
+        state._pending = order;
+        keep();
+      }
       mark('files', 'is-now');
       let done = order.uploaded.length;
       host.querySelector('#ssFiles').textContent = `${done} / ${files.length}`;
@@ -308,7 +338,7 @@ export async function submitOrder({ service, state, input, design, quote, draftK
         } catch (e) { fileMark(f.id, '실패', 'bad'); throw e; }
         order.uploaded.push(f.id);
         state._pending = order;
-        store.set(draftKey, { ...state, touched: true });
+        keep();
         fileMark(f.id, '완료', 'ok');
         done++;
         host.querySelector('#ssFiles').textContent = `${done} / ${files.length}`;
@@ -318,6 +348,7 @@ export async function submitOrder({ service, state, input, design, quote, draftK
       await api('submitOrder', { orderNo: order.orderNo, token: order.token, links: state.links || [] }, { retries: 1 });
       mark('submit', 'is-done');
       for (const f of files) await delBlob(f.id);
+      for (const id of state.dropped || []) await delBlob(id);
       store.del(draftKey);
       location.href = `${url('/checkout/')}?o=${encodeURIComponent(order.orderNo)}`;
     } catch (e) {

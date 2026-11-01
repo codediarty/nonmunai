@@ -2,7 +2,7 @@
 import { textField, ICON } from './wizard.js';
 import { esc, won } from '../core/render.js';
 import { etaDate } from '../core/pricing.js';
-import { modal } from '../ui/dom.js';
+import { modal, url } from '../ui/dom.js';
 
 export function deadlineMin() {
   const d = new Date(); d.setDate(d.getDate() + 1);
@@ -40,7 +40,7 @@ export function reviewSummary(s, ctx, rows) {
 const PRIVACY_HTML = `<table class="g-table" style="min-width:0"><thead><tr><th>항목</th><th>목적</th><th>보유 기간</th></tr></thead><tbody>
 <tr><td>이름, 이메일, 휴대전화, 조회 비밀번호(암호화 저장)</td><td>주문 접수, 진행 안내, 결과물 전달, 문의 응대</td><td>거래 기록은 전자상거래법에 따라 5년</td></tr>
 <tr><td>주문 내용, 올린 파일, 결과물</td><td>요청 작업 수행</td><td>전달 완료 후 90일 뒤 자동 삭제(요청 시 즉시)</td></tr></tbody></table>
-<p class="small">주문 자료는 Google 클라우드(Google Drive·Sheets)에 저장되며 해외 데이터센터에 보관될 수 있습니다. 동의를 거부할 수 있으나 이 경우 주문할 수 없습니다. 자세한 내용은 <a href="/privacy/" target="_blank">개인정보처리방침</a>을 확인해 주세요.</p>`;
+<p class="small">주문 자료는 Google 클라우드(Google Drive·Sheets)에 저장되며 해외 데이터센터에 보관될 수 있습니다. 동의를 거부할 수 있으나 이 경우 주문할 수 없습니다. 자세한 내용은 <a href="${url('/privacy/')}" target="_blank">개인정보처리방침</a>을 확인해 주세요.</p>`;
 
 export function contactStep() {
   return {
@@ -52,7 +52,7 @@ ${textField('contact.email', s.contact.email, { label: '이메일', required: tr
 <label class="check"><input type="checkbox" data-bool="consents.all"${s.consents.privacy && s.consents.ethics && s.consents.withdrawal && s.consents.marketing ? ' checked' : ''}><span><b>전체 동의</b></span></label>
 <label class="check"><input type="checkbox" data-bool="consents.privacy"${s.consents.privacy ? ' checked' : ''}><span><b>[필수] 개인정보 수집·이용 동의</b> <button type="button" class="link-btn" data-terms="privacy">내용 보기</button></span></label>
 <label class="check"><input type="checkbox" data-bool="consents.ethics"${s.consents.ethics ? ' checked' : ''}><span><b>[필수] 연구윤리 안내 확인</b><small>결과물은 연구를 돕는 참고 자료이며, 최종 제출물의 확인과 소속 기관 연구윤리 준수 책임이 본인에게 있음을 확인합니다. 허위 데이터·문헌 작성은 요청할 수 없습니다.</small></span></label>
-<label class="check"><input type="checkbox" data-bool="consents.withdrawal"${s.consents.withdrawal ? ' checked' : ''}><span><b>[필수] 주문 제작 서비스 안내 확인</b><small>요청에 따라 개별 제작되는 서비스로, 작업이 시작된 뒤에는 진행 단계에 따라 청약철회와 환불이 제한될 수 있습니다. <a href="/refund/" target="_blank">환불 규정</a></small></span></label>
+<label class="check"><input type="checkbox" data-bool="consents.withdrawal"${s.consents.withdrawal ? ' checked' : ''}><span><b>[필수] 주문 제작 서비스 안내 확인</b><small>요청에 따라 개별 제작되는 서비스로, 작업이 시작된 뒤에는 진행 단계에 따라 청약철회와 환불이 제한될 수 있습니다. <a href="${url('/refund/')}" target="_blank">환불 규정</a></small></span></label>
 <label class="check"><input type="checkbox" data-bool="consents.marketing"${s.consents.marketing ? ' checked' : ''}><span><b>[선택] 할인·새 서비스 소식 받기</b></span></label>
 </div>
 <input type="text" class="hp" tabindex="-1" autocomplete="off" data-path="hp" aria-hidden="true" value="">`,

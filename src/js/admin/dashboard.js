@@ -1,5 +1,5 @@
 // 오늘의 작업(대시보드)과 주문 목록
-import { aapi, esc, won, toast, fmtAt, etaChip, pill, METHOD_LABEL, SERVICE_LABEL, copyText, confirmBox, busy } from './core.js';
+import { aapi, esc, won, toast, fmtAt, etaChip, pill, METHOD_LABEL, SERVICE_LABEL, copyText, confirmBox, busy, authLost } from './core.js';
 import { workBrief } from './brief.js';
 
 const TILES = [
@@ -10,7 +10,7 @@ const TILES = [
 export async function renderDashboard(root, go) {
   root.innerHTML = '<div class="ad-loading"><span class="spin spin-dark"></span> 오늘 처리할 주문을 모으는 중입니다</div>';
   let d;
-  try { d = await aapi('adminDashboard'); } catch (e) { root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
+  try { d = await aapi('adminDashboard'); } catch (e) { if (!authLost(e)) root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
   const c = d.counts;
   const todo = c.payment + c.quote + c.working + c.review + c.revision + d.unread.length;
   const today = new Date();
@@ -105,7 +105,7 @@ export async function renderList(root, params, go) {
     go(`#orders?status=${v ? 'all' : status}${v ? `&q=${encodeURIComponent(v)}` : ''}`);
   });
   let r;
-  try { r = await aapi('adminListOrders', { status, q, offset, limit: 50 }); } catch (e) { root.querySelector('#listBody').innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
+  try { r = await aapi('adminListOrders', { status, q, offset, limit: 50 }); } catch (e) { if (!authLost(e)) root.querySelector('#listBody').innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
   const body = root.querySelector('#listBody');
   if (!r.orders.length) { body.innerHTML = '<div class="ad-empty">조건에 맞는 주문이 없습니다.</div>'; return; }
   body.innerHTML = `<div class="ad-card ad-table-wrap"><table class="ad-table ad-list"><thead><tr><th>주문</th><th>고객</th><th>상태</th><th class="r">금액</th><th>예정일</th><th>접수</th></tr></thead><tbody>${r.orders.map((x) => `<tr data-go="${esc(x.orderNo)}">

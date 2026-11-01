@@ -1,5 +1,5 @@
 // 운영 설정과 가격표 편집
-import { aapi, esc, won, toast, busy, confirmBox } from './core.js';
+import { aapi, esc, won, toast, busy, confirmBox, authLost } from './core.js';
 
 const GROUPS = [
   { title: '알림', keys: ['operatorEmails', 'replyTo', 'ntfyTopic', 'digestHour', 'notifyStatusMail'] },
@@ -52,7 +52,7 @@ const addonRow = (r = {}) => `<div class="ad-mini-row ad-mini-addon"><label clas
 export async function renderSettings(root) {
   root.innerHTML = '<div class="ad-loading"><span class="spin spin-dark"></span> 설정을 불러오는 중입니다</div>';
   let r;
-  try { r = await aapi('adminGetSettings'); } catch (e) { root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
+  try { r = await aapi('adminGetSettings'); } catch (e) { if (!authLost(e)) root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
   const byKey = Object.fromEntries(r.settings.map((s) => [s.key, s]));
   root.innerHTML = `<div class="ad-page ad-settings"><div class="ad-head"><div><h1>설정</h1><p class="muted">서버 v${esc(r.version)} · <a href="${esc(r.spreadsheetUrl)}" target="_blank" rel="noopener">운영 시트</a> · <a href="${esc(r.folderUrl)}" target="_blank" rel="noopener">자료 폴더</a></p></div><div class="ad-head-act"><button class="btn btn-ghost btn-sm" type="button" id="testNotify">알림 테스트</button><button class="btn btn-primary btn-sm" type="button" id="saveAll">설정 저장</button></div></div>
 <div class="ad-set-grid">${GROUPS.map((g) => `<section class="ad-card"><h2>${esc(g.title)}</h2>${g.keys.filter((k) => byKey[k]).map((k) => fieldHtml(byKey[k])).join('')}${g.title === '결제 연결' ? `<div class="field"><label class="label" for="tossSecret">토스페이먼츠 시크릿 키 <small>${r.secrets.tossSecretKey ? '저장되어 있음' : '없음'}</small></label><input class="input" id="tossSecret" type="password" autocomplete="off" placeholder="${r.secrets.tossSecretKey ? '바꿀 때만 입력' : 'test_gsk_ 또는 live_gsk_로 시작'}">${r.secrets.tossSecretKey ? '<label class="check"><input type="checkbox" id="tossClear"><span>저장된 키 지우기</span></label>' : ''}<p class="hint">시크릿 키는 서버(스크립트 속성)에만 저장되고 화면이나 시트에는 보이지 않습니다.</p></div>` : ''}</section>`).join('')}
@@ -112,7 +112,7 @@ const SVC = { paper: '논문', survey: '설문', statistics: '통계', addon: '�
 export async function renderCatalog(root) {
   root.innerHTML = '<div class="ad-loading"><span class="spin spin-dark"></span> 가격표를 불러오는 중입니다</div>';
   let cat;
-  try { cat = (await aapi('adminGetCatalog')).catalog; } catch (e) { root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
+  try { cat = (await aapi('adminGetCatalog')).catalog; } catch (e) { if (!authLost(e)) root.innerHTML = `<div class="ad-empty">${esc(e.message)}</div>`; return; }
   const items = cat.items;
   root.innerHTML = `<div class="ad-page"><div class="ad-head"><div><h1>가격표</h1><p class="muted">저장하면 신청 화면 견적과 서버 결제 금액에 바로 반영됩니다. 이미 접수된 주문 금액은 바뀌지 않습니다.</p></div><div class="ad-head-act"><button class="btn btn-ghost btn-sm" type="button" id="catReset">기본값으로 되돌리기</button><button class="btn btn-primary btn-sm" type="button" id="catSave">가격표 저장</button></div></div>
 <div class="ad-card ad-table-wrap"><table class="ad-table ad-cat"><thead><tr><th>사용</th><th>코드</th><th>구분</th><th>상품명</th><th class="r">가격</th><th>납기(영업일)</th><th>기준 분량</th><th>추가 단위·단가</th><th>결제 링크(같은 금액일 때)</th></tr></thead><tbody>

@@ -34,3 +34,15 @@ for (const tabs of $$('[data-tabs]')) {
     });
   });
 }
+
+// 가격표: 빌드 때 넣은 기본 가격을 운영자가 바꾼 현재 가격으로 고친다
+if (document.querySelector('[data-price]')) {
+  Promise.all([import('../app/api.js'), import('../core/pricing.js')]).then(async ([A, P]) => {
+    if (!A.apiReady()) return;
+    const c = await A.loadConfig();
+    if (!c || c.offline || !c.catalog) return;
+    const find = (code) => (c.catalog.items || []).find((i) => i.code === code);
+    for (const el of $$('[data-price]')) { const it = find(el.dataset.price); if (it) el.textContent = it.quoteOnly ? '별도 견적' : P.won(it.price); }
+    for (const el of $$('[data-days]')) { const it = find(el.dataset.days); if (it) el.textContent = it.days ? `영업일 ${it.days}일` : '견적 후 안내'; }
+  }).catch(() => { /* 기본 가격 그대로 둔다 */ });
+}

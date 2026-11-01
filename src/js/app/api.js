@@ -34,6 +34,15 @@ export async function api(action, payload = {}, { retries = 1, timeoutMs = 90000
 }
 
 // 공개 설정(가격표 등): 서버 → 세션 캐시 → 기본값
+// 서버를 기다리지 않고 바로 그릴 때 쓰는 설정: 이 탭에서 받은 적 있는 설정, 없으면 기본 가격표
+export function peekConfig() {
+  try {
+    const c = JSON.parse(sessionStorage.getItem('nm:config') || 'null');
+    if (c && c.data && c.data.catalog) return c.data;
+  } catch { /* 무시 */ }
+  return { catalog: DEFAULT_CATALOG, settings: {}, provisional: true };
+}
+
 export async function loadConfig() {
   const cached = (() => { try { return JSON.parse(sessionStorage.getItem('nm:config') || 'null'); } catch { return null; } })();
   if (cached && Date.now() - cached.at < 10 * 60 * 1000) return cached.data;

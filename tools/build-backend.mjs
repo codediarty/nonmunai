@@ -12,7 +12,7 @@ const pricing = readFileSync(path.join(root, 'src/js/core/pricing.js'), 'utf8')
   .replace(/^\/\/ Apps Script에 넣을 때는.*$/m, '');
 // 사이트 주소(메일 속 링크)는 site.config.json에서 가져온다
 const site = JSON.parse(readFileSync(path.join(root, 'site.config.json'), 'utf8'));
-const siteFull = ((process.env.SITE_URL || site.siteUrl) + (process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : (site.basePath || ''))).replace(/\/+$/, '');
+const siteFull = ((process.env.SITE_URL || site.siteUrl).replace(/^http:\/\/(?!localhost|127\.0\.0\.1)/, 'https://').replace(/\/+$/, '') + (process.env.BASE_PATH !== undefined ? process.env.BASE_PATH : (site.basePath || ''))).replace(/\/+$/, '');
 const files = readdirSync(srcDir).filter((f) => f.endsWith('.gs')).sort();
 const parts = [];
 for (const f of files) {

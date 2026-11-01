@@ -154,6 +154,7 @@ function maintenance_() {
       o.status = 'cancelled'; saveOrder_(o);
       paymentsFor_(o.orderNo).forEach(function (p) { if (p.status === 'requested') { p.status = 'cancelled'; updatePayment_(p); } });
       addHistory_(o.orderNo, 'cancelled', '결제가 진행되지 않아 주문이 자동 취소되었습니다. 올리신 자료는 삭제했습니다.', 'system');
+      mailCustomer_(o, 'cancelled', { days: unpaidDays });
       if (!o.paidAmount && o.deletedState.indexOf('content') < 0) purgeOrderContent_(o, '미결제 ' + unpaidDays + '일 자동 취소');
       stats.unpaid++;
       return;

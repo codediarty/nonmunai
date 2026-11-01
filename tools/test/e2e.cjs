@@ -5,16 +5,18 @@
  * 실행: NODE_PATH=$(npm root -g) node tools/test/e2e.cjs [기본 주소] [--only=1,2,3] [--verbose]
  *   기본 주소를 주지 않으면 http://localhost:4174 를 씁니다.
  * 전제: ./tools/dev-restart.sh 로 개발 서버(Apps Script 에뮬레이터 API 포함)가 떠 있어야 합니다.
- *   이 스크립트는 서버를 재시작하지 않습니다. 대신 /__dev(관리자 비밀번호), /__clock(에뮬레이터 시계),
- *   /__jobs(예약 작업 실행)를 씁니다.
+ *   이 스크립트는 서버를 재시작하지 않습니다. 대신 /__dev(관리자 비밀번호, 보낸 메일·대기 메일),
+ *   /__clock(에뮬레이터 시계), /__jobs(예약 작업 실행)를 씁니다. /__jobs와 /__dev의 queued는
+ *   이 테스트를 위해 tools/dev-server.mjs에 더한 개발용 기능입니다.
  *
  * 순서: 1~38, 40을 먼저 돌리고, 서버 시계를 앞당기는 39(보관 만료·접근 기한)를 맨 마지막에 돌립니다.
- *   그래서 전체 실행 뒤에는 서버 시계가 약 181일 앞서 있습니다. 다시 돌릴 때도 동작하지만
- *   깨끗한 상태가 필요하면 dev-restart.sh로 서버를 새로 띄워 주세요.
+ *   그래서 전체 실행 뒤에는 서버 시계가 약 181일 앞서 있습니다. 서버를 다시 띄우지 않고 이어서 돌려도
+ *   동작하지만, 깨끗한 상태가 필요하면 dev-restart.sh로 서버를 새로 띄워 주세요.
+ *   주문 생성 제한(시간당 120건)이 있으므로 39를 빼고(--only) 여러 번 돌릴 때는 서버를 다시 띄워 주세요.
  *
- * 결과: 확인마다 PASS/FAIL 한 줄, 마지막에 항목별(1~40) 결과와 확인 범위(E2E/백엔드 테스트) 표.
+ * 결과: 확인마다 PASS/FAIL 한 줄, 마지막에 항목별(1~40) 결과와 확인 범위(E2E, 기존 단위·API 테스트) 표.
  *   KNOWN은 프런트엔드에서 고칠 수 없는 알려진 백엔드 결함으로, 종료 코드에는 반영하지 않습니다.
- *   FAIL이 하나라도 있으면 종료 코드 1.
+ *   FAIL이 하나라도 있거나 페이지 스크립트 오류(pageerror)가 나면 종료 코드 1.
  */
 const { chromium } = require('playwright');
 const fs = require('fs');
@@ -44,11 +46,14 @@ const TITLES = {
   34: '모바일 화면에서 입력·결제 요약 사용 가능', 35: '결제사 미설정 시 결제 완료를 가장하지 않음', 36: '데이터·파일 삭제 및 개인정보 동의 처리',
   37: '실제 응답자 개인정보 비식별화 안내', 38: '제출·게재·유의성 보장 문구 없음', 39: '파일 보관 만료 및 접근 통제 테스트', 40: '관리자 가격 변경 시 신규 주문 가격 반영, 기존 주문 가격 유지',
 };
-// 서버 쪽 확인을 나눠 맡는 백엔드 API 테스트(tools/test/backend.test.mjs)
+// 같은 항목을 서버·계산 쪽에서 나눠 확인하는 기존 단위·API 테스트(node tools/test/run-all.mjs)
 const BACKEND = {
-  4: '필수 자료 검사(목차: 파일 또는 입력)', 8: '첨삭 원고 없으면 제출 불가', 13: '-', 18: '시뮬레이션 동의 필수·결과 파일명 표시', 23: '견적형 결제 불가→견적 확정',
-  24: '필수 자료 누락 시 missing_files', 25: '형식·내용 검사(위장 파일 차단)', 28: '다른 주문 토큰·위조 티켓 거부', 29: '토큰 없으면 거부·로그인 제한',
-  30: '-', 33: '결과 업로드→전달→내려받기', 35: '토스 승인·금액 위조 거부', 36: '결제 전 취소 시 영구 삭제', 39: '자동 정리(미제출·미결제·보관 90일)', 40: '가격표 편집이 서버 견적에 반영',
+  3: 'engine: 키워드로 추천 주제 생성', 8: 'backend: 첨삭 원고 없으면 제출 불가', 9: 'pricing: 피드백 항목 수 가산', 15: 'pricing: 모집 의뢰는 견적형',
+  17: 'pricing: 데이터 유무에 따른 가격', 18: 'backend: 시뮬레이션 동의 필수·결과 파일명 표시', 22: 'pricing: 유형·작업·분량·옵션 가산, backend: 서버 가격=화면 가격',
+  23: 'backend: 견적형 결제 불가→견적 확정', 24: 'backend: 필수 자료 누락 시 missing_files', 25: 'backend: 형식·내용 검사(위장 파일 차단)',
+  28: 'backend: 다른 주문 토큰·위조 티켓 거부, 조회 잠금', 29: 'backend: 토큰 없으면 거부·로그인 제한·비밀번호 변경 시 토큰 무효', 30: 'backend: 자료 보완 요청→보완 완료',
+  33: 'backend: 결과 업로드→전달→내려받기', 35: 'backend: 무통장 알림은 확인 중, 토스 승인·금액 위조 거부', 36: 'backend: 필수 동의 없으면 거부, 결제 전 취소 시 영구 삭제',
+  39: 'backend: 자동 정리(미제출 3일·미결제 30일·보관 90일), 수정 요청 30일', 40: 'pricing·backend: 가격표 변경은 새 견적에만 반영',
 };
 const results = [];
 const pageErrors = [];
@@ -204,6 +209,19 @@ async function waitText(p, sel, text, timeout = 15000) {
   }
 }
 const toast = (p, text, timeout = 15000) => waitText(p, '.toast-host .toast', text, timeout);
+// 복사 버튼을 누른 뒤 클립보드가 기대한 내용으로 바뀔 때까지 기다린다(앞선 복사의 알림이 남아 있어도 헷갈리지 않게)
+async function clipAfter(p, sel, mustInclude, timeout = 15000) {
+  await p.evaluate(() => navigator.clipboard.writeText('')).catch(() => {});
+  await p.click(sel);
+  const until = Date.now() + timeout;
+  let got = '';
+  while (Date.now() < until) {
+    got = await p.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+    if (got.includes(mustInclude)) return got;
+    await sleep(150);
+  }
+  throw new Error(`${sel}을 눌렀는데 클립보드에 "${mustInclude}"가 들어가지 않음: ${sq(got).slice(0, 160)}`);
+}
 const text = async (p, sel) => sq(await p.textContent(sel));
 async function noHScroll(p, where) {
   const r = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
@@ -215,8 +233,14 @@ async function downloadVia(p, sel) {
 }
 
 /* =================================================================== 신청서 도우미 */
+// 데스크톱에서는 새 단계가 그려지고 30ms 뒤 첫 입력 칸에 자동으로 초점이 간다. 그 전에 입력하면 초점이 옮겨 가며
+// 글자가 다른 칸에 들어갈 수 있으므로, 초점이 단계 안으로 들어올 때까지(최대 0.4초, 모바일은 자동 초점 없음) 기다린다.
+const settle = (p) => p.waitForFunction(() => {
+  const a = document.activeElement;
+  return matchMedia('(max-width: 860px)').matches || !!(a && a !== document.body && a.closest && a.closest('#wzStep'));
+}, null, { timeout: 400 }).catch(() => {});
 const W = {
-  async open(p, url, first) { await p.goto(BASE + url); await p.waitForSelector(`#wzStep[data-step="${first}"]`); },
+  async open(p, url, first) { await p.goto(BASE + url); await p.waitForSelector(`#wzStep[data-step="${first}"]`); await settle(p); },
   step: (p) => p.$eval('#wzStep', (e) => e.dataset.step),
   async pick(p, name, value) {
     await p.click(`#wzStep label.opt:has(input[data-choice="${name}"][value="${value}"])`);
@@ -235,6 +259,7 @@ const W = {
       return (s && s.dataset.step !== b) || (e && e.textContent.trim());
     }, before);
     const after = await W.step(p);
+    if (after !== before) await settle(p);
     return { step: after, err: after === before ? sq(await p.textContent('#wzErr')) : '' };
   },
   async go(p, expect) {
@@ -249,7 +274,7 @@ const W = {
     if (expected) eq(r.err, expected, '안내 문구');
     return r.err;
   },
-  async back(p, expect) { await p.click('#wzStep [data-prev]'); await p.waitForSelector(`#wzStep[data-step="${expect}"]`); },
+  async back(p, expect) { await p.click('#wzStep [data-prev]'); await p.waitForSelector(`#wzStep[data-step="${expect}"]`); await settle(p); },
   count: (p, slot) => p.$$eval(`#wzStep [data-up="${slot}"] .up-item`, (els) => els.length),
   names: (p, slot) => p.$$eval(`#wzStep [data-up="${slot}"] .up-item .up-name`, (els) => els.map((e) => e.textContent)),
   async upload(p, slot, files, { expect } = {}) {
@@ -336,6 +361,7 @@ async function statsToData(p, { purpose = 'degree', title = '중학생의 학업
 async function surchargeLabelsHold(p, name, where) {
   const opts = await p.$$eval(`#wzStep input[data-choice="${name}"]`, (els) => els.map((e) => ({ v: e.value, side: ((e.closest('label').querySelector('.opt-side') || {}).textContent || '').trim(), on: e.checked, multi: e.type === 'checkbox' })));
   const start = opts.filter((o) => o.on).map((o) => o.v);
+  await sleep(200); // 오른쪽 견적은 입력 뒤 90ms 지연해서 다시 그려지므로, 기준 금액을 읽기 전에 반영을 기다린다
   const base = parseWon(await W.price(p));
   let checkedAny = 0;
   for (const o of opts) {
@@ -563,7 +589,7 @@ async function tests() {
     await W.blocked(p, '기존 원고 파일을 올려 주세요.');
     await W.fill(p, 'paper.editScope', '2장 문장 다듬기');
     await W.blocked(p, '기존 원고 파일을 올려 주세요.');
-    has(await W.side(p), '기존 원고', '오른쪽 필수 자료 목록');
+    await waitText(p, '#wzSideIn .chk li', '기존 원고');
     ok(!(await p.$('#wzSideIn .chk li.ok:has-text("기존 원고")')), '원고를 올리기 전인데 필수 자료가 충족으로 표시됨');
     await W.fill(p, 'paper.editScope', '');
     const body = Array.from({ length: 8 }, (_, i) => `제${i + 1}장 본문 ${'가나다라마바사아자차카타파하'.repeat(57)}`);
@@ -709,6 +735,11 @@ async function tests() {
     await W.upload(p, 'questionnaire', [docx('E2E_기존설문지.docx')]);
     await W.go(p, 'target');
   }));
+  await check(11, '서버도 기존 설문지 없는 설문지 수정 주문은 빠진 자료 이름으로 거부', async () => {
+    const x = await makeOrder({ service: 'survey', input: { common: { fieldId: 'edu' }, survey: { mode: 'edit', recruit: 'none' }, addons: {} }, submit: false });
+    const r = await rawApi('submitOrder', { orderNo: x.orderNo, token: x.token });
+    eq([r.error, r.message], ['missing_files', '필수 자료가 빠졌습니다: 기존 설문지 파일'], '서버 응답');
+  });
   const surveyFb = once(() => withCtx({}, async (p) => {
     const f = {};
     await surveyToMode(p);
@@ -894,6 +925,10 @@ async function tests() {
     hasNot(g.brief, '논문 결과장', '시뮬레이션 작업지시문');
     ok(f.server.input.statistics.output !== 'chapter', `서버에 저장된 결과물 형태: ${f.server.input.statistics.output}`);
   });
+  await check(19, "'데이터 있음'에서 올렸던 파일은 시뮬레이션으로 바꾸면 주문에 붙지 않음", async () => {
+    const f = await simA();
+    eq(((f.server.files || {}).customer || []).map((x) => x.name), [], '시뮬레이션 주문에 붙은 고객 파일');
+  });
 
   /* ---------------------------------------------------------------- 20, 21 */
   await check(20, "분석 방법 '잘 모르겠어요'가 기본이고 그대로 주문이 접수됨", async () => withCtx({}, async (p) => {
@@ -924,8 +959,11 @@ async function tests() {
     await W.upload(p, 'prevResult', [file('E2E_기존분석.spv', zipBytes())]);
     await W.blocked(p, '교수님 의견을 파일로 올리거나 붙여 넣어 주세요.');
     await W.fill(p, 'statistics.feedbackText', '1. 위계적 회귀분석으로 다시 할 것\n2. 효과크기를 함께 보고할 것');
-    const okItems = await p.$$eval('#wzSideIn .chk li.ok', (els) => els.map((e) => e.textContent.trim()));
-    for (const k of ['데이터 파일', '기존 분석 결과', '교수님 의견']) ok(okItems.includes(k), `필수 자료 목록에서 "${k}"가 충족으로 표시되지 않음: ${okItems.join(', ')}`);
+    try {
+      await p.waitForFunction((want) => { const got = [...document.querySelectorAll('#wzSideIn .chk li.ok')].map((e) => e.textContent.trim()); return want.every((k) => got.includes(k)); }, ['데이터 파일', '기존 분석 결과', '교수님 의견'], { timeout: 5000 });
+    } catch (e) {
+      throw new Error(`필수 자료 목록이 모두 충족으로 바뀌지 않음: ${await p.$$eval('#wzSideIn .chk li.ok', (els) => els.map((x) => x.textContent.trim()).join(', '))}`);
+    }
     await W.waitPrice(p, '79,000원', '기존 분석 수정 금액');
     await W.go(p, 'detail'); await W.go(p, 'contact'); await fillContact(p); await W.go(p, 'review');
     const order = await submitWizard(p);
@@ -937,6 +975,11 @@ async function tests() {
     const brief = (await adminOrder(order.orderNo));
     ok(brief.files.customer.length === 2, '운영자 화면 파일 수');
   }));
+  await check(21, '서버도 기존 결과·교수 의견이 빠진 분석 수정 주문은 빠진 자료 이름으로 거부', async () => {
+    const x = await makeOrder({ service: 'statistics', input: { common: { fieldId: 'edu' }, statistics: { hasData: true, output: 'revise', methods: ['auto'] }, addons: {} }, files: [{ slot: 'data', ...csv() }], submit: false });
+    const r = await rawApi('submitOrder', { orderNo: x.orderNo, token: x.token });
+    eq([r.error, r.message], ['missing_files', '필수 자료가 빠졌습니다: 기존 분석 결과 파일, 교수님 의견(파일 또는 붙여넣기)'], '서버 응답');
+  });
 
   /* ---------------------------------------------------------------- 22 */
   await check(22, '논문: 유형·작업·분량·옵션을 바꿀 때마다 견적과 모바일 요약 금액이 바로 바뀜', async () => withCtx({}, async (p) => {
@@ -1044,6 +1087,15 @@ async function tests() {
     has(e, 'script.js', '섞어 올린 파일 중 거부된 파일 안내');
     eq(await W.names(p, 'materials'), ['E2E_정상.docx'], '허용된 파일만 남음');
   }));
+  await check(25, '서버도 허용되지 않은 형식·20MB 초과·빈 파일을 거부(화면 검사를 거치지 않은 요청)', async () => {
+    const x = await makeOrder({ input: paperIn(), submit: false });
+    const up = (name, buf, slot = 'materials') => rawApi('uploadFile', { orderNo: x.orderNo, token: x.token, slot, name, mime: 'application/octet-stream', data: B64(buf) });
+    eq((await up('virus.exe', Buffer.from('MZxxxx'))).error, 'file_type', '실행 파일');
+    eq((await up('big.pdf', Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(20 * 1024 * 1024 + 10, 0x20)]))).error, 'file_size', '20MB 초과');
+    eq((await up('empty.docx', Buffer.alloc(0))).error, 'file_empty', '빈 파일');
+    eq((await up('data.docx', zipBytes(), 'data')).error, 'file_type', '데이터 칸의 문서 파일');
+    eq((await getOrder(x)).files.customer.length, 0, '거부된 파일이 서버에 남음');
+  });
   await check(25, '주문 화면에서 더 올리는 파일도 형식을 막음', async () => {
     const x = await makeOrder({ input: paperIn() });
     await withCtx({}, async (p) => {
@@ -1377,8 +1429,8 @@ async function tests() {
     const hits = scan(docs, [
       { re: /AI[가는이]?\s*(?:지금\s*)?(?:논문|원고|초안|본문|결과|설계|답변|분석)?[을를]?\s*(?:자동\s*)?(?:생성|작성|분석)(?:하고\s*있|하는\s*중|\s*중)/g, why: 'AI가 생성 중이라는 표현' },
       { re: /(?:생성|작성|분석|검토|집필)\s*(?:하고\s*있습니다|하는\s*중|중)\s*(?:\.{2,}|…)/g, why: '진행 중 말줄임' },
-      { re: /\d{1,3}\s*%\s*(?:완료|진행|생성|분석|작성|처리)/g, why: '퍼센트 진행률' },
-      { re: /(?:진행률|완료율|생성률|처리율)\s*[:：]?\s*\d/g, why: '진행률 숫자' },
+      { re: /\d{1,3}[ \t]*%[ \t]*(?:완료|진행|생성|분석|작성|처리)/g, why: '퍼센트 진행률' },
+      { re: /(?:진행률|완료율|생성률|처리율)[ \t]*[:：]?[ \t]*\d/g, why: '진행률 숫자' },
       { re: /Math\.random\(\)[^;\n]{0,80}%/g, why: '무작위 퍼센트' },
     ], () => false);
     if (VERBOSE) for (const h of hits) console.log(`        ${h.file}: ${h.match} | ${h.ctx}`);
@@ -1426,26 +1478,21 @@ async function tests() {
       await p.goto(`${BASE}/admin/#order=${x.orderNo}`);
       await p.waitForSelector('#briefText');
       const shown = await p.textContent('#briefText');
-      await p.click('.ad-card-h [data-act="copyBrief"]');
+      const clip = await clipAfter(p, '.ad-card-h [data-act="copyBrief"]', `[논문AI 작업지시문] ${x.orderNo}`);
       await toast(p, '작업지시문을 복사했습니다.');
-      const clip = await p.evaluate(() => navigator.clipboard.readText());
       eq(clip.trim(), shown.trim(), '복사한 내용과 화면의 지시문');
       for (const s of [`[논문AI 작업지시문] ${x.orderNo}`, '석사학위논문 전체 구성·초안 작성 지원', 'E2E 지시문 주제: 요양보호사의 감정노동과 이직의도', 'E2E 요청: 표는 APA 7판으로', '[참고 자료] E2E_참고자료.docx', '요청 작업: 전체 구성·초안 작성']) has(clip, s, '복사한 작업지시문');
       for (const s of ['홍길동이투이', x.contact.email, '010-9876-5432', '9876']) hasNot(clip, s, '복사한 작업지시문의 고객 개인정보');
       await p.goto(`${BASE}/admin/#order=${y.orderNo}`);
       await waitText(p, '#briefText', y.orderNo);
-      await p.click('.ad-card-h [data-act="copyBrief"]');
-      await toast(p, '작업지시문을 복사했습니다.');
-      const clip2 = await p.evaluate(() => navigator.clipboard.readText());
-      for (const s of [`[논문AI 작업지시문] ${y.orderNo}`, '의뢰 유형: 설문지 새로 만들기', '목표 응답 수: 150명', 'E2E 설문 주제']) has(clip2, s, '두 번째 주문 지시문');
+      const clip2 = await clipAfter(p, '.ad-card-h [data-act="copyBrief"]', `[논문AI 작업지시문] ${y.orderNo}`);
+      for (const s of ['의뢰 유형: 설문지 새로 만들기', '목표 응답 수: 150명', '연구 주제: E2E 설문 주제: 간호사의 회복탄력성']) has(clip2, s, '두 번째 주문 지시문');
       hasNot(clip2, x.orderNo, '두 번째 주문 지시문에 첫 주문 번호');
       await p.goto(`${BASE}/admin/#`);
       await p.waitForSelector(`[data-brief="${x.orderNo}"]`);
-      await p.click(`[data-brief="${x.orderNo}"]`);
-      await toast(p, '작업지시문을 복사했습니다.');
-      const clip3 = await p.evaluate(() => navigator.clipboard.readText());
-      has(clip3, `[논문AI 작업지시문] ${x.orderNo}`, '대시보드에서 복사한 지시문');
+      const clip3 = await clipAfter(p, `[data-brief="${x.orderNo}"]`, `[논문AI 작업지시문] ${x.orderNo}`);
       has(clip3, 'E2E 지시문 주제', '대시보드에서 복사한 지시문');
+      hasNot(clip3, y.orderNo, '대시보드에서 복사한 지시문에 다른 주문 번호');
     });
   });
 
@@ -1484,8 +1531,18 @@ async function tests() {
       ok(dl.bytes.equals(bytes), `내려받은 내용이 올린 내용과 다름(${dl.bytes.length}/${bytes.length}바이트)`);
     });
   });
+  await check(33, '고객 API(getOrder)도 전달 전 결과물과 내려받기 권한을 주지 않음', async () => {
+    const x = await paidOrder({ input: paperIn() });
+    const up = await adminApi('adminUploadResult', { orderNo: x.orderNo, name: 'E2E_전달전초안.docx', mime: MIME.docx, data: B64(zipBytes(700, 6)) });
+    const o = await getOrder(x);
+    eq(o.files.results.map((f) => f.name), [], '전달 전 고객 API의 결과물 목록');
+    const r = await rawApi('downloadFile', { orderNo: x.orderNo, fileId: up.file.id, ticket: (o.files.results[0] || {}).ticket || '' });
+    ok(!r.ok, '전달 전 결과물을 고객 권한으로 내려받을 수 있음');
+  });
   await check(33, '수정 진행 중 새로 올린 수정본은 다시 전달하기 전까지 고객에게 보이지 않음', async () => {
     const x = await deliveredOrder({ input: paperIn() }, { name: 'E2E_1차본.docx' });
+    // 에뮬레이터 시계는 저절로 흐르지 않으므로, 전달 뒤 수정 요청·수정본 업로드까지 시간이 흐른 것을 2분 앞당겨 재현한다
+    await clock(2 / 1440);
     await api('addMessage', { orderNo: x.orderNo, token: x.token, type: 'revision', text: 'E2E 수정 요청: 2장 보강' });
     await adminApi('adminUploadResult', { orderNo: x.orderNo, name: 'E2E_수정본.docx', mime: MIME.docx, data: B64(zipBytes(900, 4)) });
     await withCtx({}, async (p) => {
@@ -1500,7 +1557,7 @@ async function tests() {
   await check(34, '모바일: 하단 요약 막대에 금액이 바로 보이고 미리보기로 견적을 펼치고 닫을 수 있음', async () => withCtx({ mobile: true }, async (p) => {
     await W.open(p, '/paper/new/', 'type');
     ok(await p.isVisible('#wzMbar'), '하단 요약 막대가 보이지 않음');
-    has(await text(p, '#wzMbar'), '유형을 고르면 금액이 나옵니다', '처음 안내');
+    await waitText(p, '#wzMbar', '유형을 고르면 금액이 나옵니다');
     await W.pick(p, 'paper.typeId', 'master');
     await p.waitForFunction(() => (document.querySelector('#wzMbar .mb-price b') || {}).textContent === '399,000원');
     const hidden = await p.$eval('#wzSide', (e) => e.getBoundingClientRect().top >= document.querySelector('#wzMbar').getBoundingClientRect().top - 1);
@@ -1518,14 +1575,18 @@ async function tests() {
     await noHScroll(p, '모바일 신청서');
   }));
   await check(34, '모바일: 끝까지 입력해 제출할 수 있고, 다음 버튼이 하단 막대에 가리지 않으며 결제 화면은 결제 상자가 먼저 나옴', async () => withCtx({ mobile: true }, async (p) => {
+    // 사용자가 끝까지 내렸을 때 다음 버튼을 하단 요약 막대 바로 위에 온전히 보이게 둘 수 있는지(가려지면 누를 수 없음)
     const covered = async (where) => {
       const r = await p.evaluate(() => {
-        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' });
-        const b = document.querySelector('#wzNext').getBoundingClientRect();
+        const btn = document.querySelector('#wzNext');
+        const bar = document.querySelector('#wzMbar').getBoundingClientRect();
+        const b0 = btn.getBoundingClientRect();
+        window.scrollBy({ top: b0.bottom - (bar.top - 12), behavior: 'instant' });
+        const b = btn.getBoundingClientRect();
         const el = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
-        return { hit: !!(el && el.closest('#wzNext')), inView: b.bottom <= window.innerHeight };
+        return { hit: !!(el && el.closest('#wzNext')), bottom: Math.round(b.bottom), barTop: Math.round(bar.top), at: el ? `${el.tagName}.${el.className}` : 'null' };
       });
-      ok(r.inView && r.hit, `${where}: 다음 버튼이 하단 막대에 가려 누를 수 없음`);
+      ok(r.hit && r.bottom <= r.barTop, `${where}: 다음 버튼이 하단 막대에 가려 누를 수 없음 (버튼 아래 ${r.bottom}, 막대 위 ${r.barTop}, 맞은 요소 ${r.at})`);
     };
     await W.open(p, '/paper/new/', 'type');
     await W.pick(p, 'paper.typeId', 'master'); await covered('유형'); await W.go(p, 'field');
@@ -1601,11 +1662,13 @@ async function tests() {
   });
   await check(35, "'결제를 마쳤어요'만 누른 단계의 고객 메일에 '결제가 확인되어'라고 쓰지 않음", async () => {
     ok(claimed, '앞 확인이 실패해 주문이 없음');
-    const mails = (await devInfo(true)).mails.filter((m) => m.subject.includes(claimed.orderNo) && m.to.includes(claimed.contact.email));
+    // 에뮬레이터 하루 메일 할당량(100통)을 넘으면 메일은 대기열(queued)에 쌓이므로 둘 다 본다
+    const dv = await devInfo(true);
+    const mails = [...(dv.mails || []), ...(dv.queued || [])].filter((m) => m.subject.includes(claimed.orderNo) && String(m.to).includes(claimed.contact.email));
     ok(mails.length, '고객 메일을 찾지 못함');
     const bad = mails.filter((m) => /결제가 확인/.test(m.subject));
     eq(bad.map((m) => m.subject), [], '결제 확인 전 고객 메일 제목');
-  }, { known: 'backend/src/20_public.gs api_claimPayment → startWork_ → mailCustomer_(o, "started"): advanceOnClaim(기본 skkc)일 때 확인 전에도 "결제가 확인되어 작업이 시작되었습니다" 메일 발송' });
+  });
 
   /* ---------------------------------------------------------------- 36 */
   await check(36, '연락처 단계: 필수 동의 없이는 진행 불가, 내용 보기·전체 동의 동작, 선택 동의는 선택대로 저장', async () => withCtx({}, async (p) => {
@@ -1717,7 +1780,7 @@ async function tests() {
     has(d, '개인정보로 보이는 열', '자동 진단');
     has(d, '이름', '자동 진단 열');
     has(d, '연락처', '자동 진단 열');
-    has(await W.side(p), '개인정보 열 확인 필요', '오른쪽 패널 경고');
+    await waitText(p, '#wzSideIn', '개인정보 열 확인 필요');
   }));
   await check(37, '설문 의뢰는 응답자 보호(동의·익명화·IRB) 확인 없이 제출할 수 없고 모집 의뢰 시 개인정보 처리도 안내', async () => withCtx({}, async (p) => {
     await surveyToMode(p);
@@ -1830,11 +1893,12 @@ async function tests() {
 /* =================================================================== 39: 시계를 앞당기는 확인(마지막) */
 async function timeTravel() {
   if (ONLY.length && !ONLY.includes(39)) return;
-  let D, P, U;
+  let D, P, U, S;
   await check(39, '전달된 결과물에 보관 기한(전달 후 90일)이 표시됨', async () => {
     D = await deliveredOrder({ input: paperIn({ title: 'E2E 보관 기한 확인 주제' }) }, { name: 'E2E_보관확인.docx' });
     P = await paidOrder({ input: paperIn({ title: 'E2E 조회 기한 확인 주제' }) });
     U = await makeOrder({ input: paperIn({ title: 'E2E 미결제 자동 취소 확인 주제' }) });
+    S = await deliveredOrder({ service: 'statistics', input: { common: { fieldId: 'edu', title: 'E2E 시뮬레이션 보관 확인 주제' }, statistics: { hasData: false, noDataPath: 'simulation', output: 'interp', methods: ['auto'] }, addons: {} }, consents: { simulation: true } }, { name: 'sim_result.docx' });
     const o = await getOrder(D);
     const ymd = new Date(new Date(o.deliveredAt).getTime() + 90 * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
     eq(o.filesExpireAt, ymd, '서버 보관 기한');
@@ -1888,6 +1952,16 @@ async function timeTravel() {
       await waitText(p, '#progress', '결제가 진행되지 않아 주문이 자동 취소되었습니다');
     } finally { await c.close(); }
   });
+  await check(39, '보관 기간이 지나 자료가 지워진 시뮬레이션 주문도 가상 데이터 표시가 남고 논문 작성 연결을 보이지 않음', async () => {
+    ok(S, '앞 확인 실패');
+    ok((await adminOrder(S.orderNo)).deletedState, '시뮬레이션 주문 자료가 정리되지 않음');
+    await withCtx({}, async (p) => {
+      await p.goto(ordersUrl(S));
+      await p.waitForSelector('.ord-card');
+      eq(await text(p, '.ord-card .sim-mark'), '가상 데이터, 실제 연구 결과 아님', '삭제 뒤 가상 데이터 표시');
+      eq(await p.$$eval('.next-svc a[href^="/paper/new/"]', (els) => els.length), 0, '삭제 뒤 논문 작성 연결 수');
+    });
+  });
   await check(39, '조회 키는 180일 뒤 만료되어 주문이 열리지 않고, 연락처와 비밀번호로 다시 확인해야 열림', async () => {
     ok(P, '앞 확인 실패');
     await withCtx({}, async (p) => {
@@ -1917,7 +1991,9 @@ async function timeTravel() {
     process.exit(2);
   }
   console.log(`논문AI 인수 테스트(E2E) · ${BASE} · 실행 ${RUN}${ONLY.length ? ` · 일부 항목만: ${ONLY.join(',')}` : ''}\n`);
-  browser = await chromium.launch();
+  // 리눅스에서 LANG이 비어 있으면 Chromium이 한글 파일 이름을 저장하지 못하고 'download'로 바꾼다(실사용 브라우저와 무관한 환경 문제)
+  const utf8 = /utf-?8/i.test(process.env.LC_ALL || process.env.LANG || '');
+  browser = await chromium.launch(utf8 ? {} : { env: { ...process.env, LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' } });
   try {
     await tests();
     await timeTravel();
@@ -1933,8 +2009,8 @@ async function timeTravel() {
     const st = !rs.length ? 'FAIL' : rs.some((r) => r.status === 'FAIL') ? 'FAIL' : 'PASS';
     if (st === 'FAIL') failed++;
     const known = rs.filter((r) => r.status === 'KNOWN').length;
-    const cover = BACKEND[i] && BACKEND[i] !== '-' ? 'E2E+백엔드' : 'E2E';
-    console.log(`${st}  ${pad(i)} ${TITLES[i]}  [${cover}, 확인 ${rs.length}개${known ? `, 알려진 백엔드 결함 ${known}` : ''}]${!rs.length ? ' (확인이 실행되지 않음)' : ''}`);
+    const cover = BACKEND[i] ? `E2E+단위·API(${BACKEND[i]})` : 'E2E';
+    console.log(`${st}  ${pad(i)} ${TITLES[i]}  [확인 ${rs.length}개${known ? `, 알려진 백엔드 결함 ${known}` : ''} · ${cover}]${!rs.length ? ' (확인이 실행되지 않음)' : ''}`);
   }
   if (pageErrors.length) {
     console.log(`\n페이지 스크립트 오류 ${pageErrors.length}건:`);

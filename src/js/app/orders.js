@@ -29,9 +29,29 @@ const NEXT = {
     { href: '/paper/new/', t: '논문 작성 지원', d: '분석 결과를 본문 장으로' },
     { href: '/paper/new/?task=feedback', t: '교수님 피드백 반영', d: '심사 의견을 항목별로 반영' },
   ],
+  // 학습용 시뮬레이션: 가상 데이터 결과를 논문으로 옮기는 안내는 하지 않고 실제 조사·분석으로만 잇는다
+  simulation: [
+    { href: '/survey/new/', t: '실제 설문조사 의뢰', d: '실제 응답을 모아 연구 데이터로' },
+    { href: '/statistics/new/', t: '실제 데이터 통계분석', d: '직접 모은 데이터로 분석과 해석' },
+  ],
 };
 
 const params = () => new URLSearchParams(location.search);
+
+// 고객에게 보일 결과물: 전달 완료로 공개된 것만(수정 진행 중 새로 올린 수정본은 다시 전달할 때까지 숨김)
+function deliveredResults(o) {
+  const res = (o.files && o.files.results) || [];
+  if (['delivered', 'completed'].includes(o.status)) return res;
+  const at = (o.timeline || []).filter((t) => t.status === 'delivered').map((t) => Date.parse(t.at)).filter((n) => !Number.isNaN(n));
+  if (!at.length) return [];
+  const last = Math.max(...at);
+  return res.filter((f) => { const u = Date.parse(f.uploadedAt); return Number.isNaN(u) || u <= last; });
+}
+
+function cancelNote(o) {
+  const last = [...(o.timeline || [])].reverse().find((t) => t.status === 'cancelled' && t.message);
+  return last ? `취소된 주문입니다. ${esc(last.message)}` : '취소된 주문입니다.';
+}
 
 /* ------------------------------------------------------------------ 시작 */
 export async function startOrders(root) {
@@ -197,7 +217,7 @@ class OrderPage {
 ${this.headCard(title, sim)}
 ${this.materialsCard()}
 ${this.resultsCard(sim)}
-<div class="card" id="progress"><div class="card-h"><h2>진행 상황</h2><span class="small muted">마지막 확인 <span id="syncAt">${fmtAt(new Date(this.lastLoad).toISOString())}</span></span></div>${o.status === 'cancelled' ? note('취소된 주문입니다.', '') : timelineHtml(o)}<p class="hint">이 화면은 1분마다 새 소식을 확인합니다. 단계가 바뀌면 메일로도 알려 드립니다.</p></div>
+<div class="card" id="progress"><div class="card-h"><h2>진행 상황</h2><span class="small muted">마지막 확인 <span id="syncAt">${fmtAt(new Date(this.lastLoad).toISOString())}</span></span></div>${o.status === 'cancelled' ? note(cancelNote(o), '') : timelineHtml(o)}<p class="hint">이 화면은 1분마다 새 소식을 확인합니다. 단계가 바뀌면 메일로도 알려 드립니다.</p></div>
 ${this.messagesCard()}
 ${this.designCard()}
 </div>
@@ -228,11 +248,11 @@ ${this.manageCard()}
     } else if (o.status === 'draft') {
       banners.push(note('아직 제출되지 않은 주문서입니다. 신청 화면에서 이어서 제출해 주세요.', 'amber'));
     }
-    if (o.deleted) banners.push(note('요청에 따라 올리신 파일과 연구 자료가 삭제되었습니다.', ''));
+    if (o.deleted) banners.push(note('올리신 파일과 결과물, 연구 자료가 삭제되었습니다. 주문번호와 결제 기록만 관련 법령에 따라 정해진 기간 보관됩니다.', ''));
     const cells = [
       ['예상 전달일', o.status === 'delivered' || o.status === 'completed' ? (o.deliveredAt ? fmtAt(o.deliveredAt).replace(/ \d\d:\d\d$/, '') + ' 전달' : '전달 완료') : (o.etaLabel || (['quote_requested', 'pending_payment', 'payment_review', 'draft'].includes(o.status) ? '결제 후 확정' : '확인 중'))],
       ['현재 단계', o.statusLabel],
-      o.queuePosition && !['delivered', 'completed', 'cancelled'].includes(o.status) ? ['작업 순서', `${o.queuePosition}번째`] : o.filesExpireAt ? ['내려받기 기한', `${Number(o.filesExpireAt.slice(5, 7))}월 ${Number(o.filesExpireAt.slice(8, 10))}일`] : ['주문 금액', won(o.amount)],
+      o.queuePosition && !['delivered', 'completed', 'cancelled'].includes(o.status) ? ['작업 순서', `${o.queuePosition}번째`] : o.filesExpireAt ? ['내려받기 기한', o.deleted ? '파일 삭제됨' : `${Number(o.filesExpireAt.slice(5, 7))}월 ${Number(o.filesExpireAt.slice(8, 10))}일`] : ['주문 금액', won(o.amount)],
     ];
     return `<div class="card ord-card"><div class="ord-head"><div class="ord-hd-txt"><p class="ord-no">주문번호 ${esc(o.orderNo)} · ${esc(fmtAt(o.createdAt))} 접수</p><h1 class="ord-title">${esc(title)}</h1>${(() => { const sub = title === o.productName ? (o.summary || '') : [o.productName, o.summary].filter(Boolean).join(' · '); return sub ? `<p class="muted small">${esc(sub)}</p>` : ''; })()}${sim ? '<p><span class="sim-mark">가상 데이터, 실제 연구 결과 아님</span></p>' : ''}</div>${statusPill(o)}</div>
 <div class="eta-box">${cells.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>
@@ -254,16 +274,16 @@ ${this.uploadBox(slots[0], 'mat')}
 
   resultsCard(sim) {
     const o = this.o;
-    const res = o.files.results || [];
+    const res = deliveredResults(o);
     if (!res.length && !['delivered', 'completed', 'revision'].includes(o.status)) return '';
     const left = Math.max(0, (o.revisions.allowed || 0) - (o.revisions.used || 0));
     const revItem = (this.cfg.catalog.items || []).find((i) => i.code === 'A-REVISION');
     const deliveredAt = o.deliveredAt ? new Date(o.deliveredAt) : null;
     const revUntil = deliveredAt ? new Date(deliveredAt.getTime() + 30 * 86400000) : null;
     const revOpen = o.allow.revision && (!revUntil || revUntil > new Date());
-    return `<div class="card card-result" id="results"><div class="card-h"><h2 class="serif">결과물</h2>${o.filesExpireAt ? `<span class="small muted">${esc(o.filesExpireAt)}까지 보관</span>` : ''}</div>
+    return `<div class="card card-result" id="results"><div class="card-h"><h2 class="serif">결과물</h2>${o.filesExpireAt && !o.deleted ? `<span class="small muted">${esc(o.filesExpireAt)}까지 보관</span>` : ''}</div>
 ${sim ? note('학습용 시뮬레이션 결과입니다. 가상 데이터로 만든 결과이므로 실제 연구 결과로 제출하거나 인용할 수 없습니다.', 'pen') : ''}
-${res.length ? fileRows(res, { results: true }) : '<p class="muted">결과물을 정리하고 있습니다.</p>'}
+${res.length ? fileRows(res, { results: true }) : o.deleted ? '<p class="muted">결과물 파일은 삭제되어 더 이상 내려받을 수 없습니다.</p>' : '<p class="muted">결과물을 정리하고 있습니다.</p>'}
 ${res.length ? '<p class="hint">결과물은 연구를 돕는 참고 자료입니다. 제출 전에 내용과 출처를 직접 확인해 주세요.</p>' : ''}
 ${o.allow.revision ? `<div class="rev-box"><h3 class="sub-q">수정 요청</h3>
 <p class="small">${o.revisions.allowed ? `포함된 수정 ${o.revisions.allowed}회 중 ${left}회 남았습니다.` : '이 주문에는 무상 수정이 포함되어 있지 않습니다.'} ${left ? '' : `추가 수정은 1회 단위${revItem ? `(${won(revItem.price)})` : ''}로 진행하며, 요청을 남기시면 범위를 확인해 안내드립니다.`} 저희 쪽 오류나 누락은 횟수와 관계없이 무상으로 고쳐 드립니다.${revUntil ? ` 수정 요청은 ${revUntil.getMonth() + 1}월 ${revUntil.getDate()}일까지 받습니다.` : ''}</p>
@@ -317,9 +337,10 @@ ${o.allow.upload && o.status !== 'needs_materials' && !o.deleted ? `<details cla
   nextCard() {
     const o = this.o;
     if (!['delivered', 'completed', 'revision', 'in_progress', 'review'].includes(o.status)) return '';
+    const sim = isSimulation(o);
     let addons = [];
-    try { addons = JSON.parse(this.cfg.settings.addonServices || '[]').filter((a) => a.enabled && /^https?:\/\//.test(a.url || '')); } catch { addons = []; }
-    const items = (NEXT[o.service] || []).map((n) => `<a href="${url(n.href)}"><b>${esc(n.t)}</b><span>${esc(n.d)}</span></a>`)
+    try { addons = sim ? [] : JSON.parse(this.cfg.settings.addonServices || '[]').filter((a) => a.enabled && /^https?:\/\//.test(a.url || '')); } catch { addons = []; }
+    const items = ((sim ? NEXT.simulation : NEXT[o.service]) || []).map((n) => `<a href="${url(n.href)}"><b>${esc(n.t)}</b><span>${esc(n.d)}</span></a>`)
       .concat(addons.map((a) => `<a href="${esc(a.url)}" target="_blank" rel="noopener"><b>${esc(a.name)}</b><span>${esc(a.desc || '성균관컨설팅 제휴 서비스')}</span></a>`));
     if (!items.length) return '';
     return `<div class="card"><div class="card-h"><h2>함께 많이 찾는 서비스</h2></div><div class="next-svc">${items.join('')}</div></div>`;
@@ -365,7 +386,8 @@ ${o.allow.upload && o.status !== 'needs_materials' && !o.deleted ? `<details cla
     const matDone = $('#matDone', r);
     if (matDone) matDone.addEventListener('click', async () => {
       matDone.disabled = true;
-      await this.act('addMessage', { type: 'materials_done', text: '' }, '보완 자료 제출을 알렸습니다. 확인 후 이어서 진행합니다.');
+      const ok = await this.act('addMessage', { type: 'materials_done', text: '' }, '보완 자료 제출을 알렸습니다. 확인 후 이어서 진행합니다.');
+      if (!ok) matDone.disabled = false;
     });
     const rev = $('#revSend', r);
     if (rev) rev.addEventListener('click', async () => {

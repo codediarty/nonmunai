@@ -83,7 +83,7 @@ ${faqBlock(T, freeFaq, { title: '무료 논문 설계 자주 묻는 질문' })}`
     crumbs: [['홈', '/'], ['무료 도구', '/tools/'], ['논문 목차 생성기', '/tools/toc/']], faq: tocFaq, scripts: ['toc'], priority: '0.8',
     geo: `논문 목차 생성기 예시(석사, 매개효과 연구):\n${tocToText(exToc)}`,
     schema: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: '논문 목차 생성기', applicationCategory: 'EducationalApplication', operatingSystem: 'Web', inLanguage: 'ko-KR', url: T.abs('/tools/toc/'), offers: { '@type': 'Offer', price: 0, priceCurrency: 'KRW' } }],
-    body: `${head(T, '/tools/toc/', '논문 목차 생성기', '논문 목차 생성기', '논문 제목을 입력하고 유형을 고르면 연구 구조에 맞는 목차를 장·절·항까지 만들어 드립니다. 변인 이름이 그대로 이론적 배경과 측정도구 절에 들어갑니다.')}
+    body: `${head(T, '/tools/toc/', '논문 목차 생성기', '논문 목차 생성기', '논문 목차 작성이 막막하다면 제목부터 넣어 보세요. 논문 제목을 입력하고 유형을 고르면 연구 구조에 맞는 목차를 장·절·항까지 만들어 드립니다. 변인 이름이 그대로 이론적 배경과 측정도구 절에 들어갑니다.')}
 <section class="sec"><div class="wrap toolbox">
 <form class="toolbox-form" id="tocForm" autocomplete="off">
 <div class="field"><label class="label" for="tTitle">논문 제목</label><textarea class="textarea" id="tTitle" rows="3">간호사의 직무스트레스가 이직의도에 미치는 영향: 회복탄력성의 매개효과</textarea></div>
@@ -152,9 +152,9 @@ ${faqBlock(T, ssFaq, { title: '표본 수 자주 묻는 질문' })}`,
     description: '학술지 논문, 단행본, 학위논문, 보고서, 웹 자료 정보를 입력하면 APA 7판 참고문헌 형식으로 바꿔 줍니다. 국내·해외 문헌 모두 지원하며 본문 인용 형식도 함께 보여 줍니다.',
     keywords: ['논문 참고문헌 정리', 'APA 참고문헌', '참고문헌 생성기', 'APA 7판', '참고문헌 작성법'],
     crumbs: [['홈', '/'], ['무료 도구', '/tools/'], ['참고문헌 생성기', '/tools/references/']], faq: refFaq, scripts: ['refs'], priority: '0.8',
-    geo: 'APA 7판 학술지 논문 형식 예: Kim, J., & Lee, S. (2023). Title of the article. Journal Name, 12(3), 45–67. https://doi.org/10.xxxx. 국내 문헌 예: 김철수, 이영희 (2023). 논문 제목. 학술지명, 12(3), 45-67.',
+    geo: 'APA 7판 학술지 논문 형식 예: Kim, J., & Lee, S. (2023). Title of the article. Journal Name, 12(3), 45-67. https://doi.org/10.xxxx. 국내 문헌 예: 김철수, 이영희 (2023). 논문 제목. 학술지명, 12(3), 45-67.',
     schema: [{ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'APA 참고문헌 생성기', applicationCategory: 'EducationalApplication', operatingSystem: 'Web', inLanguage: 'ko-KR', url: T.abs('/tools/references/'), offers: { '@type': 'Offer', price: 0, priceCurrency: 'KRW' } }],
-    body: `${head(T, '/tools/references/', '참고문헌 생성기', 'APA 참고문헌 생성기', '서지 정보를 칸에 맞춰 넣으면 APA 7판 형식의 참고문헌과 본문 인용을 만들어 드립니다. 만든 항목은 목록에 모아 한 번에 복사할 수 있습니다.')}
+    body: `${head(T, '/tools/references/', '참고문헌 생성기', 'APA 참고문헌 생성기', '논문 참고문헌 정리를 한 번에 끝내세요. 서지 정보를 칸에 맞춰 넣으면 APA 7판 형식의 참고문헌과 본문 인용을 만들어 드립니다. 만든 항목은 목록에 모아 한 번에 복사할 수 있습니다.')}
 <section class="sec"><div class="wrap toolbox">
 <form class="toolbox-form" id="refForm" autocomplete="off">
 <div class="field"><label class="label" for="rType">자료 유형</label><select class="select" id="rType"><option value="journal">학술지 논문</option><option value="book">단행본</option><option value="thesis">학위논문</option><option value="report">보고서</option><option value="web">웹 자료</option></select></div>
