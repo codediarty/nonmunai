@@ -317,7 +317,7 @@ function sanitizeDesign_(d) {
 function summaryOf_(input, quote, design) {
   var parts = [];
   if (input.service === 'paper') {
-    var typeLabel = { master: '석사', doctor: '박사', journal: '학술지', bachelor: '학사', report: '보고서', youth: '청소년 탐구', personal: '개인 연구' }[input.paper.typeId] || '';
+    var typeLabel = { master: '석사', doctor: '박사', journal: '학술지', bachelor: '학사', report: '보고서', youth: '청소년 탐구', personal: '개인 연구', short: '소논문' }[input.paper.typeId] || '';
     parts.push(typeLabel);
     parts.push({ full: '전체 초안', edit: '첨삭', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || '');
     if (input.paper.pages) parts.push(input.paper.pages + '쪽');

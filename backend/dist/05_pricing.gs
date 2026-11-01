@@ -32,6 +32,7 @@ var DEFAULT_CATALOG = {
     { code: 'P-YOUTH-FB', service: 'paper', type: 'youth', task: 'feedback', name: '청소년 탐구논문 선생님 피드백 반영', price: 39000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 1, includes: ['피드백 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
     { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초고 완성', price: 99000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 질문 정리', '연구 원고 초고(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
     { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 39000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
+    { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 8쪽 구성·초고 완성', price: 49000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 19000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 원고 초고(기준 8쪽)', '실존 참고문헌과 본문 인용', '수정 1회'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 49000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 2, includes: ['의견 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
     // 설문조사
     { code: 'S-FULL', service: 'survey', task: 'full', name: '설문조사 원스톱: 설문지 작성부터 통계 해석까지', price: 299000, days: 4, includes: ['연구 목적에 맞는 설문지 작성(검증된 척도)', '온라인 설문 제작과 설문조사 진행 관리', '응답 데이터 정리·익명화', '논문 맞춤 통계 분석과 결과 해석', '연구결과 정리'], excludes: ['응답자 모집·사례비(모집 의뢰 시 별도 견적)'] },

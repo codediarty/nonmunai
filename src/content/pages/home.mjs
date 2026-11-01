@@ -5,7 +5,7 @@ import { FIELDS } from '../../js/core/kb.js';
 
 // 분량별 대표 요금: 가격표(pricing.js)로 계산해 늘 같은 값을 쓴다
 const quote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
-const Q8 = quote('personal', 8);
+const Q8 = quote('short', 8);
 const Q80 = quote('master', 80);
 const Q130 = quote('doctor', 130);
 
@@ -14,7 +14,7 @@ export const HOME_FAQ = [
   { q: '프롬프트 한 줄로 정말 논문이 작성되나요?', a: `네. 전공과 주제, 분량을 한 줄로 적으면 제목, 연구모형, 가설, 목차가 바로 설계됩니다. 주문하시면 실존 문헌을 바탕으로 장별 본문을 자동작성하고 석·박사 연구진이 문헌과 수치, 형식을 검수해 전달합니다. 석사 80쪽은 결제 후 영업일 ${Q80.days}일, 박사 130쪽은 영업일 ${Q130.days}일이 기본 납기입니다.` },
   { q: '참고문헌은 정말 실제로 있는 논문인가요?', a: '네. 논문AI는 실제로 존재하는 문헌만 참고문헌에 넣습니다. 저자, 연도, 제목, 학술지, 권호, 쪽, DOI를 DOI와 KCI, RISS 같은 학술 데이터베이스의 원문 기록과 한 편씩 대조하고, AI가 만들어 낸 가짜 문헌은 한 편도 넣지 않습니다.' },
   { q: '본문 인용도 달아 주나요?', a: '네. 문장마다 근거가 된 문헌을 (저자, 연도) 형식의 본문 인용으로 연결하고, 본문에 인용한 문헌과 참고문헌 목록이 1:1로 맞도록 정리합니다. 기본은 APA 7판이며 학교나 학술지 양식이 있으면 그대로 맞춰 드립니다.' },
-  { q: '분량별 가격은 얼마인가요?', a: `소논문 8쪽은 ${won(Q8.total)}(15쪽까지 같은 금액), 석사학위논문 80쪽은 ${won(Q80.total)}, 박사학위논문 130쪽은 ${won(Q130.total)}입니다. 기준 분량을 넘는 부분은 10쪽 단위로 더해지고, 결제 전에 총액과 포함 사항, 예상 납기를 모두 확인할 수 있습니다.` },
+  { q: '분량별 가격은 얼마인가요?', a: `소논문 8쪽은 ${won(Q8.total)}(4쪽 추가마다 19,000원), 석사학위논문 80쪽은 ${won(Q80.total)}, 박사학위논문 130쪽은 ${won(Q130.total)}입니다. 기준 분량을 넘는 부분은 10쪽 단위로 더해지고, 결제 전에 총액과 포함 사항, 예상 납기를 모두 확인할 수 있습니다.` },
   { q: '논문 주제가 없어도 신청할 수 있나요?', a: '네. 관심 키워드와 전공만 적으시면 연구할 만한 제목을 먼저 만들어 드립니다. 목차, 학교 양식, 연구방법, 분량도 모두 "잘 모르겠어요"로 진행할 수 있습니다.' },
   { q: '결제는 어떻게 하나요?', a: '주문서를 제출하면 총액, 포함·제외 사항, 예상 납기를 먼저 확인하신 뒤 운영사 성균관컨설팅의 안전결제(카드, 간편결제, 계좌이체)로 결제합니다. 응답자 모집처럼 조건에 따라 비용이 달라지는 작업은 확정 견적을 받은 뒤에만 결제합니다.' },
   { q: '수정은 몇 번 받을 수 있나요?', a: '논문 자동작성, 연구계획서, 설문 원스톱 상품에는 수정 1회가 포함되어 있고, 필요하면 추가 수정을 1회 단위로 더할 수 있습니다. 전달 후 주문 페이지에서 수정 내용을 적어 바로 요청하시면 됩니다.' },
@@ -32,7 +32,7 @@ const REFS = [
 const ref = (id) => REFS.find((r) => r.id === id);
 const cite = (id) => `<cite class="hx-cite" data-ref="${id}" tabindex="0">(${ref(id).cite})</cite>`;
 
-const TYPE_OPTS = [['personal', '소논문'], ['bachelor', '학사 졸업논문'], ['journal', '학술지 논문'], ['master', '석사학위논문'], ['doctor', '박사학위논문']];
+const TYPE_OPTS = [['short', '소논문'], ['bachelor', '학사 졸업논문'], ['journal', '학술지 논문'], ['master', '석사학위논문'], ['doctor', '박사학위논문']];
 const PAGE_OPTS = [8, 10, 15, 20, 30, 40, 60, 80, 100, 120, 130, 150, 200];
 
 function heroWindow(T) {
@@ -283,7 +283,7 @@ ${ctaBand(T, { title: '주제 한 줄이면 지금 바로 시작됩니다', text
       '@context': 'https://schema.org', '@type': 'Service', name: '논문AI 논문 자동작성', serviceType: '논문 자동작성, AI 논문 작성, 논문 첨삭, 설문조사, 통계분석', provider: { '@id': T.abs('/#organization') }, areaServed: { '@type': 'Country', name: 'KR' },
       description: '프롬프트 한 줄로 논문을 자동작성하고 실존 참고문헌과 본문 인용을 연결하는 논문 작성 서비스',
       hasOfferCatalog: { '@type': 'OfferCatalog', name: '논문AI 서비스', itemListElement: [
-        { '@type': 'Offer', name: '소논문 자동작성 8쪽', price: Q8.total, priceCurrency: 'KRW', url: T.abs('/ai-thesis/') },
+        { '@type': 'Offer', name: '소논문 8쪽 자동작성', price: Q8.total, priceCurrency: 'KRW', url: T.abs('/ai-thesis/') },
         { '@type': 'Offer', name: '석사학위논문 자동작성 80쪽', price: Q80.total, priceCurrency: 'KRW', url: T.abs('/master-thesis/') },
         { '@type': 'Offer', name: '박사학위논문 자동작성 130쪽', price: Q130.total, priceCurrency: 'KRW', url: T.abs('/dissertation/') },
         { '@type': 'Offer', name: '논문 첨삭·교정', price: 99000, priceCurrency: 'KRW', url: T.abs('/thesis-editing/') },

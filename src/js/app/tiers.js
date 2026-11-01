@@ -3,7 +3,7 @@ import { computeQuote, DEFAULT_CATALOG } from '../core/pricing.js';
 import { $, $$, url } from '../ui/dom.js';
 
 // 종류별 쪽수 범위와 기본 분량 [최소, 최대, 기본]
-export const RANGES = { personal: [8, 40, 8], bachelor: [20, 60, 30], journal: [10, 40, 20], master: [40, 130, 80], doctor: [80, 200, 130] };
+export const RANGES = { short: [8, 20, 8], personal: [8, 40, 8], bachelor: [20, 60, 30], journal: [10, 40, 20], master: [40, 130, 80], doctor: [80, 200, 130] };
 
 export function initTiers({ onCatalog } = {}) {
   let catalog = DEFAULT_CATALOG;

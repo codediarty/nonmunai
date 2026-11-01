@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
 let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(execSync('npm root -g').toString().trim(), 'playwright')); }
 
-const TYPE = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 투고논문', bachelor: '학사·졸업논문', report: '일반 연구보고서', youth: '청소년 탐구논문', personal: '개인 관심연구' };
+const TYPE = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 투고논문', bachelor: '학사·졸업논문', report: '일반 연구보고서', youth: '청소년 탐구논문', personal: '개인 관심연구', short: '소논문' };
 const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '피드백 반영', proposal: '연구계획서 작성' };
 const FEEDBACK_TASK = { journal: '심사 의견 반영', report: '검토 의견 반영', youth: '선생님 피드백 반영', master: '교수님 피드백 반영', doctor: '교수님 피드백 반영', bachelor: '교수님 피드백 반영', personal: '피드백 반영' };
 const items = DEFAULT_CATALOG.items;
@@ -93,7 +93,7 @@ const checks = (arr) => `<ul style="list-style:none;margin:0;padding:0">${arr.ma
 const spec = (rows) => `<table style="width:100%;border-collapse:collapse;border-top:2px solid ${NAVY}">${rows.map(([k, v]) => `<tr><th style="width:34%;text-align:left;padding:15px 16px;background:#F5F7FB;border-bottom:1px solid ${LINE};font-size:15px;color:${NAVY};font-weight:700">${esc(k)}</th><td style="padding:15px 16px;border-bottom:1px solid ${LINE};font-size:15px;color:${INK2};line-height:1.6">${v}</td></tr>`).join('')}</table>`;
 const img = (file, alt) => `<p style="margin:18px 0 0;text-align:center"><img src="${SHOP_IMG}/${file}" alt="${esc(alt)}" style="max-width:100%;height:auto;border-radius:14px"></p>`;
 
-const TYPE_SHORT = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 논문', bachelor: '졸업논문', report: '연구보고서', youth: '탐구논문', personal: '연구 원고' };
+const TYPE_SHORT = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 논문', bachelor: '졸업논문', report: '연구보고서', youth: '탐구논문', personal: '연구 원고', short: '소논문' };
 const teacher = (t) => (t === 'youth' ? '선생님' : t === 'journal' ? '심사위원' : t === 'report' ? '검토자' : '교수님');
 function pitch(p) {
   if (p.service === 'paper') {
@@ -213,6 +213,7 @@ const STITLE = { 'S-FULL': ['설문지 작성부터', '통계 해석까지'], 'S
   'T-BASIC': ['논문 맞춤', '통계분석 기본형'], 'T-INTERP': ['논문 맞춤', '통계분석 표준형'], 'T-CHAPTER': ['통계분석과', '연구결과 작성'], 'T-FB': ['통계 재분석·', '피드백 반영'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절효과'],
   'A-PPT': ['심사 발표', 'PPT 제작'], 'A-ENGLISH': ['영문 논문', '작성'], 'A-PRIORITY': ['우선 처리'], 'A-FORMAT': ['양식', '상세 적용'], 'A-REVISION': ['추가 수정'] };
 function cover(p) {
+  if (p.code === 'P-SHORT-FULL') return { kicker: '소논문', title: ['8쪽 소논문', '초고 완성'], tag: '실존 참고문헌과 본문 인용까지' };
   if (p.service === 'paper') {
     const [, t, k] = p.code.split('-'); const type = t.toLowerCase(), task = { FULL: 'full', EDIT: 'edit', FB: 'feedback', PROP: 'proposal' }[k];
     const title = task === 'feedback' ? (FB_TITLE[type] || ['교수님 피드백', '반영']) : TASK_TITLE[task];

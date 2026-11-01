@@ -141,7 +141,7 @@ ${s.paper.hasFormat === 'yes' ? `<div class="cond">${textField('paper.formatName
   {
     id: 'task', title: '어떤 작업이 필요하세요?', help: '선택에 따라 필요한 자료 칸이 바뀝니다.',
     render: (s) => {
-      const tasks = TASKS.filter((t) => t.v !== 'proposal' || PROPOSAL_TYPES.includes(s.paper.typeId)).map((t) => {
+      const tasks = TASKS.filter((t) => (t.v !== 'proposal' || PROPOSAL_TYPES.includes(s.paper.typeId)) && findItem(CONFIG.catalog, paperItemCode(s.paper.typeId || 'master', t.v))).map((t) => {
         const it = findItem(CONFIG.catalog, paperItemCode(s.paper.typeId || 'master', t.v));
         return { ...t, side: it ? `${won(it.price)}부터` : '' };
       });
@@ -162,6 +162,7 @@ ${s.paper.hasFormat === 'yes' ? `<div class="cond">${textField('paper.formatName
     valid: (s) => {
       const t = s.paper.task;
       if (!t) return '필요한 작업을 골라 주세요.';
+      if (!findItem(CONFIG.catalog, paperItemCode(s.paper.typeId || 'master', t))) return '이 논문 유형에서 고를 수 있는 작업을 골라 주세요.';
       if ((t === 'edit' || t === 'feedback') && !hasSlot(s, 'manuscript')) return '기존 원고 파일을 올려 주세요.';
       if (t === 'edit' && !(s.paper.editScope || '').trim()) return '수정할 부분을 적어 주세요. 전체라면 "전체"라고 적어 주세요.';
       if (t === 'feedback' && !hasSlot(s, 'feedback') && !(s.paper.feedbackText || '').trim()) return '교수님 피드백을 파일로 올리거나 붙여 넣어 주세요.';

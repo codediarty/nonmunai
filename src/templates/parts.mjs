@@ -107,14 +107,14 @@ function tierCard(T, { kind, pages, typeId, sub, inc, featured = false, cta }) {
 export function pageTiers(T) {
   const q80 = fullQuote('master', 80);
   return `<div class="tiers">
-${tierCard(T, { kind: '소논문', pages: 8, typeId: 'personal', sub: '과제 소논문·개인 연구, 15쪽까지 같은 금액', inc: ['주제와 연구 질문 정리', '본문 원고 8쪽', '실존 참고문헌과 본문 인용', '수정 1회'], cta: '8쪽 소논문 시작하기' })}
+${tierCard(T, { kind: '소논문', pages: 8, typeId: 'short', sub: '8쪽 전용 요금, 4쪽 추가마다 19,000원', inc: ['주제와 연구 질문 정리', '소논문 원고 8쪽', '실존 참고문헌과 본문 인용', '수정 1회'], cta: '8쪽 소논문 시작하기' })}
 ${tierCard(T, { kind: '석사학위논문', pages: 80, typeId: 'master', featured: true, sub: '기준 60쪽에 추가 20쪽 포함', inc: ['연구 설계서(연구모형·가설·분석 계획)', '서론부터 결론까지 장별 본문 80쪽', '실존 참고문헌과 본문 인용', 'APA 7판·학교 양식 적용', '수정 1회'], cta: '80쪽 석사논문 시작하기' })}
 ${tierCard(T, { kind: '박사학위논문', pages: 130, typeId: 'doctor', sub: '기준 120쪽에 추가 10쪽 포함', inc: ['연구 설계서와 연구모형', '장별 본문 130쪽', '실존 참고문헌과 본문 인용', '학교 양식 적용', '수정 1회'], cta: '130쪽 박사논문 시작하기' })}
 </div>
 <div class="calc" id="tierCalc">
 <div class="calc-l">
 <p class="calc-h">다른 분량이 필요하세요?</p>
-<div class="calc-seg" role="radiogroup" aria-label="논문 종류">${[['personal', '소논문'], ['bachelor', '학사'], ['journal', '학술지'], ['master', '석사'], ['doctor', '박사']].map(([v, t]) => `<button type="button" role="radio" aria-checked="${v === 'master'}" data-type="${v}">${t}</button>`).join('')}</div>
+<div class="calc-seg" role="radiogroup" aria-label="논문 종류">${[['short', '소논문'], ['bachelor', '학사'], ['journal', '학술지'], ['master', '석사'], ['doctor', '박사']].map(([v, t]) => `<button type="button" role="radio" aria-checked="${v === 'master'}" data-type="${v}">${t}</button>`).join('')}</div>
 <label class="sr" for="calcRange">쪽수</label>
 <input class="calc-range" id="calcRange" type="range" min="40" max="130" step="1" value="80">
 <div class="calc-scale"><span id="calcMin">40쪽</span><span id="calcMax">130쪽</span></div>

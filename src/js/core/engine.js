@@ -560,7 +560,7 @@ function resultSections(model, parsed) {
 
 export function buildTOC({ typeId = 'master', model, parsed }) {
   const type = typeById(typeId);
-  const isJournal = type.id === 'journal';
+  const isJournal = type.id === 'journal' || type.id === 'short';
   const isYouth = type.id === 'youth';
   const isReport = type.id === 'report';
   const depth = type.id === 'master' || type.id === 'doctor' ? 2 : 1;
@@ -607,10 +607,10 @@ export function buildTOC({ typeId = 'master', model, parsed }) {
     sections: c.sections.map((s, j) => ({ no: isJournal || isYouth ? `${j + 1}.` : `${j + 1}.`, title: s.title, subs: (s.subs || []).map((t, k) => `${k + 1}) ${t}`) })),
   }));
   const back = ['참고문헌'];
-  if (type.id !== 'youth') back.push(type.id === 'journal' ? 'Abstract' : 'Abstract(영문 초록)');
+  if (type.id !== 'youth') back.push(isJournal ? 'Abstract' : 'Abstract(영문 초록)');
   if (model.quantitative && model.design !== 'literature') back.push('부록(설문지)');
   if (model.design === 'qualitative') back.push('부록(면담 질문지, 연구 참여 동의서)');
-  return { chapters, back, totalPages: total, front: type.id === 'journal' ? ['국문 초록', '주제어'] : type.id === 'youth' ? ['요약'] : ['국문 초록', '목차', '표 목차', '그림 목차'] };
+  return { chapters, back, totalPages: total, front: isJournal ? ['국문 초록', '주제어'] : type.id === 'youth' ? ['요약'] : ['국문 초록', '목차', '표 목차', '그림 목차'] };
 }
 
 export function tocToText(toc) {

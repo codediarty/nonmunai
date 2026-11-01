@@ -67,3 +67,15 @@ t('심사 발표 PPT·영문 논문 작성·논문 첨삭 옵션', () => {
   const sv = computeQuote(DEFAULT_CATALOG, { service: 'survey', survey: { mode: 'full', recruit: 'none' }, addons: { editing: true, editingType: 'nope' } });
   assert.ok(sv.lines.some((l) => l.code === 'P-MASTER-EDIT'), '알 수 없는 유형은 석사 기준');
 });
+t('소논문 8쪽 전용 상품과 분량별 대표 요금', () => {
+  const q = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
+  assert.equal(q('short', 8).total, 49000);
+  assert.equal(q('short', 8).days, 2);
+  assert.equal(q('short', 12).total, 49000 + 19000);
+  assert.equal(q('short', 20).total, 49000 + 19000 * 3);
+  assert.ok(q('short', 12).lines.some((l) => l.code === 'P-SHORT-FULL-X' && l.qty === 1));
+  assert.equal(q('master', 80).total, 497000);
+  assert.equal(q('doctor', 130).total, 758000);
+  // 소논문은 전체 구성·초고 완성만 있음(첨삭·피드백 상품 없음)
+  assert.ok(!DEFAULT_CATALOG.items.some((i) => /^P-SHORT-(EDIT|FB|PROP)$/.test(i.code)));
+});

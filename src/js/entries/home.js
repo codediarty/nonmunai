@@ -11,7 +11,7 @@ const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
 const quote = (typeId, pages) => computeQuote(CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
-const TYPE_LABEL = { personal: '소논문', bachelor: '학사 졸업논문', journal: '학술지 논문', master: '석사학위논문', doctor: '박사학위논문' };
+const TYPE_LABEL = { short: '소논문', personal: '개인 관심연구', bachelor: '학사 졸업논문', journal: '학술지 논문', master: '석사학위논문', doctor: '박사학위논문' };
 const orderUrl = (o) => `${url('/paper/new/')}?${new URLSearchParams(o)}`;
 
 /* ------------------------------------------------------------ 프롬프트 해석 */
@@ -63,7 +63,7 @@ function cleanAsTitle(text) {
 function readOptions(text) {
   const t = text.replace(/\s+/g, ' ');
   const f = guessField(t);
-  const type = /박사/.test(t) ? 'doctor' : /석사/.test(t) ? 'master' : /학술지|KCI|투고/.test(t) ? 'journal' : /학사|졸업\s*논문/.test(t) ? 'bachelor' : /소논문|리포트|레포트|과제/.test(t) ? 'personal' : '';
+  const type = /박사/.test(t) ? 'doctor' : /석사/.test(t) ? 'master' : /학술지|KCI|투고/.test(t) ? 'journal' : /학사|졸업\s*논문/.test(t) ? 'bachelor' : /소논문|리포트|레포트|과제/.test(t) ? 'short' : '';
   const m = t.match(/(\d{1,3})\s*(쪽|페이지|p\b)/);
   return { fieldId: f ? f.id : '', typeId: type, pages: m ? Number(m[1]) : 0 };
 }

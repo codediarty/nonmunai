@@ -34,6 +34,9 @@ for (const f of shopFiles) {
   part.push(f); size += sz;
 }
 if (part.length) groups['s' + (++n)] = part;
+// c: 따로 고른 파일만 묶기(--files=경로,경로), 예: 새 상품 표지 하나
+const filesArg = (process.argv.find((a) => a.startsWith('--files=')) || '').slice(8).split(',').filter(Boolean);
+if (filesArg.length) groups.c = filesArg.filter((f) => fs.existsSync(path.join(root, f)));
 const outDir = path.join(root, 'upload');
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
@@ -55,7 +58,7 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, nu
 
 // 배포 묶음 전달 페이지(아티팩트로 올려 GitHub 업로드 화면에 넘김)
 const kb = (n) => Math.round(n / 1024).toLocaleString('en-US');
-const rows = manifest.bundles.map((b) => `<li><div class="b-main"><b>${b.key === 'a' ? '소스 전체' : b.key === 'b' ? 'OG 이미지' : '상품 표지 ' + b.key.slice(1)}</b><span class="mono">${b.name}</span><small>파일 ${b.files}개 · ${kb(b.bytes)}KB · SHA-256 ${b.sha256.slice(0, 16)}…</small></div><button type="button" data-name="${b.name}" data-sha="${b.sha256}">GitHub로 보내기</button></li>`).join('');
+const rows = manifest.bundles.map((b) => `<li><div class="b-main"><b>${b.key === 'a' ? '소스 전체' : b.key === 'b' ? 'OG 이미지' : b.key === 'c' ? '고른 파일' : '상품 표지 ' + b.key.slice(1)}</b><span class="mono">${b.name}</span><small>파일 ${b.files}개 · ${kb(b.bytes)}KB · SHA-256 ${b.sha256.slice(0, 16)}…</small></div><button type="button" data-name="${b.name}" data-sha="${b.sha256}">GitHub로 보내기</button></li>`).join('');
 fs.writeFileSync(path.join(outDir, 'index.html'), `<title>논문AI 배포 묶음</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>

@@ -15,7 +15,7 @@ export default function info({ T }) {
     { q: '표시된 가격에 부가세가 포함되어 있나요?', a: '네. 모든 가격은 부가세를 포함한 금액입니다.' },
     { q: '견적형 주문은 언제 결제하나요?', a: '응답자 모집, 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은 자료를 확인해 확정 견적을 드린 뒤에 결제합니다. 확정되지 않은 금액은 결제할 수 없습니다.' },
     { q: '분량이 늘어나면 추가 비용이 있나요?', a: '상품마다 기준 분량이 있고, 초과분은 정해진 단위로 계산됩니다. 신청 화면에서 분량을 입력하면 총액에 바로 반영되고, 분량을 모르면 기준 분량으로 먼저 진행한 뒤 초과분이 있을 때만 안내합니다.' },
-    { q: '논문 자동작성은 분량별로 얼마인가요?', a: `소논문 8쪽은 ${won(fullQuote('personal', 8).total)}(15쪽까지 같은 금액), 석사학위논문 80쪽은 ${won(fullQuote('master', 80).total)}, 박사학위논문 130쪽은 ${won(fullQuote('doctor', 130).total)}입니다. 기준 분량을 넘는 부분은 10쪽 단위로 더해지고, 참고문헌은 모두 실존 문헌으로 본문 인용까지 연결됩니다.` },
+    { q: '논문 자동작성은 분량별로 얼마인가요?', a: `소논문 8쪽은 ${won(fullQuote('short', 8).total)}(4쪽 추가마다 19,000원), 석사학위논문 80쪽은 ${won(fullQuote('master', 80).total)}, 박사학위논문 130쪽은 ${won(fullQuote('doctor', 130).total)}입니다. 기준 분량을 넘는 부분은 10쪽 단위로 더해지고, 참고문헌은 모두 실존 문헌으로 본문 인용까지 연결됩니다.` },
   ];
   const groups = [
     ['석사학위논문', ['P-MASTER-FULL', 'P-MASTER-PROP', 'P-MASTER-EDIT', 'P-MASTER-FB']],
@@ -25,6 +25,7 @@ export default function info({ T }) {
     ['일반 연구보고서', ['P-REPORT-FULL', 'P-REPORT-EDIT', 'P-REPORT-FB']],
     ['청소년 탐구논문', ['P-YOUTH-FULL', 'P-YOUTH-EDIT', 'P-YOUTH-FB']],
     ['개인 관심연구', ['P-PERSONAL-FULL', 'P-PERSONAL-EDIT', 'P-PERSONAL-FB']],
+    ['소논문(8쪽)', ['P-SHORT-FULL']],
     ['설문조사', ['S-FULL', 'S-NEW', 'S-EDIT', 'S-FB', 'S-ANALYZE', 'S-RECRUIT']],
     ['통계분석', ['T-BASIC', 'T-INTERP', 'T-CHAPTER', 'T-FB', 'T-ADV', 'T-SIM']],
     ['추가 옵션', ['A-PPT', 'A-ENGLISH', 'A-FORMAT', 'A-REVISION', 'A-PRIORITY']],
@@ -32,7 +33,7 @@ export default function info({ T }) {
   pages.push({
     path: '/pricing/', kind: 'info', navTitle: '가격 안내', h1: '논문AI 가격 안내',
     title: '논문AI 가격 | 논문 자동작성 분량별 요금, 첨삭·통계분석·설문조사 비용',
-    description: `논문 자동작성은 소논문 8쪽 ${won(fullQuote('personal', 8).total)}, 석사 80쪽 ${won(fullQuote('master', 80).total)}, 박사 130쪽 ${won(fullQuote('doctor', 130).total)}. 첨삭, 교수님 피드백 반영, 연구계획서, 설문조사, 통계분석의 가격과 기본 납기를 결제 전에 한눈에 확인하세요.`,
+    description: `논문 자동작성은 소논문 8쪽 ${won(fullQuote('short', 8).total)}, 석사 80쪽 ${won(fullQuote('master', 80).total)}, 박사 130쪽 ${won(fullQuote('doctor', 130).total)}. 첨삭, 교수님 피드백 반영, 연구계획서, 설문조사, 통계분석의 가격과 기본 납기를 결제 전에 한눈에 확인하세요.`,
     keywords: ['논문 자동작성 가격', '논문 작성 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 첨삭 비용', '통계분석 비용', '설문조사 비용', '논문 컨설팅 가격'],
     crumbs: [['홈', '/'], ['가격 안내', '/pricing/']], faq: pricingFaq, priority: '0.9', styles: ['site', 'home'], scripts: ['pricing'],
     body: `${pageHead(T, '가격은 결제 전에 전부 보여 드립니다', '선택한 조건에 따라 총액이 자동으로 계산됩니다. 포함·제외 사항과 예상 납기를 확인한 뒤 결제하고, 조건에 따라 달라지는 작업은 확정 견적 후에만 결제합니다.', '/pricing/', '가격 안내')}

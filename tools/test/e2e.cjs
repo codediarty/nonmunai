@@ -453,8 +453,8 @@ async function tests() {
   await check(2, '신청서 논문 유형 선택지 순서: 석사→박사→학술지→학사→일반→청소년→개인', async () => withCtx({}, async (p) => {
     await W.open(p, '/paper/new/', 'type');
     const opts = await p.$$eval('#wzStep input[data-choice="paper.typeId"]', (els) => els.map((e) => [e.value, e.closest('label').querySelector('b').textContent.trim()]));
-    eq(opts.map((x) => x[0]), ['master', 'doctor', 'journal', 'bachelor', 'report', 'youth', 'personal'], '유형 값 순서');
-    eq(opts.map((x) => x[1]), ['석사학위논문', '박사학위논문', '학술지 투고논문', '학사·졸업논문', '일반 연구보고서', '청소년 탐구논문', '개인 관심연구'], '유형 이름 순서');
+    eq(opts.map((x) => x[0]), ['master', 'doctor', 'journal', 'bachelor', 'report', 'youth', 'personal', 'short'], '유형 값 순서');
+    eq(opts.map((x) => x[1]), ['석사학위논문', '박사학위논문', '학술지 투고논문', '학사·졸업논문', '일반 연구보고서', '청소년 탐구논문', '개인 관심연구', '소논문(8쪽)'], '유형 이름 순서');
   }));
   await check(2, '가격 안내 페이지 논문 표도 같은 순서', async () => withCtx({}, async (p) => {
     await p.goto(`${BASE}/pricing/`);
