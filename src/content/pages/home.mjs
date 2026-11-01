@@ -122,7 +122,7 @@ export default function home({ T }) {
 <div class="tab-panel" role="tabpanel" id="out-3" aria-labelledby="tab-3" hidden>
 <div class="art sheet"><div class="art-in art-grid">
 <table class="apa"><caption><b>표 6</b><i>회복탄력성의 매개효과 검증</i></caption><thead><tr><th>경로</th><th><span class="st">B</span></th><th><span class="st">SE</span></th><th>95% CI</th></tr></thead><tbody><tr><td>직무스트레스 → 회복탄력성</td><td>-0.38</td><td>0.07</td><td>[-0.52, -0.24]</td></tr><tr><td>회복탄력성 → 이직의도</td><td>-0.44</td><td>0.09</td><td>[-0.62, -0.26]</td></tr><tr><td>간접효과</td><td>0.17</td><td>0.05</td><td>[0.08, 0.27]</td></tr></tbody><tfoot><tr><td colspan="4">부트스트래핑 5,000회. 예시 수치입니다.</td></tr></tfoot></table>
-<div class="easy"><p class="easy-h">쉬운 해석</p><p>직무스트레스가 높을수록 회복탄력성이 낮아지고, 회복탄력성이 낮을수록 이직의도가 높아졌습니다. 간접효과의 신뢰구간에 0이 없으므로 회복탄력성이 두 변인의 관계를 부분적으로 설명한다고 해석합니다.</p></div>
+<div class="easy"><p class="easy-h">결과 해석</p><p>직무스트레스가 높을수록 회복탄력성이 낮아지고, 회복탄력성이 낮을수록 이직의도가 높아졌습니다. 간접효과의 신뢰구간에 0이 없으므로 회복탄력성이 두 변인의 관계를 부분적으로 설명한다고 해석합니다.</p></div>
 </div></div></div>
 <div class="tab-panel" role="tabpanel" id="out-4" aria-labelledby="tab-4" hidden>
 <div class="art sheet"><div class="art-in">

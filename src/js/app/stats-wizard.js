@@ -118,7 +118,7 @@ const steps = [
     valid: () => null,
   },
   {
-    id: 'output', title: '어떤 형태로 받고 싶으세요?', help: '결과를 설명해야 한다면 통계표와 쉬운 해석을 추천합니다.', when: hasData,
+    id: 'output', title: '어떤 형태로 받고 싶으세요?', help: '주제와 가설에 맞는 분석 설계와 결과 해석이 필요하다면 표준형을 추천합니다.', when: hasData,
     render: (s) => {
       let out = choice('statistics.output', s.statistics.output, OUTPUTS.map((o) => { const it = findItem(CONFIG.catalog, o.code); return { v: o.v, t: o.t, d: o.d, badge: o.badge, side: it ? won(it.price) : '' }; }));
       if (s.statistics.output === 'revise') out += `<div class="cond">${uploader(s, 'prevResult', { label: '기존 분석 결과', required: true, hint: 'SPSS 출력(spv), 결과표 Word·한글·Excel 파일' })}${uploader(s, 'feedback', { label: '교수님 의견 파일' })}${textArea('statistics.feedbackText', s.statistics.feedbackText, { label: '또는 의견 붙여 넣기', rows: 4, hint: '파일과 붙여넣기 중 하나는 꼭 필요합니다.' })}</div>`;
