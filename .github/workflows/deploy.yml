@@ -1,0 +1,85 @@
+name: 사이트 배포
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.src.outputs.ok }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 웹에서 올린 소스 묶음(_upload/*.zip)을 풀어 저장소에 커밋한다
+      - name: 올린 묶음 반영
+        run: |
+          shopt -s nullglob
+          zips=(_upload/*.zip)
+          if [ ${#zips[@]} -eq 0 ]; then echo "올린 묶음 없음"; exit 0; fi
+          if [ -f _upload/delete.txt ]; then
+            while IFS= read -r f; do f="${f%$'\r'}"; [ -n "$f" ] && git rm -r -q --ignore-unmatch -- "$f"; done < _upload/delete.txt
+          fi
+          for z in "${zips[@]}"; do unzip -o -q "$z" -d .; done
+          rm -rf _upload
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "바뀐 내용 없음"; else git commit -q -m "올린 묶음 반영" && git push; fi
+
+      - name: 소스 확인
+        id: src
+        run: echo "ok=$([ -f package.json ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.src.outputs.ok == '1'
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        if: steps.src.outputs.ok == '1'
+        run: npm ci --no-audit --no-fund
+
+      - name: 단위·서버 테스트
+        if: steps.src.outputs.ok == '1'
+        run: node tools/test/run-all.mjs
+
+      # Pages 주소(도메인 연결 전: codediarty.github.io/nonmunai, 연결 후: 도메인)에 맞춰 빌드
+      - uses: actions/configure-pages@v5
+        id: pages
+        if: steps.src.outputs.ok == '1'
+
+      - name: 사이트 빌드
+        if: steps.src.outputs.ok == '1'
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: node tools/build.mjs
+
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.src.outputs.ok == '1'
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.ok == '1'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
