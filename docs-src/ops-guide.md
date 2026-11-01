@@ -81,7 +81,7 @@
 ## 검색 노출 관리
 
 - **Google**: Search Console(skkc.office@gmail.com으로 로그인)에서 nonmunai.kr 속성을 엽니다. 사이트맵(https://nonmunai.kr/sitemap.xml)이 제출되어 있고, '페이지' 보고서에서 색인된 페이지 수를, '실적'에서 검색어별 노출·클릭을 봅니다.
-- **네이버**: 서치어드바이저에 사이트를 등록하고 HTML 태그로 소유 확인을 한 뒤, 사이트맵과 RSS(https://nonmunai.kr/rss.xml)를 제출합니다. 소유 확인 태그는 site.config.json의 verification.naver에 넣으면 모든 페이지에 들어갑니다.
+- **네이버**: 서치어드바이저(searchadvisor.naver.com)에 nonmunai.kr을 등록했습니다. 소유 확인은 두 방식을 함께 걸어 두었습니다. site.config.json의 verification.naver(HTML 태그, 모든 페이지 head에 들어감)와 verification.naverFile(확인 파일, 사이트 맨 위 naver….html로 만들어짐)입니다. 둘 다 지우면 인증이 풀립니다. 사이트맵(https://nonmunai.kr/sitemap.xml)과 RSS(https://nonmunai.kr/rss.xml)는 요청 메뉴의 사이트맵 제출, RSS 제출에서 넣습니다.
 - **다음**: 웹마스터도구(webmaster.daum.net)에 nonmunai.kr이 등록되어 있습니다. 로그인은 사이트 주소와 직접 정한 PIN으로 합니다. 소유 확인 코드는 site.config.json의 verification.daum에 있고 robots.txt 맨 아래에 자동으로 붙습니다(지우면 인증이 풀립니다). 사이트맵, RSS, 주요 페이지 수집 요청을 해 두었습니다.
 - **빙·네이버 자동 알림**: 배포할 때마다 IndexNow로 바뀐 주소를 빙(api.indexnow.org)과 네이버(searchadvisor.naver.com/indexnow)에 보냅니다. GitHub Actions 배포 기록의 '검색엔진 색인 알림' 단계에서 결과(200)를 볼 수 있습니다.
 - **AI 검색(ChatGPT, Claude, Perplexity 등)**: robots.txt에서 AI 검색 봇을 허용하고, 사이트 소개와 서비스·가격 요약을 /llms.txt, /llms-full.txt로 제공합니다.

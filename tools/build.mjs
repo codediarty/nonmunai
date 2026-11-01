@@ -119,4 +119,7 @@ write('site.webmanifest', JSON.stringify({ name: '논문AI', short_name: '논문
 write('.nojekyll', '');
 write('assets/config.json', JSON.stringify({ apiUrl: site.apiUrl, version: assetVersion }));
 if (site.indexNowKey) write(`${site.indexNowKey}.txt`, site.indexNowKey);
+// 네이버 서치어드바이저 소유 확인(HTML 파일 방식): verification.naverFile에 확인 파일 이름(naver….html)을 넣으면 사이트 맨 위에 만든다. HTML 태그 방식은 verification.naver
+const naverFile = String((site.verification || {}).naverFile || '').trim();
+if (/^naver[0-9a-f]+\.html$/.test(naverFile)) write(naverFile, `naver-site-verification: ${naverFile}`);
 console.log(`site: ${pages.length} pages, ${indexable.length} indexable, assets v=${assetVersion} → ${path.relative(root, out)}/`);
