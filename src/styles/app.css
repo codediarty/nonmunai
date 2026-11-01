@@ -7,14 +7,14 @@
 .wz-top { background: #fff; border-bottom: 1px solid var(--rule-2); }
 .wz-top-in { padding-top: 22px; padding-bottom: 0; }
 .wz-title { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-.wz-title h1 { font-family: var(--serif); font-size: 24px; }
+.wz-title h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; }
 .wz-count { font-size: 14px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 .wz-bar { height: 3px; background: var(--rule-2); border-radius: 3px; overflow: hidden; margin: 0 calc(var(--gutter) * -1); }
 .wz-bar i { display: block; height: 100%; background: var(--blue); transition: width .35s ease; }
 .wz-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; padding-top: 28px; padding-bottom: 80px; align-items: start; }
 .wz-main { min-width: 0; }
 .wz-step { background: #fff; border: 1px solid var(--rule); border-radius: 18px; padding: 34px 36px 28px; }
-.wz-q { font-family: var(--serif); font-size: clamp(22px, 2.5vw, 28px); line-height: 1.4; letter-spacing: -0.03em; margin-bottom: 8px; }
+.wz-q { font-weight: 800; font-size: clamp(22px, 2.5vw, 29px); line-height: 1.38; letter-spacing: -0.042em; margin-bottom: 8px; }
 .wz-help { color: var(--muted); font-size: 15.5px; margin-bottom: 24px; }
 .wz-body { display: grid; gap: 4px; }
 .wz-err { color: var(--pen); font-weight: 700; font-size: 14.5px; min-height: 1px; margin: 16px 0 0; }
@@ -135,7 +135,7 @@
 .pl li b { white-space: nowrap; font-weight: 700; }
 .pl-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; padding-top: 12px; border-top: 1.5px solid var(--ink); }
 .pl-total span { font-weight: 700; font-size: 14.5px; }
-.pl-total b { font-family: var(--serif); font-size: 26px; letter-spacing: -0.02em; }
+.pl-total b { font-size: 28px; font-weight: 850; letter-spacing: -0.045em; }
 .pl-quote { display: flex; gap: 8px; margin: 12px 0 0; padding: 10px 12px; background: var(--amber-soft); border-radius: 10px; font-size: 13.5px; color: #7A4206; line-height: 1.55; }
 .pl-quote .i { color: var(--amber); width: 18px; height: 18px; margin-top: 1px; }
 .pl-note { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; line-height: 1.6; }
@@ -185,7 +185,7 @@
 .card + .card { margin-top: 18px; }
 .card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 16px; }
 .card-h h2 { font-size: 18px; }
-.card-h h2.serif { font-family: var(--serif); font-size: 21px; }
+.card-h h2.serif { font-family: var(--sans); font-weight: 800; font-size: 21px; letter-spacing: -0.035em; }
 .ord-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
 .ord-no { font-size: 13.5px; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ord-title { font-family: var(--serif); font-size: clamp(22px, 2.6vw, 28px); line-height: 1.4; margin: 4px 0 8px; letter-spacing: -0.025em; }
@@ -199,7 +199,7 @@
 .eta-box div { padding: 14px 16px; }
 .eta-box div + div { border-left: 1px solid var(--rule); }
 .eta-box span { display: block; font-size: 12.5px; color: var(--muted); font-weight: 600; }
-.eta-box b { font-family: var(--serif); font-size: 19px; }
+.eta-box b { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; }
 .pay-methods { display: grid; gap: 12px; }
 .pay-m { border: 1.5px solid var(--rule); border-radius: 14px; padding: 18px; display: grid; gap: 10px; }
 .pay-m.is-main { border-color: var(--blue); background: #F7F9FF; }
@@ -246,7 +246,7 @@
 .sim-mark { display: inline-block; font-weight: 800; color: var(--pen); border: 1.5px solid var(--pen); border-radius: 6px; padding: 1px 8px; font-size: 12.5px; }
 
 /* 주문 조회 */
-.lk-title { font-family: var(--serif); font-size: clamp(26px, 3vw, 32px); letter-spacing: -0.03em; margin-bottom: 6px; }
+.lk-title { font-weight: 800; font-size: clamp(26px, 3vw, 33px); letter-spacing: -0.045em; margin-bottom: 6px; }
 .lk-lead { margin-bottom: 18px; }
 .lookup .card .field + .field { margin-top: 14px; }
 .lookup .btn-block { margin-top: 6px; }
@@ -314,7 +314,7 @@
   .wz-side .side-card { box-shadow: var(--shadow-pop); }
   .wz-mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 61; height: 64px; padding: 0 var(--gutter); align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-top: 1px solid var(--rule); }
   .mb-price { display: grid; line-height: 1.2; }
-  .mb-price b { font-family: var(--serif); font-size: 19px; }
+  .mb-price b { font-size: 19px; font-weight: 850; letter-spacing: -0.035em; }
   .mb-price small { font-size: 12px; color: var(--muted); }
   .wz-grid { padding-bottom: 110px; }
 }

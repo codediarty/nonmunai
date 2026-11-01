@@ -52,10 +52,11 @@ const statCss = `@font-face{font-family:'Source Serif 4';font-style:italic;font-
 const fontsCss = pretendardCss + serifCss + statCss;
 
 // 2) CSS 묶기
-const css = (names) => fontsCss + names.map((n) => fs.readFileSync(path.join(root, `src/styles/${n}.css`), 'utf8')).join('\n');
-const cssBundles = { site: ['base', 'pages'], app: ['base', 'pages', 'app'], admin: ['base', 'app', 'admin'] };
+const css = (names, withFonts = true) => (withFonts ? fontsCss : '') + names.map((n) => fs.readFileSync(path.join(root, `src/styles/${n}.css`), 'utf8')).join('\n');
+// home: 홈 화면 전용 스타일(글꼴은 site.css에 있으므로 빼고 묶음)
+const cssBundles = { site: ['base', 'pages'], app: ['base', 'pages', 'app'], admin: ['base', 'app', 'admin'], home: ['home'] };
 for (const [name, parts] of Object.entries(cssBundles)) {
-  const r = await esbuild.transform(css(parts), { loader: 'css', minify: true });
+  const r = await esbuild.transform(css(parts, name !== 'home'), { loader: 'css', minify: true });
   write(`assets/css/${name}.css`, r.code);
 }
 

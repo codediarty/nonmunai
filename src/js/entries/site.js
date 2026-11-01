@@ -27,9 +27,10 @@ for (const tabs of $$('[data-tabs]')) {
   btns.forEach((b, i) => {
     b.addEventListener('click', () => select(b));
     b.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const next = e.key === 'ArrowRight' || e.key === 'ArrowDown';
+      if (next || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
-        select(btns[(i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length], true);
+        select(btns[(i + (next ? 1 : btns.length - 1)) % btns.length], true);
       }
     });
   });

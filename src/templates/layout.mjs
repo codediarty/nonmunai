@@ -8,15 +8,15 @@ export function esc(s) {
 
 export const NAV = [
   {
-    label: '논문 작성', href: '/thesis-writing/', children: [
-      { label: '논문 작성 지원', href: '/thesis-writing/', desc: '주제부터 장별 초고까지' },
+    label: '논문 자동작성', href: '/ai-thesis/', children: [
+      { label: '논문 자동작성', href: '/ai-thesis/', desc: '프롬프트 한 줄로 논문 완성' },
+      { label: '논문 작성 지원', href: '/thesis-writing/', desc: '주제부터 장별 원고까지' },
+      { label: '석사학위논문', href: '/master-thesis/', desc: '석사 80쪽 맞춤 작성' },
+      { label: '박사학위논문', href: '/dissertation/', desc: '박사 130쪽 심화 설계' },
+      { label: '학술지 논문', href: '/journal-paper/', desc: '투고 규정과 심사 대응' },
+      { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
       { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '문장·논리·형식 점검' },
       { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정표와 파란색 반영 표시' },
-      { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
-      { label: '석사학위논문', href: '/master-thesis/', desc: '석사 과정 맞춤 설계' },
-      { label: '박사학위논문', href: '/dissertation/', desc: '심화 설계와 장기 일정' },
-      { label: '학술지 논문', href: '/journal-paper/', desc: '투고 규정과 심사 대응' },
-      { label: 'AI 논문 작성', href: '/ai-thesis/', desc: 'AI와 전문가 검수의 결합' },
       { label: '논문 컨설팅', href: '/consulting/', desc: '단계별 1:1 지원' },
     ],
   },
@@ -45,7 +45,8 @@ export function createTemplates({ site, root, assetVersion }) {
     if (!iconCache[name]) {
       const file = path.join(root, 'node_modules/lucide-static/icons', `${name}.svg`);
       let svg = fs.readFileSync(file, 'utf8');
-      svg = svg.replace(/<!--[\s\S]*?-->/g, '').replace(/\s(width|height)="[^"]*"/g, '').replace(/\sclass="[^"]*"/, '').replace(/\n\s*/g, '').trim();
+      // 크기·클래스는 바깥 svg 태그에서만 지운다(안쪽 rect의 width·height는 남겨야 자물쇠·계산기 등이 온전히 그려짐)
+      svg = svg.replace(/<!--[\s\S]*?-->/g, '').replace(/<svg\b[^>]*>/, (tag) => tag.replace(/\s(width|height)="[^"]*"/g, '').replace(/\sclass="[^"]*"/, '')).replace(/\s*\n\s*/g, ' ').replace(/\s{2,}/g, ' ').replace(/>\s+</g, '><').replace(/\s+\/>/g, '/>').trim();
       iconCache[name] = svg;
     }
     return iconCache[name].replace('<svg', `<svg class="${cls}" aria-hidden="true" focusable="false"`);
@@ -70,10 +71,10 @@ export function createTemplates({ site, root, assetVersion }) {
     }).join('');
     return `<header class="hd"><div class="wrap hd-in">${logo()}
 <nav class="nav" aria-label="주 메뉴"><ul class="nav-ul">${items}</ul></nav>
-<div class="hd-right"><a class="hd-link" href="${u('/orders/')}">주문 조회</a><a class="btn btn-primary btn-sm" href="${u('/paper/new/')}">무료 설계 시작</a>
+<div class="hd-right"><a class="hd-link" href="${u('/orders/')}">주문 조회</a><a class="btn btn-primary btn-sm" href="${u('/paper/new/')}">논문 작성 시작</a>
 <button class="hd-burger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mnav">${icon('menu')}</button></div></div>
 <div class="mnav" id="mnav" hidden><div class="mnav-in">${NAV.map((n) => `<div class="mnav-group"><a class="mnav-top" href="${u(n.href)}">${esc(n.label)}</a>${n.children ? `<div class="mnav-kids">${n.children.map((c) => `<a href="${u(c.href)}">${esc(c.label)}</a>`).join('')}</div>` : ''}</div>`).join('')}
-<div class="mnav-cta"><a class="btn btn-primary btn-block" href="${u('/paper/new/')}">무료 설계 시작</a><a class="btn btn-ghost btn-block" href="${u('/orders/')}">주문 조회</a></div></div></div></header>`;
+<div class="mnav-cta"><a class="btn btn-primary btn-block" href="${u('/paper/new/')}">논문 작성 시작</a><a class="btn btn-ghost btn-block" href="${u('/orders/')}">주문 조회</a></div></div></div></header>`;
   }
 
   function footer(page) {
@@ -81,8 +82,8 @@ export function createTemplates({ site, root, assetVersion }) {
     if (page.chrome === 'admin') return '';
     const col = (title, links) => `<div class="ft-col"><h2 class="ft-h">${esc(title)}</h2><ul>${links.map(([l, h]) => `<li><a href="${u(h)}">${esc(l)}</a></li>`).join('')}</ul></div>`;
     return `<footer class="ft"><div class="wrap">
-<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>논문을 잘 몰라도 시작할 수 있도록, 연구 설계부터 작성·설문·통계까지 한 번에 맡기는 원스톱 논문 지원 서비스입니다.</p></div>
-<div class="ft-cols">${col('서비스', [['논문 작성 지원', '/thesis-writing/'], ['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['연구계획서', '/research-proposal/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/']])}
+<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>프롬프트 한 줄로 논문을 자동작성하고, 실존 참고문헌과 본문 인용까지 연결하는 논문 작성 서비스입니다. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있습니다.</p></div>
+<div class="ft-cols">${col('서비스', [['논문 자동작성', '/ai-thesis/'], ['논문 작성 지원', '/thesis-writing/'], ['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['연구계획서', '/research-proposal/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/']])}
 ${col('무료 도구', [['무료 논문 설계', '/free/'], ['논문 목차 생성기', '/tools/toc/'], ['표본 수 계산기', '/tools/sample-size/'], ['참고문헌 생성기', '/tools/references/'], ['논문 작성 가이드', '/guide/']])}
 ${col('고객 지원', [['주문 조회', '/orders/'], ['가격 안내', '/pricing/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/']])}
 ${col('논문AI', [['서비스 소개', '/about/'], ['연구윤리 원칙', '/ethics/'], ['이용약관', '/terms/'], ['개인정보처리방침', '/privacy/'], ['환불 규정', '/refund/']])}</div></div>

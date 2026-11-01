@@ -333,6 +333,10 @@ export async function startPaperWizard(root) {
       if (params.get('field') && FIELDS.some((f) => f.id === params.get('field'))) s.common.fieldId = params.get('field');
       if (params.get('method')) s.common.method = params.get('method');
       if (params.get('task') && TASKS.some((t) => t.v === params.get('task'))) s.paper.task = params.get('task');
+      // 홈 프롬프트·분량별 요금에서 넘어온 분량과 프롬프트
+      const pg = Math.round(Number(params.get('pages')));
+      if (pg > 0) { s.paper.pagesMode = 'custom'; s.paper.pages = Math.min(400, pg); }
+      if (!params.get('title') && params.get('prompt')) { s.common.topicKnown = 'yes'; s.common.title = params.get('prompt').slice(0, 200); }
     },
     onFileAdded: async (slot, file, s, ctx) => {
       if (slot === 'manuscript' && /\.(docx|hwpx|pdf|txt)$/i.test(file.name)) {

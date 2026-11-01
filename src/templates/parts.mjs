@@ -1,7 +1,7 @@
 // 공통 섹션 조각
 import { buildDesign, tocToText } from '../js/core/engine.js';
 import { renderModelSVG } from '../js/core/model-svg.js';
-import { DEFAULT_CATALOG, won } from '../js/core/pricing.js';
+import { DEFAULT_CATALOG, won, computeQuote } from '../js/core/pricing.js';
 import { esc, readLineHtml, factsHtml, tocHtml } from '../js/core/render.js';
 
 export function faqBlock(T, faq, { id = 'faq', title = '자주 묻는 질문', lead = '' } = {}) {
@@ -86,3 +86,44 @@ export function heroDemo(T) {
 export const readLine = readLineHtml;
 
 export { tocToText };
+
+// 분량별 요금: 소논문 8쪽·석사 80쪽·박사 130쪽 카드와 분량 계산기(동작은 js/app/tiers.js)
+export const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
+const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
+
+function tierCard(T, { kind, pages, typeId, sub, inc, featured = false, cta }) {
+  const q = fullQuote(typeId, pages);
+  const href = `${T.u('/paper/new/')}?${new URLSearchParams({ type: typeId, task: 'full', pages: String(pages) })}`;
+  return `<article class="tier${featured ? ' is-featured' : ''}" data-tier="${typeId}" data-pages="${pages}">
+<div class="tier-hd"><span class="tier-kind">${esc(kind)}</span>${featured ? '<span class="tier-flag">석사 표준 분량</span>' : ''}</div>
+<p class="tier-pages"><b class="num">${pages}</b>쪽</p>
+<p class="tier-price"><b class="num" data-tier-total>${wonNum(q.total)}</b>원</p>
+<p class="tier-sub"><span>${esc(sub)}</span><span class="tier-days" data-tier-days>영업일 ${q.days}일</span></p>
+<ul class="tier-inc">${inc.map((x) => `<li>${T.icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul>
+<a class="btn ${featured ? 'btn-primary' : 'btn-ghost'} btn-block" href="${href}">${esc(cta)}</a>
+</article>`;
+}
+
+export function pageTiers(T) {
+  const q80 = fullQuote('master', 80);
+  return `<div class="tiers">
+${tierCard(T, { kind: '소논문', pages: 8, typeId: 'personal', sub: '과제 소논문·개인 연구, 15쪽까지 같은 금액', inc: ['주제와 연구 질문 정리', '본문 원고 8쪽', '실존 참고문헌과 본문 인용', '수정 1회'], cta: '8쪽 소논문 시작하기' })}
+${tierCard(T, { kind: '석사학위논문', pages: 80, typeId: 'master', featured: true, sub: '기준 60쪽에 추가 20쪽 포함', inc: ['연구 설계서(연구모형·가설·분석 계획)', '서론부터 결론까지 장별 본문 80쪽', '실존 참고문헌과 본문 인용', 'APA 7판·학교 양식 적용', '수정 1회'], cta: '80쪽 석사논문 시작하기' })}
+${tierCard(T, { kind: '박사학위논문', pages: 130, typeId: 'doctor', sub: '기준 120쪽에 추가 10쪽 포함', inc: ['연구 설계서와 연구모형', '장별 본문 130쪽', '실존 참고문헌과 본문 인용', '학교 양식 적용', '수정 1회'], cta: '130쪽 박사논문 시작하기' })}
+</div>
+<div class="calc" id="tierCalc">
+<div class="calc-l">
+<p class="calc-h">다른 분량이 필요하세요?</p>
+<div class="calc-seg" role="radiogroup" aria-label="논문 종류">${[['personal', '소논문'], ['bachelor', '학사'], ['journal', '학술지'], ['master', '석사'], ['doctor', '박사']].map(([v, t]) => `<button type="button" role="radio" aria-checked="${v === 'master'}" data-type="${v}">${t}</button>`).join('')}</div>
+<label class="sr" for="calcRange">쪽수</label>
+<input class="calc-range" id="calcRange" type="range" min="40" max="130" step="1" value="80">
+<div class="calc-scale"><span id="calcMin">40쪽</span><span id="calcMax">130쪽</span></div>
+</div>
+<div class="calc-r" aria-live="polite">
+<p class="calc-pages"><b class="num" id="calcPages">80</b>쪽</p>
+<p class="calc-total"><b class="num" id="calcTotal">${wonNum(q80.total)}</b>원</p>
+<p class="calc-note" id="calcNote">기준 60쪽 + 추가 20쪽 · 영업일 ${q80.days}일</p>
+<a class="btn btn-dark" id="calcGo" href="${T.u('/paper/new/')}?type=master&amp;task=full&amp;pages=80">이 분량으로 시작하기</a>
+</div>
+</div>`;
+}

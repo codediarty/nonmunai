@@ -29,15 +29,15 @@ const T = createTemplates({ site, root, assetVersion: 'og' });
 const ctx = { site, T, root, assetVersion: 'og', guides: loadGuides(root) };
 const pageDir = path.join(root, 'src/content/pages');
 const targets = new Map();
-targets.set('/assets/img/og/default.png', { kicker: '원스톱 논문 지원', title: '논문, 어디서부터 시작할지 몰라도 괜찮습니다', sub: '주제 한 줄로 연구 설계부터 작성·설문·통계까지' });
+targets.set('/assets/img/og/default.png', { kicker: '논문 자동작성 AI', title: '프롬프트 한 줄로\n논문을 완성합니다', sub: '참고문헌은 모두 실존 문헌, 본문 인용까지 연결' });
 for (const f of fs.readdirSync(pageDir).filter((x) => x.endsWith('.mjs'))) {
   const mod = await import(pathToFileURL(path.join(pageDir, f)).href);
   for (const p of await mod.default(ctx)) {
     if (!p.ogImage || targets.has(p.ogImage)) continue;
     const isGuide = p.ogImage.includes('/og/guide-');
-    const title = p.path === '/' ? '논문, 어디서부터 시작할지 몰라도 괜찮습니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
-    const kicker = p.path === '/' ? '논문 작성·첨삭·설문조사·통계분석' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
-    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '주제 한 줄로 연구모형, 가설, 목차, 표본 수까지 바로 설계합니다' : '' });
+    const title = p.path === '/' ? '프롬프트 한 줄로\n논문을 완성합니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
+    const kicker = p.path === '/' ? '논문 자동작성 AI' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
+    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '참고문헌은 모두 실존 문헌, 본문 인용까지 연결합니다' : p.path === '/ai-thesis/' ? '실존 참고문헌, 본문 인용, 8쪽부터 130쪽까지' : '' });
   }
 }
 
@@ -64,7 +64,7 @@ html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#F5F7FB}
 .top{position:relative;display:flex;align-items:center;gap:12px;font-weight:800;font-size:30px;letter-spacing:-.02em}
 .top b{color:#2346E8}
 .k{position:relative;font-size:24px;font-weight:700;color:#2346E8;margin:0 0 18px}
-h1{position:relative;font-family:var(--serif);font-weight:700;font-size:${title.length > 40 ? 42 : title.length > 26 ? 48 : 58}px;line-height:1.3;letter-spacing:-.035em;margin:0;max-width:660px;word-break:keep-all}
+h1{position:relative;font-family:var(--sans);font-weight:800;font-size:${title.length > 40 ? 44 : title.length > 26 ? 52 : 62}px;line-height:1.22;letter-spacing:-.05em;margin:0;max-width:680px;word-break:keep-all;color:#0B1633}
 .s{position:relative;font-size:24px;color:#41506B;margin:20px 0 0;max-width:620px;word-break:keep-all}
 .foot{position:relative;font-size:19px;color:#5B6478;font-weight:600}
 </style></head><body><div class="c">
@@ -74,7 +74,7 @@ h1{position:relative;font-family:var(--serif);font-weight:700;font-size:${title.
 <path d="M60 95L170 58" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M222 58L330 95" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M106 118H282" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/></svg>
 ${[350, 382, 414, 446, 478].map((y, i) => `<span class="ln" style="top:${y}px;width:${[330, 280, 340, 300, 220][i]}px"></span>`).join('')}</div>
 <div class="top">${MARK(46)}<span>논문<b>AI</b></span></div>
-<div><p class="k">${esc(kicker)}</p><h1>${esc(title)}</h1>${sub ? `<p class="s">${esc(sub)}</p>` : ''}</div>
+<div><p class="k">${esc(kicker)}</p><h1>${esc(title.includes('\n') || title.length < 17 ? title : title.replace(/, /, ',\n')).replace(/\n/g, '<br>')}</h1>${sub ? `<p class="s">${esc(sub)}</p>` : ''}</div>
 <div class="foot">운영 성균관컨설팅 · 성균관대학교 RISE사업 지원 기업</div></div></body></html>`;
 
 const browser = await playwright.chromium.launch();
@@ -83,7 +83,7 @@ let n = 0;
 for (const [rel, t] of targets) {
   await page.setContent(ogHtml(t), { waitUntil: 'networkidle' });
   await page.evaluate(async (txt) => {
-    await Promise.all([document.fonts.load(`700 56px "Noto Serif KR"`, txt.title), document.fonts.load(`700 24px "Pretendard Variable"`, txt.kicker + txt.sub + '논문AI 운영 성균관컨설팅')]);
+    await Promise.all([document.fonts.load(`800 56px "Pretendard Variable"`, txt.title), document.fonts.load(`700 24px "Pretendard Variable"`, txt.kicker + txt.sub + '논문AI 운영 성균관컨설팅')]);
     await document.fonts.ready;
   }, t);
   await page.waitForTimeout(150);

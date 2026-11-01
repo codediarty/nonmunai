@@ -1,18 +1,23 @@
+import { computeQuote, DEFAULT_CATALOG, won } from '../src/js/core/pricing.js';
+
+const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
 // GEO: AI 검색·답변 엔진용 요약 파일 (llms.txt, llms-full.txt)
 function line(T, p) { return `- [${p.navTitle || p.h1 || p.title}](${T.abs(p.path)}): ${p.description}`; }
 
 export function llmsTxt(ctx, pages) {
   const { T } = ctx;
   const pick = (paths) => paths.map((x) => pages.find((p) => p.path === x)).filter(Boolean);
-  const services = pick(['/thesis-writing/', '/thesis-editing/', '/professor-feedback/', '/research-proposal/', '/master-thesis/', '/dissertation/', '/journal-paper/', '/survey/', '/statistics/', '/ai-thesis/', '/consulting/']);
+  const services = pick(['/ai-thesis/', '/thesis-writing/', '/thesis-editing/', '/professor-feedback/', '/research-proposal/', '/master-thesis/', '/dissertation/', '/journal-paper/', '/survey/', '/statistics/', '/consulting/']);
   const tools = pick(['/free/', '/tools/toc/', '/tools/sample-size/', '/tools/references/']);
   const info = pick(['/pricing/', '/process/', '/faq/', '/about/', '/ethics/', '/refund/']);
   const guides = pages.filter((p) => p.path.startsWith('/guide/') && p.path !== '/guide/');
   return `# 논문AI
 
-> 논문AI(논문 AI)는 논문, 설문조사, 통계분석을 잘 몰라도 간편하게 의뢰할 수 있는 한국어 원스톱 논문 지원 서비스입니다. 주제나 키워드를 입력하면 연구모형, 가설, 목차, 분석 방법, 표본 수를 즉시 설계하고, 원고 작성과 통계분석은 AI 도구를 활용해 석·박사 연구진이 작업하고 검수해 전달합니다. 운영사는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)입니다.
+> 논문AI(논문 AI)는 프롬프트 한 줄(전공·주제·분량)로 논문을 자동작성하는 한국어 AI 논문 작성 서비스입니다. 참고문헌은 DOI·KCI·RISS 원문 기록과 대조한 실존 문헌만 쓰고, 본문 인용과 참고문헌 목록을 1:1로 연결합니다. 소논문 8쪽부터 석사 80쪽, 박사 130쪽까지 작성하며 석·박사 연구진이 최종 검수합니다. 논문 첨삭, 교수님 피드백 반영, 연구계획서, 설문조사, 통계분석도 함께 의뢰할 수 있습니다. 운영사는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)입니다.
 
 핵심 사실:
+- 논문 자동작성: 전공·주제·분량을 한 줄로 적으면 제목, 연구모형, 가설, 목차를 즉시 설계하고, 주문 후 실존 문헌을 바탕으로 장별 본문을 작성해 문장마다 (저자, 연도) 본문 인용을 연결한다. 분량별 요금(부가세 포함)은 소논문 8쪽 ${won(fullQuote('personal', 8).total)}(15쪽까지 같은 금액), 석사학위논문 80쪽 ${won(fullQuote('master', 80).total)}, 박사학위논문 130쪽 ${won(fullQuote('doctor', 130).total)}이며 기준 분량 초과분은 10쪽 단위로 계산한다.
+- 참고문헌 원칙: 실제로 존재하는 문헌만 쓰고 저자·연도·제목·학술지·권호·쪽·DOI를 원문 기록과 대조한다. AI가 만든 가짜 문헌은 넣지 않는다.
 - 서비스 범위: 석사·박사학위논문, 학술지 투고논문, 학사·졸업논문, 연구보고서, 청소년 탐구논문의 전체 구성·초고 완성, 논문 첨삭·교정, 교수님 피드백 반영(수정 대조표 작성, 반영 부분 파란색 표시), 연구계획서 작성, 설문지 작성부터 설문조사 진행·통계 해석까지의 설문 원스톱, 논문 주제와 데이터에 맞는 통계분석(SPSS, PROCESS Macro, AMOS 등)과 연구결과 작성. 추가 옵션으로 심사 발표 PPT 제작과 영문 논문 작성을 고를 수 있다.
 - 대표 시작가(부가세 포함): 석사학위논문 전체 구성·초고 완성 399,000원, 논문 첨삭·교정 99,000원, 교수님 피드백 반영 129,000원, 연구계획서 149,000원, 설문조사 원스톱 299,000원(응답자 모집 비용 별도 견적), 논문 맞춤 통계분석 99,000원부터, 심사 발표 PPT 제작 89,000원. 결제 전에 총액, 포함·제외 사항, 예상 납기를 먼저 보여 준다.
 - 진행 단계: 접수 완료, 자료 확인, 작업 준비, 작성·분석 진행, 품질 검토, 전달 완료. 꾸며 낸 진행률 대신 실제 처리 단계만 표시한다.

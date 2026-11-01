@@ -16,7 +16,7 @@ body.chrome-admin { background: var(--paper-2); }
 .ad-page { max-width: 1360px; margin: 0 auto; padding: 26px var(--gutter) 80px; }
 .ad-loading, .ad-empty { max-width: 1360px; margin: 0 auto; padding: 60px var(--gutter); display: flex; gap: 10px; align-items: center; color: var(--muted); font-weight: 600; }
 .ad-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-.ad-head h1 { font-family: var(--serif); font-size: 28px; letter-spacing: -0.03em; }
+.ad-head h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; }
 .ad-head p { margin: 4px 0 0; font-size: 14.5px; }
 .ad-head-act { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -34,7 +34,7 @@ body.chrome-admin { background: var(--paper-2); }
 .ad-tiles { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 18px; }
 .ad-tile { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--rule); background: #fff; cursor: pointer; font: inherit; color: var(--muted); }
 .ad-tile span { font-size: 13px; font-weight: 700; }
-.ad-tile b { font-family: var(--serif); font-size: 26px; color: var(--faint); line-height: 1.2; font-variant-numeric: tabular-nums; }
+.ad-tile b { font-size: 26px; font-weight: 850; color: var(--faint); line-height: 1.2; font-variant-numeric: tabular-nums; }
 .ad-tile.has b { color: var(--ink); }
 .ad-tile.has { border-color: var(--blue-line); }
 .ad-tile.is-bad { border-color: #F2B8BF; background: var(--pen-soft); }
@@ -112,12 +112,12 @@ body.chrome-admin { background: var(--paper-2); }
 .ad-ohead { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 20px 22px; }
 .oh-main { min-width: 0; }
 .oh-no { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 0 4px; font-variant-numeric: tabular-nums; }
-.ad-ohead h1 { font-family: var(--serif); font-size: 23px; line-height: 1.4; letter-spacing: -0.025em; margin-bottom: 4px; }
+.ad-ohead h1 { font-size: 23px; font-weight: 800; line-height: 1.4; letter-spacing: -0.035em; margin-bottom: 4px; }
 .ad-ohead .muted { font-size: 14px; margin: 0; }
 .oh-tags { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
 .oh-money { text-align: right; display: grid; gap: 2px; flex-shrink: 0; }
 .oh-money span { font-size: 12.5px; color: var(--muted); font-weight: 700; }
-.oh-money b { font-family: var(--serif); font-size: 26px; }
+.oh-money b { font-size: 26px; font-weight: 850; letter-spacing: -0.04em; }
 .oh-money small { font-size: 13px; color: var(--muted); }
 .ad-next { display: grid; gap: 8px; margin: 12px 0 16px; }
 .nx { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 16px; border-radius: 12px; background: #fff; border: 1px solid var(--blue-line); box-shadow: inset 4px 0 0 var(--blue); }
@@ -184,7 +184,7 @@ body.chrome-admin { background: var(--paper-2); }
 
 .ad-login { min-height: calc(100vh - 68px); display: grid; place-items: center; padding: 24px; }
 .ad-login .ad-card { width: min(100%, 400px); padding: 28px; }
-.ad-login h1 { font-family: var(--serif); font-size: 24px; margin-bottom: 6px; }
+.ad-login h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 6px; }
 .ad-login .btn { margin-top: 12px; }
 
 @media (max-width: 1180px) {
