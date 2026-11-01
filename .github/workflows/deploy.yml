@@ -77,9 +77,29 @@ jobs:
     needs: build
     if: needs.build.outputs.ok == '1'
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # 배포가 끝나면 네이버·빙 등에 바뀐 주소를 바로 알린다(IndexNow). 실패해도 배포에는 영향 없음
+  indexnow:
+    needs: deploy
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      # 올린 묶음이 반영된 최신 main 기준으로 알린다
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 검색엔진 색인 알림
+        run: |
+          sleep 20
+          node tools/indexnow.mjs "${{ needs.deploy.outputs.page_url }}"
