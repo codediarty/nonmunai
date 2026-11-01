@@ -6,10 +6,10 @@ import { classifyFeedback } from '../core/feedback.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { won } from '../core/render.js';
 
-const TASK = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
-const SURVEY_MODE = { full: '설문조사 처음부터 끝까지(설계·제작·배포·분석)', new: '설문지 새로 만들기', edit: '기존 설문지 수정', feedback: '설문지 피드백 반영', analyze: '모은 응답 분석·해석' };
+const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
+const SURVEY_MODE = { full: '설문지 작성부터 통계 해석까지(작성·제작·조사·분석)', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영(수정표, 파란색 표시)', analyze: '설문 응답 통계 분석·해석' };
 const TARGET = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
-const OUTPUT = { table: '통계표(APA)', interp: '통계표 + 쉬운 해석', chapter: '논문 결과장(4장) 서술 초고', revise: '기존 분석 수정·피드백 반영' };
+const OUTPUT = { table: '논문 맞춤 통계분석 기본형(분석·APA 통계표·핵심 해석)', interp: '논문 맞춤 통계분석 표준형(가설별 분석 설계·통계표·표별 해석)', chapter: '통계분석과 연구결과(4장) 본문 작성', revise: '통계 재분석·피드백 반영(수정표, 파란색 표시)' };
 const SLOT = { manuscript: '기존 원고', materials: '참고 자료', toc: '목차', format: '양식', feedback: '피드백', questionnaire: '설문지', proposal: '연구계획서', data: '데이터', prevResult: '기존 분석 결과', codebook: '변수 설명', other: '기타', result: '결과물' };
 
 const line = (k, v) => (v === undefined || v === null || v === '' ? '' : `- ${k}: ${v}`);
@@ -68,6 +68,9 @@ export function workBrief(o) {
     line('희망 마감일', c.due),
     line('우선 처리', i.addons && i.addons.priority ? '예(우선 순서)' : ''),
     line('양식 상세 적용', i.addons && i.addons.format ? '예' : ''),
+    line('심사 발표 PPT', i.addons && i.addons.ppt ? '예(발표 자료 15~20장, 발표 스크립트)' : ''),
+    line('영문 논문 작성', i.addons && i.addons.english ? '예(원고 전체를 학술 영어로)' : ''),
+    line('논문 첨삭 추가', i.addons && i.addons.editing ? '예(고객 원고 전체 문장·논리 첨삭)' : ''),
     line('포함 수정', o.revisions ? `${o.revisions.allowed}회 (사용 ${o.revisions.used}회)` : ''),
     line('연구 분야', field ? `${field.label}${c.fieldText ? ` (${c.fieldText})` : ''}` : c.fieldText),
     line('연구 주제', c.title),
@@ -123,7 +126,7 @@ function paperBrief(o) {
   }
   if (p.task === 'feedback' && p.feedbackText) {
     const fb = classifyFeedback(p.feedbackText);
-    out.push(`■ 피드백 항목(${fb.items.length}개, 자동 분류)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표(피드백 / 수정 내용 / 위치) 함께 작성`);
+    out.push(`■ 피드백 항목(${fb.items.length}개, 자동 분류)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표(피드백 / 수정 내용 / 쪽) 작성, 본문에서 반영한 부분은 파란색 글자로 표시한 수정본과 최종 정리본을 함께 전달`);
   }
   return out;
 }
@@ -150,7 +153,7 @@ function surveyBrief(o) {
   }
   if (s.feedbackText) {
     const fb = classifyFeedback(s.feedbackText);
-    out.push(`■ 피드백 항목(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}`);
+    out.push(`■ 피드백 항목(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표 작성, 반영한 문항은 파란색 글자로 표시`);
   }
   if (s.recruit === 'us') out.push('■ 모집 대행 확인\n  · 모집 경로·일정·사례비 집행 내역 기록(환불 규정 제6조)\n  · 참여 동의 문구와 개인정보 최소 수집, IRB 필요 여부 확인');
   return out;
@@ -176,7 +179,7 @@ function statsBrief(o) {
   if (sim) out.push('■ 시뮬레이션 주의\n  · 모든 결과물 첫 쪽과 표 제목에 "가상 데이터, 실제 연구 결과 아님" 표시\n  · 결과 파일 이름 앞에 [가상데이터_실제연구결과아님] 자동 표시됨\n  · 실제 논문 결과로 쓰도록 돕는 문구 금지');
   if (t.feedbackText) {
     const fb = classifyFeedback(t.feedbackText);
-    out.push(`■ 교수님 의견(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}`);
+    out.push(`■ 교수님 의견(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표 작성, 고친 표와 수치는 파란색으로 표시`);
   }
   return out;
 }

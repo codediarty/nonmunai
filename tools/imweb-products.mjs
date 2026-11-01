@@ -16,14 +16,14 @@ let playwright;
 try { playwright = require('playwright'); } catch { playwright = require(path.join(execSync('npm root -g').toString().trim(), 'playwright')); }
 
 const TYPE = { master: '석사학위논문', doctor: '박사학위논문', journal: '학술지 투고논문', bachelor: '학사·졸업논문', report: '일반 연구보고서', youth: '청소년 탐구논문', personal: '개인 관심연구' };
-const TASK = { full: '전체 구성·초고 완성', edit: '부분 첨삭·수정', feedback: '피드백 반영', proposal: '연구계획서 작성' };
+const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '피드백 반영', proposal: '연구계획서 작성' };
 const FEEDBACK_TASK = { journal: '심사 의견 반영', report: '검토 의견 반영', youth: '선생님 피드백 반영', master: '교수님 피드백 반영', doctor: '교수님 피드백 반영', bachelor: '교수님 피드백 반영', personal: '피드백 반영' };
 const items = DEFAULT_CATALOG.items;
 const find = (c) => items.find((i) => i.code === c);
 
 // 추가 분량 단가별 상품: 같은 단가를 쓰는 본 상품을 묶는다
 const unitUsers = {};
-for (const it of items) if (it.unitPrice) (unitUsers[it.unitPrice] = unitUsers[it.unitPrice] || []).push(it);
+for (const it of items) if (it.unitPrice && !it.addon) (unitUsers[it.unitPrice] = unitUsers[it.unitPrice] || []).push(it);
 
 function paperTitle(it) {
   return [TYPE[it.type], it.task === 'feedback' ? FEEDBACK_TASK[it.type] : TASK[it.task]];
@@ -39,18 +39,18 @@ for (const it of items) {
     meta = `기준 ${it.baseUnits}${it.unitLabel} · 기본 납기 영업일 ${it.days}일`;
   } else if (it.service === 'survey') {
     family = '설문조사';
-    lines = it.name === '설문조사 처음부터 끝까지' ? ['설문조사', '처음부터 끝까지'] : it.code === 'S-ANALYZE' ? ['모은 응답', '분석·해석'] : it.code === 'S-NEW' ? ['설문지', '새로 만들기'] : it.code === 'S-EDIT' ? ['기존 설문지', '수정'] : ['설문지', '교수님 피드백 반영'];
+    lines = { 'S-FULL': ['설문지 작성부터', '통계 해석까지'], 'S-NEW': ['설문지', '작성'], 'S-EDIT': ['설문지', '점검·수정'], 'S-FB': ['설문지', '교수님 피드백 반영'], 'S-ANALYZE': ['설문 응답', '통계 분석·해석'] }[it.code];
     meta = `기본 납기 영업일 ${it.days}일`;
   } else if (it.service === 'statistics') {
     family = it.addon ? '추가 옵션 · 통계분석' : '통계분석';
-    lines = { 'T-BASIC': ['기초 통계', '분석과 통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '작성'], 'T-FB': ['기존 분석 수정', '교수님 피드백 반영'], 'T-SIM': ['학습용 시뮬레이션', '데이터 분석'], 'T-ADV': ['심화 분석 가산', '매개·조절효과'] }[it.code];
+    lines = { 'T-BASIC': ['논문 맞춤', '통계분석 기본형'], 'T-INTERP': ['논문 맞춤', '통계분석 표준형'], 'T-CHAPTER': ['통계분석과', '연구결과 작성'], 'T-FB': ['통계 재분석·', '교수님 피드백 반영'], 'T-SIM': ['학습용 시뮬레이션', '데이터 분석'], 'T-ADV': ['심화 분석', '매개·조절효과'] }[it.code];
     meta = it.addon ? '통계분석·응답 분석 주문에 더하는 옵션' : `기본 납기 영업일 ${it.days}일`;
   } else {
     family = '추가 옵션';
-    lines = { 'A-PRIORITY': ['우선 처리', '작업 순서 앞당김'], 'A-FORMAT': ['학교·학술지', '양식 상세 적용'], 'A-REVISION': ['추가 수정', '1회'] }[it.code];
-    meta = '논문AI 주문에 더하는 옵션';
+    lines = { 'A-PPT': ['심사 발표', 'PPT 제작'], 'A-ENGLISH': ['영문 논문', '작성'], 'A-PRIORITY': ['우선 처리', '작업 순서 앞당김'], 'A-FORMAT': ['학교·학술지', '양식 상세 적용'], 'A-REVISION': ['추가 수정', '1회'] }[it.code];
+    meta = it.code === 'A-ENGLISH' ? `전체 구성·초고 완성 주문에 ${it.unitSize}쪽 단위로 더하는 옵션` : '논문AI 주문에 더하는 옵션';
   }
-  if (it.addon) applies = it.code === 'T-ADV' ? '통계분석(통계표+해석, 결과장 정리)과 설문 응답 분석 주문' : it.code === 'A-FORMAT' ? '논문 작성·첨삭 주문' : '논문·설문조사·통계분석 주문 전체';
+  if (it.addon) applies = { 'T-ADV': '논문 맞춤 통계분석과 설문 응답 분석 주문', 'A-FORMAT': '논문 작성·첨삭 주문', 'A-ENGLISH': '논문 전체 구성·초고 완성 주문' }[it.code] || '논문·설문조사·통계분석 주문 전체';
   products.push({ code: it.code, kind: it.addon ? 'addon' : 'main', service: it.service, family, lines, name: `[논문AI] ${it.name}`, price: it.price, days: it.days || 0, meta, includes: it.includes || [], excludes: it.excludes || [], unit: it.unitPrice ? { size: it.unitSize, label: it.unitLabel, price: it.unitPrice, base: it.baseUnits } : null, applies });
 }
 for (const price of Object.keys(unitUsers).map(Number).sort((a, b) => a - b)) {
@@ -64,13 +64,22 @@ for (const price of Object.keys(unitUsers).map(Number).sort((a, b) => a - b)) {
   });
 }
 
+// 쇼핑몰 진열 순서: 본 상품, 옵션(발표 PPT·영문 작성 먼저), 추가 분량
+const ADDON_ORDER = ['A-PPT', 'A-ENGLISH', 'T-ADV', 'A-FORMAT', 'A-REVISION', 'A-PRIORITY'];
+products.sort((a, b) => {
+  const rank = (p) => (p.kind === 'main' ? 0 : p.kind === 'addon' ? 1 : 2);
+  if (rank(a) !== rank(b)) return rank(a) - rank(b);
+  if (a.kind === 'addon') return ADDON_ORDER.indexOf(a.code) - ADDON_ORDER.indexOf(b.code);
+  return 0;
+});
+
 // 요약 설명(아임웹 메타 설명): 160자 안팎
 for (const p of products) {
   const inc = p.includes.slice(0, 4).map((x) => x.replace(/\(.*?\)/g, '').trim()).join(', ');
   p.summary = p.kind === 'extra'
     ? `논문AI 주문서에 '추가 분량 N단위'가 표시되면 그 단위 수만큼 담아 결제하는 상품입니다. 1단위 ${won(p.price)}.`
     : p.kind === 'addon'
-      ? `${p.lines.join(' ')} · ${won(p.price)} · ${p.applies}에 더할 수 있습니다. 논문AI(nonmunai.kr) 주문과 함께 결제하세요.`
+      ? `${p.lines.join(' ')} · ${p.code === 'A-ENGLISH' ? `${p.unit.size}쪽마다 ${won(p.price)}` : won(p.price)} · ${p.applies}에 더할 수 있습니다. 논문AI(nonmunai.kr) 주문과 함께 결제하세요.`
       : `${p.name.replace('[논문AI] ', '')} · ${p.meta} · ${inc} 포함. 논문AI(nonmunai.kr)에서 주문서를 내면 연구 설계와 금액이 바로 나옵니다.`;
 }
 
@@ -93,30 +102,38 @@ function pitch(p) {
     return {
       full: { head: `주제 한 줄에서 장별 초고까지, ${n}을 처음부터 함께 완성합니다`, who: [`주제는 정했지만 어디서부터 써야 할지 막막한 분`, `연구모형, 가설, 목차를 한 번에 제대로 잡고 싶은 분`, `일정이 빠듯해 탄탄한 초고가 빨리 필요한 분`] },
       edit: { head: `${n}의 문장과 논리를 다듬어 제출할 수 있는 원고로 만듭니다`, who: [`원고는 있지만 문장과 흐름이 매끄럽지 않은 분`, `인용과 형식을 꼼꼼하게 점검받고 싶은 분`, `제출 전에 전문가의 눈으로 마지막 점검을 받고 싶은 분`] },
-      feedback: { head: `${teacher(t)} 의견을 항목별로 정확하게 반영합니다`, who: [`${teacher(t)} 의견을 받았는데 어떻게 고쳐야 할지 막막한 분`, `정해진 일정 안에 수정본을 내야 하는 분`, `무엇을 어디서 고쳤는지 한눈에 정리해 보여 드려야 하는 분`] },
+      feedback: { head: `${teacher(t)} 의견을 항목별로 반영하고, 수정표와 파란색 표시로 한눈에 보여 드립니다`, who: [`${teacher(t)} 의견을 받았는데 어떻게 고쳐야 할지 막막한 분`, `정해진 일정 안에 수정본을 내야 하는 분`, `무엇을 어디서 고쳤는지 한눈에 보여 드려야 하는 분`] },
       proposal: { head: `연구 목적부터 분석 계획까지, 설득력 있는 연구계획서를 세웁니다`, who: [`연구계획서 심사를 앞둔 분`, `주제는 있지만 연구 방법을 정하지 못한 분`, `선행연구와 연구모형을 체계적으로 정리해야 하는 분`] },
     }[task];
   }
   const M = {
-    'S-FULL': { head: '설문지 설계부터 응답 정리, 통계와 해석까지 한 번에 끝냅니다', who: ['설문조사가 처음이라 무엇부터 해야 할지 모르는 분', '척도 선정과 문항 구성에 자신이 없는 분', '응답을 모은 뒤 분석과 결과 정리까지 이어서 맡기고 싶은 분'] },
-    'S-NEW': { head: '연구 변인에 맞는 검증된 척도로 설문지를 새로 만듭니다', who: ['연구 변인은 정했지만 척도를 고르지 못한 분', '문항 수와 구성을 어떻게 잡을지 막막한 분', '바로 배포할 수 있는 온라인 설문이 필요한 분'] },
+    'S-FULL': { head: '설문지 작성부터 설문조사 진행, 통계 분석과 해석까지 한 번에 끝냅니다', who: ['설문조사가 처음이라 무엇부터 해야 할지 모르는 분', '척도 선정과 문항 구성에 자신이 없는 분', '응답을 모은 뒤 분석과 결과 정리까지 이어서 맡기고 싶은 분'] },
+    'S-NEW': { head: '연구 변인에 맞는 검증된 척도로 설문지를 작성합니다', who: ['연구 변인은 정했지만 척도를 고르지 못한 분', '문항 수와 구성을 어떻게 잡을지 막막한 분', '바로 배포할 수 있는 온라인 설문이 필요한 분'] },
     'S-EDIT': { head: '기존 설문지의 문항과 척도를 점검하고 완성도를 높입니다', who: ['설문지는 있지만 문항 표현이 어색한 분', '척도 구성과 문항 순서가 맞는지 확인하고 싶은 분', '배포 전에 마지막 점검이 필요한 분'] },
-    'S-FB': { head: '설문지에 대한 교수님 의견을 항목별로 반영합니다', who: ['설문지 수정 의견을 받고 방향을 잡지 못한 분', '심사 일정에 맞춰 수정본이 필요한 분', '수정 내용을 정리해 보여 드려야 하는 분'] },
-    'S-ANALYZE': { head: '모은 응답으로 신뢰도부터 가설 검증까지 분석합니다', who: ['응답은 모았지만 분석을 어떻게 할지 막막한 분', '가설 검증 결과를 논문 형식으로 정리하고 싶은 분', '통계표를 읽고 해석하는 데 도움이 필요한 분'] },
-    'T-BASIC': { head: '데이터를 정리하고 요청하신 분석을 APA 통계표로 드립니다', who: ['분석 방법은 정했고 실행과 표 작성이 필요한 분', 'SPSS를 다루기 어려운 분', '논문 형식에 맞는 통계표가 필요한 분'] },
-    'T-INTERP': { head: 'SPSS를 몰라도 됩니다. 통계표와 쉬운 해석까지 드립니다', who: ['어떤 분석을 해야 할지부터 막막한 분', '결과표를 받아도 읽고 설명하기 어려운 분', '지도교수님께 결과를 자신 있게 설명하고 싶은 분'] },
-    'T-CHAPTER': { head: '분석부터 논문 결과장(4장) 서술 초고까지 완성합니다', who: ['데이터는 있고 결과장을 써야 하는 분', '통계표와 본문 서술을 함께 맞춰야 하는 분', '표·그림 번호와 형식까지 정리하고 싶은 분'] },
-    'T-FB': { head: '교수님 의견대로 다시 분석하고 통계표를 고칩니다', who: ['분석 방법을 바꾸라는 의견을 받은 분', '표 형식이나 수치 보고를 고쳐야 하는 분', '수정 내용을 대조표로 정리해 보여 드려야 하는 분'] },
+    'S-FB': { head: '설문지 의견을 항목별로 반영하고, 수정표와 파란색 표시로 보여 드립니다', who: ['설문지 수정 의견을 받고 방향을 잡지 못한 분', '심사 일정에 맞춰 수정본이 필요한 분', '수정 내용을 정리해 보여 드려야 하는 분'] },
+    'S-ANALYZE': { head: '모은 응답을 연구 가설에 맞게 분석하고 통계표와 해석으로 정리합니다', who: ['응답은 모았지만 분석을 어떻게 할지 막막한 분', '가설 검증 결과를 논문 형식으로 정리하고 싶은 분', '통계표를 읽고 해석하는 데 도움이 필요한 분'] },
+    'T-BASIC': { head: '논문 주제와 데이터에 맞는 분석을 실행하고 APA 통계표로 정리합니다', who: ['분석 방향은 정했고 실행과 표 작성이 필요한 분', 'SPSS를 다루기 어려운 분', '논문 형식에 맞는 통계표가 필요한 분'] },
+    'T-INTERP': { head: '논문 주제와 가설, 데이터에 맞는 분석을 설계하고 결과 해석까지 드립니다', who: ['어떤 분석을 해야 할지부터 막막한 분', '결과표를 받아도 읽고 설명하기 어려운 분', '지도교수님께 결과를 자신 있게 설명하고 싶은 분'] },
+    'T-CHAPTER': { head: '논문 맞춤 통계분석에 연구결과(4장) 본문 작성까지 완성합니다', who: ['데이터는 있고 연구결과 장을 써야 하는 분', '통계표와 본문 서술을 함께 맞춰야 하는 분', '표·그림 번호와 형식까지 정리하고 싶은 분'] },
+    'T-FB': { head: '교수님 의견대로 다시 분석하고, 수정표와 파란색 표시로 보여 드립니다', who: ['분석 방법을 바꾸라는 의견을 받은 분', '표 형식이나 수치 보고를 고쳐야 하는 분', '수정 내용을 대조표로 정리해 보여 드려야 하는 분'] },
+    'A-PPT': { head: '심사장에서 자신 있게 발표하도록, 논문 핵심을 발표 자료로 만듭니다', who: ['심사 발표가 다가오는데 PPT를 만들 시간이 없는 분', '논문 내용을 몇 장으로 줄여야 할지 막막한 분', '발표 흐름과 스크립트까지 준비하고 싶은 분'] },
+    'A-ENGLISH': { head: '해외 학술지와 영문 학위논문에 맞게, 원고를 학술 영어로 작성합니다', who: ['해외 학술지(SCI·SSCI·Scopus) 투고를 준비하는 분', '영문으로 학위논문을 써야 하는 분', '영어 표현과 형식까지 한 번에 맞추고 싶은 분'] },
     'T-SIM': { head: '가상 데이터로 분석 절차를 직접 익히는 학습용 실습입니다', who: ['데이터를 모으기 전에 분석 흐름을 미리 익히고 싶은 분', '분석 방법이 연구에 맞는지 먼저 확인하고 싶은 분', '통계 수업 과제나 연습이 필요한 분'] },
   };
   return M[p.code] || { head: p.lines.join(' '), who: [] };
 }
 const optionRows = (p) => {
   const o = [];
-  if (['T-INTERP', 'T-CHAPTER', 'T-BASIC', 'S-ANALYZE'].includes(p.code)) o.push(['심화 분석(매개·조절)', `<b>${won(find('T-ADV').price)}</b>`]);
-  o.push(['우선 처리', `<b>${won(find('A-PRIORITY').price)}</b> · 작업 순서를 앞당겨 납기를 줄입니다`]);
+  const ppt = find('A-PPT'), en = find('A-ENGLISH');
+  if (ppt) o.push(['심사 발표 PPT 제작', `<b>${won(ppt.price)}</b> · 논문 핵심을 담은 발표 자료와 스크립트`]);
+  if (en && p.service === 'paper' && /-FULL$/.test(p.code)) o.push(['영문 논문 작성', `<b>${en.unitSize}쪽마다 ${won(en.unitPrice)}</b> · 원고를 학술 영어로 작성`]);
+  const edCode = p.service === 'paper' ? (/-FB$/.test(p.code) ? p.code.replace(/-FB$/, '-EDIT') : '') : p.code === 'T-SIM' ? '' : 'P-MASTER-EDIT';
+  const ed = edCode && find(edCode);
+  if (ed) o.push(['논문 첨삭·교정', `<b>${won(ed.price)}</b>${p.service === 'paper' ? '' : '(석사 기준)'} · 직접 쓰신 원고 전체의 문장·논리를 다듬습니다`]);
+  if (['T-INTERP', 'T-CHAPTER', 'T-BASIC', 'S-ANALYZE'].includes(p.code)) o.push(['심화 분석(매개·조절효과)', `<b>${won(find('T-ADV').price)}</b>`]);
   if (p.service === 'paper') o.push(['학교·학술지 양식 상세 적용', `<b>${won(find('A-FORMAT').price)}</b> · 여백, 글꼴, 표·그림, 목차 서식까지`]);
   o.push(['추가 수정', `<b>${won(find('A-REVISION').price)}</b> · 결과물을 한 번 더 다듬습니다`]);
+  o.push(['우선 처리', `<b>${won(find('A-PRIORITY').price)}</b> · 작업 순서를 앞당겨 납기를 줄입니다`]);
   return o;
 };
 const STEPS = [
@@ -137,7 +154,7 @@ const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${
 const SAMPLE = { paper: ['sample-paper.png', '논문AI 연구 설계서와 목차 결과물 예시'], survey: ['sample-survey.png', '논문AI 설문지와 응답 분석 결과물 예시'], statistics: ['sample-stats.png', '논문AI 통계표와 해석 결과물 예시'] };
 // 상세 맨 위: 표지와 같은 남색 머리(구분, 한 줄 소개, 상품 기본 정보)
 const hero = (kicker, head, sub) => `<div style="margin:0 0 28px;padding:46px 30px 42px;border-radius:18px;background:${NAVY};text-align:center"><p style="margin:0;font-size:15px;font-weight:700;letter-spacing:.06em;color:#9DB0FF">${esc(kicker)}</p><h2 style="margin:14px 0 0;font-size:30px;line-height:1.42;font-weight:800;color:#FFFFFF;letter-spacing:-.03em">${head}</h2>${sub ? `<p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#C6CEE6">${esc(sub)}</p>` : ''}</div>`;
-const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCase()] : p.kind === 'extra' ? '추가 옵션' : p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.service === 'survey' ? '설문조사' : '통계분석');
+const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCase()] : p.kind === 'extra' ? '추가 옵션' : p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '논문 맞춤 통계분석');
 for (const p of products) {
   let body = '';
   if (p.kind === 'extra') {
@@ -145,9 +162,16 @@ for (const p of products) {
       + sec('이렇게 담아 주세요', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">논문AI 주문서의 금액 안내에 <b>추가 분량 N단위</b>가 있으면, 이 상품을 <b>N개</b> 담아 본 상품과 함께 한 번에 결제해 주세요. 1단위는 <b>${won(p.price)}</b>입니다.</p>`)
       + sec('이 단가를 쓰는 상품', checks(p.includes));
   } else if (p.kind === 'addon') {
-    body = hero(KICK(p), esc(p.lines.join(' ')), `${p.name.replace('[논문AI] ', '')} · ${won(p.price)}`) + TRUST
-      + sec('무엇이 달라지나요', checks(p.includes))
-      + sec('함께 결제하는 법', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">${esc(p.applies)}에 더할 수 있습니다. 논문AI 주문서에서 이 옵션을 고르면 결제 화면에 본 상품과 함께 안내되니, 장바구니에 함께 담아 한 번에 결제해 주세요.</p>`);
+    const pt = pitch(p);
+    const isEn = p.code === 'A-ENGLISH';
+    const priceText = isEn ? `${p.unit.size}쪽마다 ${won(p.price)}` : won(p.price);
+    const howTo = isEn
+      ? `${esc(p.applies)}에 더할 수 있습니다. 논문AI 주문서에서 영문 논문 작성을 고르면 원고 분량에 맞춰 단위 수가 계산됩니다. 결제 화면에 나온 단위 수만큼 이 상품을 담아 본 상품과 함께 한 번에 결제해 주세요.`
+      : `${esc(p.applies)}에 더할 수 있습니다. 논문AI 주문서에서 이 옵션을 고르면 결제 화면에 본 상품과 함께 안내되니, 장바구니에 함께 담아 한 번에 결제해 주세요.`;
+    body = hero(KICK(p), pt.who.length ? esc(pt.head).replace(/, /, ',<br>') : esc(p.lines.join(' ')), `${p.name.replace('[논문AI] ', '')} · ${priceText}`) + TRUST
+      + (pt.who.length ? sec('이런 분께 맞습니다', checks(pt.who)) : '')
+      + sec(pt.who.length ? '받는 결과물' : '무엇이 달라지나요', checks(p.includes))
+      + sec('함께 결제하는 법', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">${howTo}</p>`);
   } else {
     const pt = pitch(p);
     const inc = p.includes.filter((x) => !/수정 \d+회/.test(x)).map((x) => x.replace(/\s*\(.*?\)\s*/g, ' ').trim());
@@ -176,27 +200,29 @@ const base = `http://localhost:${server.address().port}`;
 const mark = (doc, dot, size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${size}" height="${size}"><rect x="5" y="3.5" width="19" height="25" rx="2.5" fill="none" stroke="${doc}" stroke-width="2.2"/><path d="M9.5 10h10M9.5 14.5h10M9.5 19h6" stroke="${doc}" stroke-width="2.2" stroke-linecap="round"/><circle cx="24.5" cy="23.5" r="5.5" fill="${dot}"/><path d="M22.2 23.6l1.6 1.6 3-3.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const MARK = mark('#0F1B3D', '#2346E8', 44);
 // 상품 이미지: 논문 표지처럼 위에 구분(학위·서비스), 가운데 제목, 아래 논문AI. 남색 바탕에 글자만 쓰고 그림은 넣지 않는다
-const TASK_TITLE = { full: ['전체 구성·', '초고 완성'], edit: ['부분 첨삭·', '수정'], proposal: ['연구계획서', '작성'] };
+const TASK_TITLE = { full: ['전체 구성·', '초고 완성'], edit: ['논문', '첨삭·교정'], proposal: ['연구계획서', '작성'] };
 const FB_TITLE = { journal: ['심사 의견', '반영'], report: ['검토 의견', '반영'], youth: ['선생님 피드백', '반영'], personal: ['피드백', '반영'] };
+const BLUE_TAG = '수정표 작성, 반영 부분은 파란색 표시';
 const TAG = {
   full: '주제 한 줄에서 장별 초고까지', edit: '문장과 논리를 제출 수준으로', proposal: '목적부터 분석 계획까지 탄탄하게',
-  'S-FULL': '설계부터 해석까지 한 번에', 'S-NEW': '검증된 척도로 새로 구성', 'S-EDIT': '문항과 척도를 정교하게', 'S-FB': '의견을 항목별로 정확하게', 'S-ANALYZE': '신뢰도부터 가설 검증까지',
-  'T-BASIC': 'APA 통계표로 깔끔하게', 'T-INTERP': '통계표에 쉬운 해석까지', 'T-CHAPTER': '분석부터 결과장 초고까지', 'T-FB': '의견대로 다시 분석', 'T-SIM': '분석 흐름을 미리 익히는 실습', 'T-ADV': '매개·조절효과까지 깊이 있게',
-  'A-PRIORITY': '작업 순서를 앞당겨 더 빠르게', 'A-FORMAT': '제출 양식까지 빈틈없이', 'A-REVISION': '결과물을 한 번 더 다듬습니다',
+  'S-FULL': '설문 진행과 응답 정리까지 한 번에', 'S-NEW': '검증된 척도로 문항 구성', 'S-EDIT': '문항과 척도를 정교하게', 'S-FB': BLUE_TAG, 'S-ANALYZE': '연구 가설에 맞는 분석과 해석',
+  'T-BASIC': '주제와 데이터에 맞는 분석과 통계표', 'T-INTERP': '가설별 분석 설계부터 결과 해석까지', 'T-CHAPTER': '분석부터 논문 4장 본문까지', 'T-FB': BLUE_TAG, 'T-SIM': '분석 흐름을 미리 익히는 실습', 'T-ADV': 'PROCESS Macro로 깊이 있게',
+  'A-PPT': '논문 핵심을 담은 발표 자료와 스크립트', 'A-ENGLISH': '', 'A-PRIORITY': '작업 순서를 앞당겨 더 빠르게', 'A-FORMAT': '제출 양식까지 빈틈없이', 'A-REVISION': '결과물을 한 번 더 다듬습니다',
 };
-const STITLE = { 'S-FULL': ['처음부터', '끝까지'], 'S-NEW': ['설문지', '새로 만들기'], 'S-EDIT': ['기존 설문지', '수정'], 'S-FB': ['설문지', '피드백 반영'], 'S-ANALYZE': ['모은 응답', '분석·해석'],
-  'T-BASIC': ['기초 통계와', '통계표'], 'T-INTERP': ['통계표와', '쉬운 해석'], 'T-CHAPTER': ['논문 결과장', '작성'], 'T-FB': ['기존 분석', '수정'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절'],
-  'A-PRIORITY': ['우선 처리'], 'A-FORMAT': ['양식', '상세 적용'], 'A-REVISION': ['추가 수정'] };
-const TEACHER_TAG = { journal: '심사', report: '검토', youth: '선생님', personal: '받은' };
+const STITLE = { 'S-FULL': ['설문지 작성부터', '통계 해석까지'], 'S-NEW': ['설문지', '작성'], 'S-EDIT': ['설문지', '점검·수정'], 'S-FB': ['설문지', '피드백 반영'], 'S-ANALYZE': ['설문 응답', '통계 분석·해석'],
+  'T-BASIC': ['논문 맞춤', '통계분석 기본형'], 'T-INTERP': ['논문 맞춤', '통계분석 표준형'], 'T-CHAPTER': ['통계분석과', '연구결과 작성'], 'T-FB': ['통계 재분석·', '피드백 반영'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절효과'],
+  'A-PPT': ['심사 발표', 'PPT 제작'], 'A-ENGLISH': ['영문 논문', '작성'], 'A-PRIORITY': ['우선 처리'], 'A-FORMAT': ['양식', '상세 적용'], 'A-REVISION': ['추가 수정'] };
 function cover(p) {
   if (p.service === 'paper') {
     const [, t, k] = p.code.split('-'); const type = t.toLowerCase(), task = { FULL: 'full', EDIT: 'edit', FB: 'feedback', PROP: 'proposal' }[k];
     const title = task === 'feedback' ? (FB_TITLE[type] || ['교수님 피드백', '반영']) : TASK_TITLE[task];
-    const tag = task === 'feedback' ? `${TEACHER_TAG[type] || '교수님'} 의견을 항목별로 정확하게` : TAG[task];
+    const tag = task === 'feedback' ? (type === 'journal' ? '답변서 작성, 반영 부분은 파란색 표시' : BLUE_TAG) : TAG[task];
     return { kicker: TYPE[type], title, tag };
   }
   if (p.kind === 'extra') return { kicker: '추가 옵션', title: ['추가 분량'], tag: `1단위 ${won(p.price)}` };
-  return { kicker: p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.service === 'survey' ? '설문조사' : '통계분석', title: STITLE[p.code], tag: TAG[p.code] };
+  if (p.code === 'A-ENGLISH') return { kicker: '추가 옵션', title: STITLE[p.code], tag: `${p.unit.size}쪽마다 ${won(p.price)}` };
+  const kicker = p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '통계분석';
+  return { kicker, title: STITLE[p.code], tag: TAG[p.code] };
 }
 const imgHtml = (p) => {
   const c = cover(p);

@@ -661,8 +661,8 @@ async function tests() {
   }));
   await check(10, '처음부터 끝까지: 설계·모집(응답 수집)·분석·해석 범위를 안내하고 결과물에 반영', async () => {
     const f = await surveyS();
-    for (const w of ['처음부터 끝까지 맡기기 범위', '설문 설계', '응답 수집', '모집', '통계분석', '해석']) has(f.fullNote, w, '범위 안내');
-    for (const d of ['설문지(Word)', '익명화 응답 데이터', '통계표(APA 형식)', '결과를 읽는 쉬운 해석', '논문 결과장 정리']) ok(f.deliverables.includes(d), `받을 결과물에 "${d}" 없음: ${f.deliverables.join(', ')}`);
+    for (const w of ['설문지 작성부터 통계 해석까지 범위', '설문지 작성', '응답 수집', '모집', '통계분석', '해석']) has(f.fullNote, w, '범위 안내');
+    for (const d of ['설문지(Word)', '익명화 응답 데이터', 'APA 형식 통계표', '논문 맞춤 결과 해석', '연구결과 정리']) ok(f.deliverables.includes(d), `받을 결과물에 "${d}" 없음: ${f.deliverables.join(', ')}`);
     eq(f.planErr, '연구계획서가 있는지 골라 주세요.', '자료 단계 안내');
   });
   await check(14, "응답 수 '잘 모르겠어요'가 기본이고 그대로 다음 단계로 진행·접수", async () => {
@@ -922,7 +922,7 @@ async function tests() {
   await check(19, '데이터 있음에서 고른 "논문 결과장" 선택이 시뮬레이션 주문에 남지 않음', async () => {
     const f = await simA();
     const g = await simDelivered();
-    hasNot(g.brief, '논문 결과장', '시뮬레이션 작업지시문');
+    hasNot(g.brief, '연구결과(4장)', '시뮬레이션 작업지시문');
     ok(f.server.input.statistics.output !== 'chapter', `서버에 저장된 결과물 형태: ${f.server.input.statistics.output}`);
   });
   await check(19, "'데이터 있음'에서 올렸던 파일은 시뮬레이션으로 바꾸면 주문에 붙지 않음", async () => {
@@ -1486,7 +1486,7 @@ async function tests() {
       await p.goto(`${BASE}/admin/#order=${y.orderNo}`);
       await waitText(p, '#briefText', y.orderNo);
       const clip2 = await clipAfter(p, '.ad-card-h [data-act="copyBrief"]', `[논문AI 작업지시문] ${y.orderNo}`);
-      for (const s of ['의뢰 유형: 설문지 새로 만들기', '목표 응답 수: 150명', '연구 주제: E2E 설문 주제: 간호사의 회복탄력성']) has(clip2, s, '두 번째 주문 지시문');
+      for (const s of ['의뢰 유형: 설문지 작성', '목표 응답 수: 150명', '연구 주제: E2E 설문 주제: 간호사의 회복탄력성']) has(clip2, s, '두 번째 주문 지시문');
       hasNot(clip2, x.orderNo, '두 번째 주문 지시문에 첫 주문 번호');
       await p.goto(`${BASE}/admin/#`);
       await p.waitForSelector(`[data-brief="${x.orderNo}"]`);

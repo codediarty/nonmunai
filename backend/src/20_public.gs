@@ -27,7 +27,12 @@ function normalizeInput_(service, raw) {
       purpose: str_(common.purpose, 30), topicKnown: str_(common.topicKnown, 10), title: str_(common.title, 200), keywords: (common.keywords || []).slice(0, 5).map(function (k) { return str_(k, 30); }),
       due: str_(common.due, 10), outputFormat: str_(common.outputFormat, 10), request: str_(common.request, 3000), method: str_(common.method, 20),
     },
-    addons: { priority: bool_((raw.addons || {}).priority), format: bool_((raw.addons || {}).format), revisions: Math.min(5, Math.max(0, Number((raw.addons || {}).revisions || 0))) },
+    addons: (function (ad) {
+      return {
+        priority: bool_(ad.priority), format: bool_(ad.format), revisions: Math.min(5, Math.max(0, Number(ad.revisions || 0))),
+        ppt: bool_(ad.ppt), english: bool_(ad.english), editing: bool_(ad.editing), editingType: EDIT_TYPES.indexOf(String(ad.editingType || '')) >= 0 ? String(ad.editingType) : '',
+      };
+    })(raw.addons || {}),
   };
   if (service === 'paper') {
     var p = raw.paper || {};
@@ -317,14 +322,17 @@ function summaryOf_(input, quote, design) {
     parts.push({ full: '전체 초안', edit: '첨삭', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || '');
     if (input.paper.pages) parts.push(input.paper.pages + '쪽');
   } else if (input.service === 'survey') {
-    parts.push({ full: '처음부터 끝까지', new: '설문지 제작', edit: '설문 수정', feedback: '피드백 반영', analyze: '응답 분석' }[input.survey.mode] || '');
+    parts.push({ full: '설문 원스톱', new: '설문지 작성', edit: '설문 점검', feedback: '피드백 반영', analyze: '응답 분석' }[input.survey.mode] || '');
     if (input.survey.recruit === 'us') parts.push('모집 의뢰');
   } else if (input.service === 'statistics') {
-    parts.push(input.statistics.hasData === false ? (input.statistics.noDataPath === 'survey' ? '조사부터' : '학습용 시뮬레이션') : ({ table: '통계표', interp: '통계표+해석', chapter: '결과장', revise: '분석 수정' }[input.statistics.output] || ''));
+    parts.push(input.statistics.hasData === false ? (input.statistics.noDataPath === 'survey' ? '조사부터' : '학습용 시뮬레이션') : ({ table: '맞춤 분석 기본형', interp: '맞춤 분석 표준형', chapter: '연구결과 작성', revise: '재분석' }[input.statistics.output] || ''));
   }
   if (input.common.fieldText) parts.push(input.common.fieldText);
   if (design && design.designLabel) parts.push(design.designLabel);
   if (input.addons.priority) parts.push('우선');
+  if (input.addons.ppt) parts.push('발표 PPT');
+  if (input.addons.english) parts.push('영문');
+  if (input.addons.editing) parts.push('첨삭 추가');
   return parts.filter(String).join(' · ').slice(0, 120);
 }
 

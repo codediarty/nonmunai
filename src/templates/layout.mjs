@@ -11,7 +11,7 @@ export const NAV = [
     label: '논문 작성', href: '/thesis-writing/', children: [
       { label: '논문 작성 지원', href: '/thesis-writing/', desc: '주제부터 장별 초고까지' },
       { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '문장·논리·형식 점검' },
-      { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정 대조표와 반영본' },
+      { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정표와 파란색 반영 표시' },
       { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
       { label: '석사학위논문', href: '/master-thesis/', desc: '석사 과정 맞춤 설계' },
       { label: '박사학위논문', href: '/dissertation/', desc: '심화 설계와 장기 일정' },

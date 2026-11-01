@@ -14,8 +14,8 @@ import { $, toast } from '../ui/dom.js';
 
 const TASKS = [
   { v: 'full', t: '전체 구성·초고 완성', d: '주제·설계부터 장별 초고까지. 기존 자료가 있으면 함께 올려 주세요.' },
-  { v: 'edit', t: '부분 첨삭·수정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
-  { v: 'feedback', t: '교수님 피드백 반영', d: '피드백을 항목별로 반영하고 수정 대조표를 드립니다. 원고와 피드백이 필요합니다.' },
+  { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
+  { v: 'feedback', t: '교수님 피드백 반영', d: '피드백을 항목별로 반영하고 수정 대조표를 작성하며, 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
   { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
 ];
 const PROPOSAL_TYPES = ['master', 'doctor', 'bachelor'];
@@ -24,7 +24,7 @@ const defaults = {
   v: 1, service: 'paper',
   common: { fieldId: '', fieldText: '', school: '', dept: '', topicKnown: '', title: '', keywords: [], keywordsText: '', method: 'auto', due: '', outputFormat: 'docx', request: '' },
   paper: { typeId: '', task: '', hasToc: '', tocText: '', hasFormat: '', formatName: '', pagesMode: 'base', pages: null, feedbackText: '', editScope: '' },
-  addons: { priority: false, format: false, revisions: 0 },
+  addons: { priority: false, format: false, revisions: 0, ppt: false, english: false, editing: false },
   files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', pin2: '', consents: { privacy: false, ethics: false, withdrawal: false, marketing: false }, hp: '', docInfo: null,
 };
 
@@ -44,7 +44,10 @@ function quoteInput(s, d) {
   return {
     service: 'paper',
     paper: { typeId: p.typeId || 'master', task: p.task || 'full', pages, feedbackItems: fb, needsData: !!(d && d.method === 'survey' && p.task === 'full') },
-    addons: { priority: s.addons.priority, format: s.addons.format, revisions: Number(s.addons.revisions || 0) },
+    addons: {
+      priority: s.addons.priority, format: s.addons.format, revisions: Number(s.addons.revisions || 0),
+      ppt: !!s.addons.ppt, english: !!s.addons.english && (p.task || 'full') === 'full', editing: !!s.addons.editing && p.task === 'feedback',
+    },
   };
 }
 
@@ -208,11 +211,22 @@ ${d ? `<div class="rv-block"><h3 class="sub-q">자동 연구 설계 리포트</h
 ];
 
 function addonsHtml(s) {
-  const pr = findItem(CONFIG.catalog, 'A-PRIORITY'), fm = findItem(CONFIG.catalog, 'A-FORMAT'), rv = findItem(CONFIG.catalog, 'A-REVISION');
+  const cat = CONFIG.catalog;
+  const pr = findItem(cat, 'A-PRIORITY'), fm = findItem(cat, 'A-FORMAT'), rv = findItem(cat, 'A-REVISION');
+  const ppt = findItem(cat, 'A-PPT'), en = findItem(cat, 'A-ENGLISH');
+  const task = s.paper.task || 'full';
+  const ed = task === 'feedback' ? findItem(cat, paperItemCode(s.paper.typeId || 'master', 'edit')) : null;
+  const main = baseItem(s);
+  const enPages = Math.max((main && main.baseUnits) || 0, Number(quoteInput(s, null).paper.pages) || 0);
+  const enBlocks = en ? Math.max(1, Math.ceil(enPages / (Number(en.unitSize) || 10))) : 0;
   const prOff = CONFIG.settings && String(CONFIG.settings.priorityEnabled) === 'false';
+  const box = (key, title, price, desc, extra = '') => `<label class="check addon${extra}"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}${extra.includes('is-off') ? ' disabled' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
   return `<div class="addons">
-${pr ? `<label class="check addon${prOff ? ' is-off' : ''}"><input type="checkbox" data-bool="addons.priority"${s.addons.priority ? ' checked' : ''}${prOff ? ' disabled' : ''}><span><b>우선 처리 <em class="num">+${won(pr.price)}</em></b><small>${prOff ? '현재 작업 일정상 우선 처리를 받을 수 없습니다.' : '작업 순서를 앞당겨 기본 납기를 줄입니다. 일정상 가능한 경우에만 선택할 수 있습니다.'}</small></span></label>` : ''}
-${fm ? `<label class="check addon"><input type="checkbox" data-bool="addons.format"${s.addons.format ? ' checked' : ''}><span><b>학교·학술지 양식 상세 적용 <em class="num">+${won(fm.price)}</em></b><small>여백, 글꼴, 제목 위계, 표·그림 서식, 목차 서식까지 제출 양식에 맞춥니다.</small></span></label>` : ''}
+${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '논문 핵심을 담은 발표 자료 15~20장과 장표별 발표 스크립트를 함께 드립니다.') : ''}
+${en && task === 'full' ? box('english', '영문 논문 작성', en.unitPrice * enBlocks, `원고를 학술 영어로 작성합니다. ${en.unitSize}쪽마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위입니다.`) : ''}
+${ed ? box('editing', '논문 전체 첨삭·교정', ed.price, `피드백 반영과 함께 원고 전체의 문장·논리를 다듬습니다(기준 ${ed.baseUnits}${ed.unitLabel}).`) : ''}
+${fm ? box('format', '학교·학술지 양식 상세 적용', fm.price, '여백, 글꼴, 제목 위계, 표·그림 서식, 목차 서식까지 제출 양식에 맞춥니다.') : ''}
+${pr ? box('priority', '우선 처리', pr.price, prOff ? '현재 작업 일정상 우선 처리를 받을 수 없습니다.' : '작업 순서를 앞당겨 기본 납기를 줄입니다. 일정상 가능한 경우에만 선택할 수 있습니다.', prOff ? ' is-off' : '') : ''}
 ${rv ? `<div class="addon addon-row"><span><b>추가 수정</b><small>기본 포함 수정 외에 1회 ${won(rv.price)}씩 더할 수 있습니다.</small></span>${selectField('addons.revisions', s.addons.revisions, [{ v: 0, t: '추가 안 함' }, { v: 1, t: '1회 추가' }, { v: 2, t: '2회 추가' }])}</div>` : ''}
 </div>`;
 }

@@ -3,7 +3,7 @@ import { createWizard, choice, textField, textArea, uploader, note, hasSlot, sub
 import { contactStep, reviewSummary, etaHtml, sideShell, deadlineMin, quickChecklist } from './common-steps.js';
 import { loadConfig, peekConfig } from './api.js';
 import { FIELDS } from '../core/kb.js';
-import { computeQuote, findItem } from '../core/pricing.js';
+import { computeQuote, findItem, paperItemCode } from '../core/pricing.js';
 import { statsPlan, METHOD_LABELS } from '../core/plans.js';
 import { diagnoseFile } from '../core/diagnose-data.js';
 import { classifyFeedback } from '../core/feedback.js';
@@ -12,20 +12,23 @@ import { url } from '../ui/dom.js';
 
 const PURPOSES = [['degree', '학위논문'], ['journal', '학술지 논문'], ['report', '보고서'], ['course', '과제'], ['study', '학습·연습']];
 const OUTPUTS = [
-  { v: 'table', t: '통계표만', d: 'APA 형식 통계표와 분석 출력 파일', code: 'T-BASIC' },
-  { v: 'interp', t: '통계표 + 쉬운 해석', d: '표마다 결과를 읽는 방법과 해석 문장', code: 'T-INTERP', badge: '추천' },
-  { v: 'chapter', t: '논문 결과장 작성', d: '논문 4장(연구결과)에 넣을 서술 초고까지', code: 'T-CHAPTER' },
-  { v: 'revise', t: '기존 분석 수정·교수님 피드백 반영', d: '데이터, 기존 결과, 교수님 의견이 필요합니다', code: 'T-FB' },
+  { v: 'table', t: '논문 맞춤 통계분석 기본형', d: '주제와 데이터에 맞는 분석, APA 통계표, 핵심 결과 해석', code: 'T-BASIC' },
+  { v: 'interp', t: '논문 맞춤 통계분석 표준형', d: '가설별 분석 설계부터 통계표, 표마다 결과 해석과 설명까지', code: 'T-INTERP', badge: '추천' },
+  { v: 'chapter', t: '통계분석과 연구결과 작성', d: '표준형 분석에 논문 4장(연구결과) 본문 작성까지', code: 'T-CHAPTER' },
+  { v: 'revise', t: '통계 재분석·교수님 피드백 반영', d: '수정표 작성, 반영 부분 파란색 표시. 데이터, 기존 결과, 교수님 의견이 필요합니다', code: 'T-FB' },
 ];
 
 const defaults = {
   v: 1, service: 'statistics',
   common: { purpose: '', fieldId: '', fieldText: '', title: '', due: '', request: '' },
   statistics: { hasData: '', noDataPath: '', methods: ['auto'], output: '', variables: '', feedbackText: '' },
-  addons: { priority: false, revisions: 0 },
+  addons: { priority: false, revisions: 0, ppt: false, editing: false },
   files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', pin2: '', consents: { privacy: false, ethics: false, withdrawal: false, marketing: false, simulation: false }, hp: '', dataInfo: null,
 };
 let CONFIG = { catalog: null, settings: {} };
+
+// 논문 첨삭을 더할 때 쓸 논문 유형(분석 목적에서)
+const EDIT_TYPE = { degree: 'master', journal: 'journal', report: 'report', course: 'bachelor', study: 'personal' };
 
 const hasData = (s) => s.statistics.hasData === 'yes';
 const isSim = (s) => s.statistics.hasData === 'no' && s.statistics.noDataPath === 'simulation';
@@ -36,7 +39,7 @@ function quoteInput(s) {
   return {
     service: 'statistics',
     statistics: { hasData: t.hasData === 'yes' ? true : t.hasData === 'no' ? false : true, noDataPath: t.noDataPath, output: t.output || 'interp', advanced: (t.methods || []).includes('medmod'), sem: (t.methods || []).includes('sem'), messy: false },
-    addons: { priority: s.addons.priority, revisions: Number(s.addons.revisions || 0) },
+    addons: { priority: s.addons.priority, revisions: Number(s.addons.revisions || 0), ppt: !!s.addons.ppt, editing: !!s.addons.editing, editingType: EDIT_TYPE[s.common.purpose] || 'master' },
   };
 }
 
@@ -49,6 +52,19 @@ function toInput(s) {
     statistics: { ...t, hasData: q.statistics.hasData, advanced: q.statistics.advanced, sem: q.statistics.sem, dataInfo: s.dataInfo ? JSON.stringify(compactInfo(s.dataInfo)).slice(0, 1900) : '' },
     addons: q.addons,
   };
+}
+
+// 추가 옵션: 심사 발표 PPT, 논문 첨삭·교정, 우선 처리
+function extraAddonsHtml(s) {
+  const cat = CONFIG.catalog;
+  const ppt = findItem(cat, 'A-PPT'), pr = findItem(cat, 'A-PRIORITY');
+  const ed = findItem(cat, paperItemCode(EDIT_TYPE[s.common.purpose] || 'master', 'edit'));
+  const box = (key, title, price, desc) => `<label class="check addon"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
+  return `<div class="addons">
+${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '분석 결과와 논문 핵심을 담은 발표 자료 15~20장과 발표 스크립트를 드립니다.') : ''}
+${ed && !isSim(s) ? box('editing', '논문 첨삭·교정', ed.price, `직접 쓰신 논문 원고의 문장·논리를 다듬습니다(${esc(ed.name)}, 기준 ${ed.baseUnits}${ed.unitLabel}). 원고는 주문 뒤 올려 주셔도 됩니다.`) : ''}
+${pr ? box('priority', '우선 처리', pr.price, '일정상 가능한 경우 작업 순서를 앞당깁니다.') : ''}
+</div>`;
 }
 
 function compactInfo(i) {
@@ -122,7 +138,7 @@ const steps = [
     id: 'detail', title: '분석할 변수와 일정을 알려 주세요', help: '모르는 부분은 비워 두셔도 됩니다.',
     render: (s) => `${textArea('statistics.variables', s.statistics.variables, { label: '분석할 변수나 가설 (선택)', rows: 4, placeholder: '예: 독립변수 학업스트레스, 종속변수 학교적응, 조절변수 사회적 지지. 성별·학년을 통제' })}
 <div class="row-2">${textField('common.due', s.common.due, { type: 'date', label: '희망 완료일 (선택)' })}</div>
-<div class="addons" style="margin-top:14px"><label class="check addon"><input type="checkbox" data-bool="addons.priority"${s.addons.priority ? ' checked' : ''}><span><b>우선 처리 <em class="num">+${won((findItem(CONFIG.catalog, 'A-PRIORITY') || {}).price || 0)}</em></b><small>일정상 가능한 경우 작업 순서를 앞당깁니다.</small></span></label></div>
+<h3 class="sub-q">추가 옵션</h3>${extraAddonsHtml(s)}
 ${textArea('common.request', s.common.request, { label: '요청 사항 (선택)', rows: 3 })}`,
     bind: (el) => { const d = el.querySelector('input[type=date]'); if (d) d.min = deadlineMin(); },
     valid: () => null,

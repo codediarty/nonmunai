@@ -92,23 +92,30 @@ function setup() {
   } finally { lock.releaseLock(); }
 }
 
-/* 편집기에서 직접 실행: 가격표의 상품명·포함·제외 문구만 기본 가격표에 맞춘다(가격, 결제 링크, 사용 여부는 그대로 둠) */
+/* 편집기에서 직접 실행: 가격표의 상품명·포함·제외 문구를 기본 가격표에 맞추고, 새로 생긴 기본 상품은 뒤에 더한다
+   (이미 있는 상품의 가격, 결제 링크, 사용 여부는 그대로 둠) */
 function syncCatalogText() {
   var cur = catalogFromSheet_();
   if (!cur) { writeCatalog_(DEFAULT_CATALOG); log_('catalog', 'created from default'); return { created: true }; }
   var def = {};
   DEFAULT_CATALOG.items.forEach(function (it) { def[it.code] = it; });
-  var changed = [];
+  var changed = [], added = [], have = {};
   cur.items.forEach(function (it) {
+    have[it.code] = true;
     var d = def[it.code];
     if (!d) return;
     var inc = (d.includes || []).slice(), exc = (d.excludes || []).slice();
     if (it.name !== d.name || it.includes.join('\n') !== inc.join('\n') || it.excludes.join('\n') !== exc.join('\n')) changed.push(it.code);
     it.name = d.name; it.includes = inc; it.excludes = exc;
   });
-  if (changed.length) writeCatalog_(cur);
-  log_('catalog', 'text synced ' + changed.length + (changed.length ? ': ' + changed.join(',') : ''));
-  return { changed: changed };
+  DEFAULT_CATALOG.items.forEach(function (d) {
+    if (have[d.code]) return;
+    cur.items.push(JSON.parse(JSON.stringify(d)));
+    added.push(d.code);
+  });
+  if (changed.length || added.length) writeCatalog_(cur);
+  log_('catalog', 'text synced ' + changed.length + (changed.length ? ': ' + changed.join(',') : '') + (added.length ? ' / added: ' + added.join(',') : ''));
+  return { changed: changed, added: added };
 }
 
 function installTriggers_() {

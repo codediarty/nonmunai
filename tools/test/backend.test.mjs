@@ -373,15 +373,21 @@ t('가격표 문구 맞추기(syncCatalogText): 이름·포함 문구만 기본�
   const item = cat.items.find((i) => i.code === 'P-MASTER-FULL');
   item.name = '석사학위논문 옛 이름'; item.includes = ['옛 포함 문구']; item.price = 459000; item.payUrl = 'https://skkc.co.kr/shop_view/?idx=99';
   x.ok('adminSaveCatalog', { adminToken: token, catalog: cat });
+  cat.items = cat.items.filter((i) => i.code !== 'A-PPT');
+  x.ok('adminSaveCatalog', { adminToken: token, catalog: cat });
   const res = x.env.call('syncCatalogText');
   assert.deepEqual(res.changed, ['P-MASTER-FULL']);
+  assert.deepEqual(res.added, ['A-PPT']);
+  const ppt = x.ok('config').catalog.items.find((i) => i.code === 'A-PPT');
+  assert.equal(ppt.price, DEFAULT_CATALOG.items.find((i) => i.code === 'A-PPT').price);
   const after = x.ok('config').catalog.items.find((i) => i.code === 'P-MASTER-FULL');
   const def = DEFAULT_CATALOG.items.find((i) => i.code === 'P-MASTER-FULL');
   assert.equal(after.name, def.name);
   assert.deepEqual(after.includes, def.includes);
   assert.equal(after.price, 459000);
   assert.equal(after.payUrl, 'https://skkc.co.kr/shop_view/?idx=99');
-  assert.deepEqual(x.env.call('syncCatalogText').changed, []);
+  const again = x.env.call('syncCatalogText');
+  assert.deepEqual([again.changed, again.added], [[], []]);
 });
 
 t('토스페이먼츠: 승인 성공 시 결제 확정, 금액 위조 거부', () => {

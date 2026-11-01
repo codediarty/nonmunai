@@ -47,3 +47,23 @@ t('영업일 계산(주말 제외)', () => {
   const d = addBusinessDays(new Date(2026, 10, 6), 1, []); // 2026-11-06 금 → 11-09 월
   assert.equal(d.getDate(), 9);
 });
+t('심사 발표 PPT·영문 논문 작성·논문 첨삭 옵션', () => {
+  // 석사 전체 80쪽 + 영문(80쪽 → 10쪽 단위 8개) + PPT
+  const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'full', pages: 80 }, addons: { ppt: true, english: true } });
+  const en = q.lines.find((l) => l.code === 'A-ENGLISH');
+  assert.equal(en.qty, 8);
+  assert.equal(en.amount, 8 * 49000);
+  assert.ok(q.lines.some((l) => l.code === 'A-PPT' && l.amount === 89000));
+  assert.equal(q.total, 399000 + 2 * 49000 + 8 * 49000 + 89000);
+  // 영문 작성은 전체 구성·초고 완성에만, 논문 첨삭은 피드백 반영·통계·설문에만 붙는다
+  const fb = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'doctor', task: 'feedback' }, addons: { english: true, editing: true } });
+  assert.ok(!fb.lines.some((l) => l.code === 'A-ENGLISH'));
+  assert.ok(fb.lines.some((l) => l.code === 'P-DOCTOR-EDIT' && l.amount === 149000));
+  const full = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'full' }, addons: { editing: true } });
+  assert.ok(!full.lines.some((l) => /-EDIT$/.test(l.code)));
+  const st = computeQuote(DEFAULT_CATALOG, { service: 'statistics', statistics: { hasData: true, output: 'interp' }, addons: { editing: true, editingType: 'journal', ppt: true } });
+  assert.ok(st.lines.some((l) => l.code === 'P-JOURNAL-EDIT'));
+  assert.equal(st.total, 149000 + 79000 + 89000);
+  const sv = computeQuote(DEFAULT_CATALOG, { service: 'survey', survey: { mode: 'full', recruit: 'none' }, addons: { editing: true, editingType: 'nope' } });
+  assert.ok(sv.lines.some((l) => l.code === 'P-MASTER-EDIT'), '알 수 없는 유형은 석사 기준');
+});
