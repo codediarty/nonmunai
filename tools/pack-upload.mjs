@@ -1,5 +1,5 @@
-// 웹 업로드용 소스 묶음: node tools/pack-upload.mjs [--only=a,b]
-//  a: OG 이미지를 뺀 소스 전체, b: OG 이미지(src/assets/img/og)
+// 웹 업로드용 소스 묶음: node tools/pack-upload.mjs [--only=a,b,s]
+//  a: 이미지 묶음을 뺀 소스 전체, b: OG 이미지(src/assets/img/og), s: 아임웹 상품 표지(src/assets/img/shop/products, 1.3MB씩 나눔)
 //  결과: upload/nonmunai-a.zip(.b64.txt), upload/nonmunai-b.zip(.b64.txt), upload/manifest.json
 // .github/workflows는 넣지 않는다(Actions 토큰으로는 워크플로를 고칠 수 없음)
 import fs from 'node:fs';
@@ -11,7 +11,8 @@ import JSZip from 'jszip';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SKIP = new Set(['node_modules', 'docs', 'docs-dev', 'upload', 'tmp', '.github', '.git']);
 const OG = 'src/assets/img/og/';
-const only = (process.argv.find((a) => a.startsWith('--only=')) || '--only=a,b').slice(7).split(',');
+const SHOP = 'src/assets/img/shop/products/';
+const onlyArg = (process.argv.find((a) => a.startsWith('--only=')) || '--only=a,b').slice(7).split(',');
 const list = [];
 const walk = (dir, rel = '') => {
   for (const name of fs.readdirSync(dir)) {
@@ -23,11 +24,21 @@ const walk = (dir, rel = '') => {
   }
 };
 walk(root);
-const groups = { a: list.filter((f) => !f.startsWith(OG)), b: list.filter((f) => f.startsWith(OG)) };
+const groups = { a: list.filter((f) => !f.startsWith(OG) && !f.startsWith(SHOP)), b: list.filter((f) => f.startsWith(OG)) };
+// 상품 표지는 주소창 길이 제한(약 2MB) 안에 들도록 나눠 묶는다
+const shopFiles = list.filter((f) => f.startsWith(SHOP)).sort();
+let part = [], size = 0, n = 0;
+for (const f of shopFiles) {
+  const sz = fs.statSync(path.join(root, f)).size;
+  if (part.length && size + sz > 1300 * 1024) { groups['s' + (++n)] = part; part = []; size = 0; }
+  part.push(f); size += sz;
+}
+if (part.length) groups['s' + (++n)] = part;
 const outDir = path.join(root, 'upload');
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 const manifest = { builtAt: new Date().toISOString(), bundles: [] };
+const only = onlyArg.flatMap((k) => (k === 's' ? Object.keys(groups).filter((g) => /^s\d+$/.test(g)) : [k]));
 for (const key of only) {
   const zip = new JSZip();
   for (const f of groups[key]) zip.file(f, fs.readFileSync(path.join(root, f)), { date: new Date('2026-11-01T00:00:00Z') });
@@ -44,7 +55,7 @@ fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, nu
 
 // 배포 묶음 전달 페이지(아티팩트로 올려 GitHub 업로드 화면에 넘김)
 const kb = (n) => Math.round(n / 1024).toLocaleString('en-US');
-const rows = manifest.bundles.map((b) => `<li><div class="b-main"><b>${b.key === 'a' ? '소스 전체' : 'OG 이미지'}</b><span class="mono">${b.name}</span><small>파일 ${b.files}개 · ${kb(b.bytes)}KB · SHA-256 ${b.sha256.slice(0, 16)}…</small></div><button type="button" data-name="${b.name}" data-sha="${b.sha256}">GitHub로 보내기</button></li>`).join('');
+const rows = manifest.bundles.map((b) => `<li><div class="b-main"><b>${b.key === 'a' ? '소스 전체' : b.key === 'b' ? 'OG 이미지' : '상품 표지 ' + b.key.slice(1)}</b><span class="mono">${b.name}</span><small>파일 ${b.files}개 · ${kb(b.bytes)}KB · SHA-256 ${b.sha256.slice(0, 16)}…</small></div><button type="button" data-name="${b.name}" data-sha="${b.sha256}">GitHub로 보내기</button></li>`).join('');
 fs.writeFileSync(path.join(outDir, 'index.html'), `<title>논문AI 배포 묶음</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>

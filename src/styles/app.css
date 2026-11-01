@@ -363,3 +363,10 @@
   .eta-box b { font-size: 16.5px; text-align: right; }
   .ord-head .status-pill { order: -1; }
 }
+
+/* 아임웹 장바구니 결제 안내 */
+.cart-list { list-style: decimal; margin: 12px 0 0; padding: 0 0 0 22px; display: grid; gap: 8px; }
+.cart-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: baseline; font-size: 14px; }
+.cart-list li a { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.cart-q { color: var(--muted, #5B6478); font-size: 13px; }
+.cart-total { display: flex; justify-content: space-between; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line, #DDE3EE); font-size: 14px; }

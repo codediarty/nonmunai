@@ -3,7 +3,7 @@ import { aapi, esc, won, toast, busy, confirmBox, authLost } from './core.js';
 
 const GROUPS = [
   { title: '알림', keys: ['operatorEmails', 'replyTo', 'ntfyTopic', 'digestHour', 'notifyStatusMail'] },
-  { title: '결제 연결', keys: ['skkcEnabled', 'skkcCustomUrl', 'skkcLinks', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey'] },
+  { title: '결제 연결', keys: ['skkcEnabled', 'skkcProducts', 'skkcCustomUrl', 'skkcLinks', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey'] },
   { title: '작업 운영', keys: ['advanceOnPayment', 'advanceOnClaim', 'dailyCapacity', 'holidays', 'maxFileMB', 'noticeBanner'] },
   { title: '보관·정리', keys: ['retentionDays', 'revisionDays', 'draftExpireDays', 'unpaidExpireDays'] },
   { title: '후속 서비스', keys: ['addonServices'] },
@@ -36,6 +36,12 @@ function fieldHtml(s0) {
     let rows = [];
     try { rows = JSON.parse(s.value || '[]'); } catch { rows = []; }
     return `<div class="field"><span class="label">금액별 결제 링크 <small>금액이 정확히 같은 주문에 이 링크를 엽니다</small></span><div class="ad-mini" data-json="skkcLinks">${rows.map((r) => linkRow(r)).join('')}</div><button type="button" class="btn btn-ghost btn-xs" data-add="skkcLinks">링크 추가</button></div>`;
+  }
+  if (s.key === 'skkcProducts') {
+    let map = {};
+    try { map = JSON.parse(s.value || '{}') || {}; } catch { map = {}; }
+    const text = Object.entries(map).map(([k, v]) => `${k} ${v}`).join('\n');
+    return `<div class="field"><label class="label" for="${id}">아임웹 상품 링크 <small>한 줄에 '상품코드 링크'. 주문 금액 줄마다 이 상품을 안내합니다(${Object.keys(map).length}개)</small></label><textarea class="textarea" rows="6" id="${id}" data-products placeholder="P-MASTER-FULL https://skkc.co.kr/shop_view?idx=...">${esc(text)}</textarea></div>`;
   }
   if (s.key === 'addonServices') {
     let rows = [];
@@ -75,6 +81,12 @@ export async function renderSettings(root) {
     out.skkcLinks = JSON.stringify(links);
     const addons = Array.from(root.querySelectorAll('[data-json="addonServices"] .ad-mini-row')).map((row, k) => ({ key: row.querySelector('[data-f="key"]').value || `svc${k + 1}`, name: row.querySelector('[data-f="name"]').value.trim(), url: row.querySelector('[data-f="url"]').value.trim(), desc: row.querySelector('[data-f="desc"]').value.trim(), enabled: row.querySelector('[data-f="enabled"]').checked })).filter((x) => x.name);
     out.addonServices = JSON.stringify(addons);
+    const prodEl = root.querySelector('[data-products]');
+    if (prodEl) {
+      const map = {};
+      for (const line of prodEl.value.split('\n')) { const m = line.trim().match(/^([A-Z0-9-]+)\s+(https?:\/\/\S+)$/); if (m) map[m[1]] = m[2]; }
+      out.skkcProducts = JSON.stringify(map);
+    }
     for (const k of NUM) if (out[k] !== undefined && out[k] !== '' && !/^\d+$/.test(out[k])) { toast(`${(byKey[k] || {}).label || k}: 숫자로 입력해 주세요.`, { error: true }); return; }
     if (out.tossEnabled === 'true' && !out.tossClientKey) { toast('토스페이먼츠를 켜려면 클라이언트 키가 필요합니다.', { error: true }); return; }
     const payload = { settings: out };

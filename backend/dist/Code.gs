@@ -61,6 +61,7 @@ var DEFAULT_SETTINGS = {
   skkcEnabled: ['true', '성균관컨설팅(skkc.co.kr) 결제 연결 사용'],
   skkcCustomUrl: ['', '금액이 맞는 결제 링크가 없을 때 안내할 결제 페이지(비우면 상담 채널에서 결제 링크를 받도록 안내)'],
   skkcLinks: ['[]', '금액별 결제 링크 목록(JSON: [{"amount":399000,"url":"https://skkc.co.kr/shop_view?idx=..."}])'],
+  skkcProducts: ['{}', '아임웹 상품 링크(JSON: {"P-MASTER-FULL":"https://skkc.co.kr/shop_view?idx=...", "X-29000":"..."}). 주문 금액 줄마다 맞는 상품을 안내'],
   skkcUnitUrl: ['', '금액 단위 결제 상품 링크(예: 1,000원 상품). 수량을 금액에 맞춰 결제'],
   skkcUnitPrice: ['1000', '금액 단위 결제 상품의 1개 가격(원)'],
   bankEnabled: ['false', '무통장입금 안내 사용'],
@@ -91,7 +92,7 @@ var DEFAULT_SETTINGS = {
   addonServices: ['[{"key":"aicheck","name":"AI 사용 여부 점검(카피클린)","url":"https://www.skkc.co.kr/ai-detector","desc":"제출 전 AI 작성 의심 구간 확인","enabled":true},{"key":"humanize","name":"문장 다듬기(카피휴먼)","url":"https://copyhuman.kr/","desc":"AI 문체를 사람 문장으로 다듬기","enabled":true}]', '전달 후 함께 안내할 후속 서비스(JSON)'],
 };
 
-var PUBLIC_SETTING_KEYS = ['siteName', 'siteUrl', 'skkcEnabled', 'skkcCustomUrl', 'skkcLinks', 'skkcUnitUrl', 'skkcUnitPrice', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey',
+var PUBLIC_SETTING_KEYS = ['siteName', 'siteUrl', 'skkcEnabled', 'skkcCustomUrl', 'skkcLinks', 'skkcProducts', 'skkcUnitUrl', 'skkcUnitPrice', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey',
   'dailyCapacity', 'holidays', 'maxFileMB', 'bizName', 'bizCeo', 'bizNo', 'bizMailOrder', 'bizAddress', 'bizPhone', 'bizEmail', 'noticeBanner', 'addonServices', 'retentionDays', 'revisionDays', 'replyTo'];
 
 /* ------------------------------------------------------------------ 속성·저장소 */
