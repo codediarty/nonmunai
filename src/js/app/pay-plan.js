@@ -13,7 +13,7 @@ export function linkForLine(line, links, catalog) {
   return '';
 }
 
-// 묶음 상품: 본 상품과 추가 분량 줄을 '석사 80쪽'처럼 상품 하나로 바꾼다(가격표의 묶음 금액과 같을 때만)
+// 묶음 상품: 본 상품과 추가 분량 줄을 '석사 100 Page'처럼 상품 하나로 바꾼다(가격표의 묶음 금액과 같을 때만)
 export function mergeBundle(rows, links, catalog) {
   const items = (catalog && catalog.items) || [];
   const x = rows.find((r) => /-X$/.test(r.code || ''));

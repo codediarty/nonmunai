@@ -1,5 +1,5 @@
-// 홈: 프롬프트 한 줄 → 논문이 써지다가 모자이크로 가려지는 작성 화면, 분량별 요금 계산
-import { readPrompt, TYPE_LABEL } from '../core/preview.js';
+// 홈: 프롬프트 한 줄 → 논문이 써지다가 모자이크로 가려지는 작성 화면, 논문 완성 가격 카드
+import { readPrompt, TYPE_LABEL, DEMO_PROMPTS } from '../core/preview.js';
 import { $, $$, url, esc, debounce } from '../ui/dom.js';
 import { initTiers } from '../app/tiers.js';
 import { keystrokes, createIme } from '../ui/hangul-typing.js';
@@ -12,7 +12,7 @@ function chipsHtml(text) {
   const r = readPrompt(text);
   const chips = [];
   if (r.typeId) chips.push(TYPE_LABEL[r.typeId]);
-  if (r.pages) chips.push(`${r.pages}쪽`);
+  if (r.pages) chips.push(`${r.pages} Page`);
   if (r.major) chips.push(r.major);
   for (const k of r.keywords) chips.push(`#${k}`);
   return chips.map((c) => `<span class="hx-chip">${esc(c)}</span>`).join('');
@@ -201,7 +201,8 @@ if (win) {
       win.classList.add('is-warn'); setTimeout(() => win.classList.remove('is-warn'), 900);
       return;
     }
-    location.href = `${url('/paper/new/')}?${new URLSearchParams({ prompt: raw.slice(0, 200) })}`;
+    // 예시 문장을 그대로 보냈다면 빈 주문서로(예시는 예시일 뿐, 주문서는 내 주제로 채운다)
+    location.href = DEMO_PROMPTS.includes(raw) ? url('/paper/new/') : `${url('/paper/new/')}?${new URLSearchParams({ prompt: raw.slice(0, 200) })}`;
   };
   form.addEventListener('submit', (e) => { e.preventDefault(); goOrder(); });
   text.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); goOrder(); } });
@@ -235,5 +236,5 @@ if (win) {
   }
 }
 
-/* ------------------------------------------------------------ 분량별 요금 */
+/* ------------------------------------------------------------ 가격 카드: 운영 가격표로 다시 계산 */
 initTiers({});

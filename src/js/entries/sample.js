@@ -60,7 +60,7 @@ if ($('#ssForm')) {
   $('#ssForm').addEventListener('input', calc);
   $('#ssForm').addEventListener('change', (e) => { if (e.target.id !== 'ssTest') calc(); });
   $('#ssCopy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText($('#ssSentence').textContent); toast('문장을 복사했습니다.'); } catch { toast('복사하지 못했습니다.', { error: true }); }
+    try { await navigator.clipboard.writeText($('#ssSentence').textContent); toast('문장을 복사했어요.'); } catch { toast('복사하지 못했어요.', { error: true }); }
   });
   setTest();
 }

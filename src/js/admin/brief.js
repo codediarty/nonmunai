@@ -160,7 +160,7 @@ function surveyBrief(o) {
     const fb = classifyFeedback(s.feedbackText);
     out.push(`■ 피드백 항목(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표 작성, 반영한 문항은 파란색 글자로 표시`);
   }
-  if (s.recruit === 'us') out.push('■ 모집 대행 확인\n  · 모집 경로·일정·사례비 집행 내역 기록(환불 규정 제6조)\n  · 참여 동의 문구와 개인정보 최소 수집, IRB 필요 여부 확인');
+  if (s.recruit === 'us') out.push('■ 모집 대행 확인\n  · 모집 경로·일정·사례비 집행 내역 기록(이용약관 제28조 제2항)\n  · 참여 동의 문구와 개인정보 최소 수집, IRB 필요 여부 확인');
   return out;
 }
 

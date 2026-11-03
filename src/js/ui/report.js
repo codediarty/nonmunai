@@ -10,7 +10,7 @@ export function ganttHtml(schedule) {
     const left = (p.startOffset / total) * 100;
     const width = Math.max(3, (p.days / total) * 100);
     return `<div class="gt-row" role="row"><span class="gt-lab" role="cell">${esc(p.label)}</span><span class="gt-track" role="cell"><i style="left:${left.toFixed(2)}%;width:${width.toFixed(2)}%"></i></span><span class="gt-date" role="cell">${esc(p.start.slice(5))}~${esc(p.end.slice(5))}</span></div>`;
-  }).join('')}<div class="gt-foot"><span>${esc(schedule.startDate)}</span><span>${schedule.tight ? '<b class="pen-t">기간이 짧습니다</b>' : `총 ${total}일`}</span><span>${esc(schedule.endDate)}</span></div></div>`;
+  }).join('')}<div class="gt-foot"><span>${esc(schedule.startDate)}</span><span>${schedule.tight ? '<b class="pen-t">기간이 짧아요</b>' : `총 ${total}일`}</span><span>${esc(schedule.endDate)}</span></div></div>`;
 }
 
 export function designReportHtml(d, { compactModel = false, titleChooser = false, showToc = true, showSchedule = true, heading = '연구 설계 리포트' } = {}) {
@@ -30,7 +30,7 @@ export function designReportHtml(d, { compactModel = false, titleChooser = false
   }
   parts.push(`<section class="rp-sec rp-two"><div><h3 class="rp-h">분석 계획</h3><ol class="rp-list">${d.analysis.map((a) => `<li>${esc(a)}</li>`).join('')}</ol><p class="rp-foot">사용 도구: ${esc((d.tools || []).join(', '))}</p></div><div><h3 class="rp-h">표본 수</h3><p class="rp-sample">${esc(d.sample.text)}</p>${(d.sample.items || []).map((i) => `<p class="rp-foot">${esc(i.label)}: <b>${i.n}명</b>${i.assumptions ? ` · ${esc(i.assumptions)}` : ''}</p>`).join('')}${d.sample.note ? `<p class="rp-foot">${esc(d.sample.note)}</p>` : ''}</div></section>`);
   if (showSchedule) parts.push(`<section class="rp-sec"><h3 class="rp-h">연구 전체 일정</h3>${ganttHtml(d.schedule)}</section>`);
-  if (showToc) parts.push(`<section class="rp-sec"><h3 class="rp-h">목차 <span class="muted rp-sub">본문 약 ${d.toc.totalPages}쪽 기준</span></h3><div class="rp-toc">${tocHtml(d.toc, { withSubs: true })}</div></section>`);
+  if (showToc) parts.push(`<section class="rp-sec"><h3 class="rp-h">목차 <span class="muted rp-sub">본문 약 ${d.toc.totalPages} Page 기준</span></h3><div class="rp-toc">${tocHtml(d.toc, { withSubs: true })}</div></section>`);
   if (d.checks && d.checks.length) parts.push(`<section class="rp-sec"><h3 class="rp-h">미리 확인할 점</h3><ul class="rp-checks">${d.checks.map((c) => `<li>${esc(c)}</li>`).join('')}</ul></section>`);
   return `<div class="report">${parts.join('')}</div>`;
 }

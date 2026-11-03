@@ -43,7 +43,7 @@ export function contactStep() {
     id: 'contact', title: '결과를 받을 연락처를 알려 주세요', help: '회원가입은 필요 없습니다. 주문번호와 조회 비밀번호로 언제든 진행 상황을 확인할 수 있습니다.',
     render: (s) => `<div class="row-2">${textField('contact.name', s.contact.name, { label: '이름', required: true, max: 40, autocomplete: 'name' })}${textField('contact.phone', s.contact.phone, { label: '휴대전화', required: true, type: 'tel', inputmode: 'tel', placeholder: '010-0000-0000', max: 20, autocomplete: 'tel' })}</div>
 <div class="row-2">${textField('contact.email', s.contact.email, { label: '이메일', required: true, type: 'email', placeholder: '진행 안내와 결과물을 받을 주소', max: 120, autocomplete: 'email' })}${textField('pin', s.pin, { label: '주문 조회 비밀번호', required: true, type: 'text', inputmode: 'numeric', placeholder: '숫자 4~8자리', max: 8, autocomplete: 'off', hint: '다른 기기에서 주문을 확인할 때 씁니다.' })}</div>
-<p class="consent-note">주문서를 내면 <a href="${url('/terms/')}" target="_blank">이용약관</a>, <a href="${url('/privacy/')}" target="_blank">개인정보 처리방침</a>, <a href="${url('/refund/')}" target="_blank">환불 규정</a>이 적용됩니다. 주문 진행에 필요한 정보만 받습니다.</p>
+<p class="consent-note">주문서를 내면 <a href="${url('/terms/')}" target="_blank">이용약관</a>, <a href="${url('/privacy/')}" target="_blank">개인정보 처리방침</a>, <a href="${url('/refund/')}" target="_blank">환불 규정</a>이 적용돼요. 맞춤 제작이라 결제가 확인되면 바로 작업이 시작되고, 결과물 발송 전 취소는 결제 금액의 20%를 환불하며 발송 후에는 환불되지 않아요. 주문 진행에 필요한 정보만 받아요.</p>
 <label class="check check-sm"><input type="checkbox" data-bool="consents.marketing"${s.consents.marketing ? ' checked' : ''}><span>할인·새 서비스 소식 받기 (선택)</span></label>
 <input type="text" class="hp" tabindex="-1" autocomplete="off" data-path="hp" aria-hidden="true" value="">`,
     bind: (el, s, ctx) => {

@@ -280,10 +280,10 @@ export async function submitOrder({ service, state, input, design, quote, draftK
   const files = state.files || [];
   const host = document.createElement('div');
   host.className = 'modal-back';
-  host.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="주문서 제출"><div class="modal-hd"><h2>${payNow ? '주문서를 보내고 결제를 준비하고 있습니다' : '주문서를 제출하고 있습니다'}</h2></div><div class="modal-bd"><ol class="sub-steps">
+  host.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="주문서 제출"><div class="modal-hd"><h2>${payNow ? '의뢰를 접수하고 있습니다' : '주문서를 제출하고 있습니다'}</h2></div><div class="modal-bd"><ol class="sub-steps">
 <li data-s="create"><span class="ss-dot"></span><span>주문서 저장</span></li>
 <li data-s="files"><span class="ss-dot"></span><span>자료 파일 올리기 <em id="ssFiles">${files.length ? `0 / ${files.length}` : '없음'}</em></span></li>
-<li data-s="submit"><span class="ss-dot"></span><span>${payNow ? '접수하고 성균관컨설팅 결제 연결' : '필수 자료 확인과 접수'}</span></li></ol>
+<li data-s="submit"><span class="ss-dot"></span><span>${payNow ? '접수 완료와 결제 화면 준비' : '필수 자료 확인과 접수'}</span></li></ol>
 <ul class="sub-files" id="ssList">${files.map((f) => `<li data-fid="${f.id}"><span>${esc(f.name)}</span><b class="muted">대기</b></li>`).join('')}</ul>
 <p class="wz-err" id="ssErr" role="alert"></p><div id="ssNote"></div><div class="sub-actions" id="ssAct"></div><p class="hint">큰 파일은 올리는 데 시간이 걸릴 수 있습니다. 이 창을 닫지 말아 주세요.</p></div></div>`;
   document.body.appendChild(host);

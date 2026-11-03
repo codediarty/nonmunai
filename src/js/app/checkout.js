@@ -7,13 +7,25 @@ import { designReportHtml } from '../ui/report.js';
 import { esc, won } from '../core/render.js';
 import { $, toast, url, modal, cfg } from '../ui/dom.js';
 import { cartPlan, productLinks } from './pay-plan.js';
-import { includesFor } from '../core/pricing.js';
+import { includesFor, listPriceFor, discountRate } from '../core/pricing.js';
+import { shopUrl } from './shop-link.js';
 
 function tokenFor(no) {
   const p = new URLSearchParams(location.search);
   if (p.get('t')) { myOrders.put(no, { token: p.get('t') }); return p.get('t'); }
   const m = myOrders.get(no);
   return m ? m.token : '';
+}
+
+// 상품 하나로 결제하는 주소는 결제 화면을 바로 여는 주소로 바꾼다(skkc.co.kr 공통 코드가 처리)
+function directUrl(o, link) {
+  const single = link.cart ? link.cart.length === 1 && link.cart[0].qty === 1 : link.exact && !link.unit && !link.chat;
+  if (!single || !/^https?:\/\/(www\.)?skkc\.co\.kr\/shop_view/.test(link.url || '')) return '';
+  const code = link.cart ? link.cart[0].code : ((o.quote || {}).mainCode || '');
+  return shopUrl(link.url, { kind: 'order', o: o.orderNo, code, price: o.amountDue, list: listPriceFor(code, o.amountDue), label: payLabel(o, link) });
+}
+function payLabel(o, link) {
+  return (link && link.cart && link.cart[0] ? link.cart[0].name : (o.productName || '논문AI 주문')).replace(/^\[논문AI\]\s*/, '');
 }
 
 function skkcLink(o, settings, catalog) {
@@ -86,37 +98,38 @@ export async function startCheckout(root) {
     return;
   }
   if (p.get('toss') === 'fail') toast(p.get('message') || '결제가 완료되지 않았습니다.', { error: true, ms: 5000 });
-  // 주문서를 막 낸 경우: 결제할 상품이 하나면 결제 대기 화면 없이 성균관컨설팅 결제 페이지로 바로 잇는다
+  // 주문서를 막 낸 경우: 결제할 상품이 하나면 결제 대기 화면 없이 결제 화면으로 바로 잇는다
   if (p.get('pay') === '1') {
     history.replaceState(null, '', `${url('/checkout/')}?o=${encodeURIComponent(o.orderNo)}`);
     const s = cfg.settings || {};
     if (o.amountDue > 0 && o.allow && o.allow.pay && String(s.skkcEnabled) !== 'false' && !(String(s.tossEnabled) === 'true' && s.tossClientKey)) {
       const link = skkcLink(o, s, cfg.catalog || { items: [] });
-      const single = link.cart ? link.cart.length === 1 && link.cart[0].qty === 1 : link.exact && !link.unit && !link.chat;
-      if (single && /^https?:\/\//.test(link.url || '')) { renderHandoff(root, o, link); return; }
+      const go = directUrl(o, link);
+      if (go) { renderHandoff(root, o, link, go); return; }
     }
   }
   render(root, o, cfg, token);
 }
 
-// 성균관컨설팅 결제로 넘어가는 화면(잠깐 보여 주고 이동)
-function renderHandoff(root, o, link) {
-  const item = link.cart && link.cart[0] ? link.cart[0].name.replace(/^\[논문AI\]\s*/, '') : (o.productName || '논문AI 주문');
+// 결제 화면으로 넘어가는 화면(잠깐 보여 주고 이동)
+function renderHandoff(root, o, link, go) {
+  const item = payLabel(o, link);
+  const code = link.cart && link.cart[0] ? link.cart[0].code : ((o.quote || {}).mainCode || '');
+  const list = listPriceFor(code, o.amountDue);
   const mail = (o.contact && o.contact.email) || '';
   root.innerHTML = `<div class="wrap handoff"><div class="handoff-card">
-<div class="handoff-brand"><span class="handoff-logo">논문<b>AI</b></span><span class="handoff-x" aria-hidden="true"></span><span class="handoff-skkc">성균관컨설팅</span></div>
-<p class="handoff-ok">${ICON.check}<span>주문서 접수 완료 · 주문번호 ${esc(o.orderNo)}</span></p>
-<h1 class="handoff-h">성균관컨설팅 안전결제로<br>연결하고 있습니다</h1>
-<div class="handoff-item"><span>${esc(item)}</span><b class="num">${won(o.amountDue)}</b></div>
+<p class="handoff-ok">${ICON.check}<span>의뢰 접수 완료 · 주문번호 ${esc(o.orderNo)}</span></p>
+<h1 class="handoff-h">결제 화면을 여는 중이에요</h1>
+<div class="handoff-item"><span>${esc(item)}</span><span class="handoff-price">${list ? `<s class="num">${won(list)}</s><em>${discountRate(list, o.amountDue)}%</em>` : ''}<b class="num">${won(o.amountDue)}</b></span></div>
 <div class="handoff-bar" aria-hidden="true"><i></i></div>
-<ul class="handoff-list"><li>${ICON.check}<span>논문AI는 성균관컨설팅이 운영합니다. 결제와 영수증은 성균관컨설팅 이름으로 처리됩니다.</span></li><li>${ICON.check}<span>결제가 확인되면 작업이 시작되고, 완성본은 ${mail ? `<b>${esc(mail)}</b>로` : '메일로'} 보내 드립니다.</span></li><li>${ICON.check}<span>결제할 때 주문자 이름과 연락처를 주문서와 같게 적어 주세요.</span></li></ul>
-<a class="btn btn-primary btn-lg btn-block" id="handoffGo" href="${esc(link.url)}">결제 페이지 바로 열기</a>
+<ul class="handoff-list"><li>${ICON.check}<span>결제가 확인되면 바로 작업을 시작해요.</span></li><li>${ICON.check}<span>진행 안내와 결과물은 ${mail ? `<b>${esc(mail)}</b>로` : '메일로'} 보내 드려요.</span></li><li>${ICON.check}<span>결제할 때 주문자 이름과 연락처를 주문서와 같게 적어 주세요.</span></li></ul>
+<a class="btn btn-primary btn-lg btn-block" id="handoffGo" href="${esc(go)}">결제 화면 바로 열기</a>
 <a class="handoff-later" href="${url('/checkout/')}?o=${encodeURIComponent(o.orderNo)}">나중에 결제할게요</a>
 </div></div>`;
-  const go = () => { location.href = link.url; };
-  const timer = setTimeout(go, 2200);
+  const move = () => { location.href = go; };
+  const timer = setTimeout(move, 1800);
   root.querySelector('.handoff-later').addEventListener('click', () => clearTimeout(timer));
-  // 결제 페이지에서 뒤로 돌아오면 다시 넘기지 않고 결제 화면을 보여 준다
+  // 결제 화면에서 뒤로 돌아오면 다시 넘기지 않고 결제 화면을 보여 준다
   window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 }
 
@@ -127,7 +140,7 @@ function afterPayHtml(o) {
     .concat([
       ['작업 순서 배정', '결제가 확인되는 즉시 작업 순서와 예상 전달일이 정해집니다.'],
       ['진행 상황 공유', '단계가 바뀔 때마다 주문 페이지와 메일로 알려 드립니다. 자료가 더 필요하면 바로 요청드립니다.'],
-      ['완성본 메일 전달', '검수를 마친 완성본을 메일로 보내 드립니다. 주문 페이지에서도 내려받고, 포함된 범위 안에서 수정을 요청할 수 있습니다.'],
+      ['완성본 메일 전달', '석·박사 전문가 최종 검토를 마친 완성본을 메일로 보내 드려요. 주문 페이지에서도 내려받고, 포함된 범위 안에서 수정을 요청할 수 있어요.'],
     ]);
   return `<div class="card"><div class="card-h"><h2>${quote ? '견적 확정 후 진행' : '결제 후 진행'}</h2></div><ol class="flow-steps">${steps.map(([b, t]) => `<li><b>${esc(b)}</b><span>${esc(t)}</span></li>`).join('')}</ol></div>`;
 }
@@ -166,11 +179,11 @@ function render(root, o, cfg, token) {
         : link.chat ? `<p class="small">상담 채널에 주문번호를 남기시면 이 주문 금액(<b>${won(o.amountDue)}</b>)의 결제 링크를 바로 보내 드립니다.</p>`
         : '';
       const goLabel = link.chat ? '결제 링크 받기' : multi ? '첫 상품 담으러 가기' : `${won(o.amountDue)} 결제하기`;
-      blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>성균관컨설팅 안전결제</h3>
-<p class="pay-lead">논문AI는 <b>성균관컨설팅</b>이 운영합니다. 결제는 운영사 공식 결제 페이지(skkc.co.kr)에서 카드, 간편결제, 계좌이체로 진행되고 영수증에도 성균관컨설팅으로 표시됩니다.</p>
+      blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>안전결제</h3>
+<p class="pay-lead">카드, 간편결제, 계좌이체로 결제합니다. 카드 명세서와 영수증에는 운영사 <b>성균관컨설팅</b>으로 표시됩니다.</p>
 ${what}
-<div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(link.url)}"${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
-<ol class="pay-steps"><li>성균관컨설팅 결제 페이지에서 결제를 마칩니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.</li><li>결제가 확인되면 작업이 시작되고 메일로 알려 드립니다. 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 더 빨리 시작합니다.</li></ol>
+<div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(directUrl(o, link) || link.url)}"${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
+<ol class="pay-steps"><li>결제 화면에서 결제를 마칩니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.</li><li>결제가 확인되면 작업이 시작되고 메일로 알려 드립니다. 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 더 빨리 시작합니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
 <ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul></div>`);
     }
@@ -211,7 +224,7 @@ function bind(root, o, cfg, token) {
   const done = $('#skkcDone', root);
   if (done) done.addEventListener('click', () => {
     modal({
-      title: '결제를 마치셨나요?', html: `<p>성균관컨설팅 결제 페이지에서 <b>${won(o.amountDue)}</b> 결제를 마쳤다면 아래 버튼을 눌러 주세요. 결제 내역을 확인하는 대로 작업을 시작합니다.</p><div class="field"><label class="label" for="pn">결제자 이름</label><input class="input" id="pn" value="${esc((o.contact && o.contact.name) || '')}"></div><button class="btn btn-primary btn-block" style="margin-top:14px" id="pnOk">결제 완료 알리기</button>`,
+      title: '결제를 마치셨나요?', html: `<p>결제 화면에서 <b>${won(o.amountDue)}</b> 결제를 마쳤다면 아래 버튼을 눌러 주세요. 결제 내역을 확인하는 대로 작업을 시작합니다.</p><div class="field"><label class="label" for="pn">결제자 이름</label><input class="input" id="pn" value="${esc((o.contact && o.contact.name) || '')}"></div><button class="btn btn-primary btn-block" style="margin-top:14px" id="pnOk">결제 완료 알리기</button>`,
       onOpen: (m, close) => { m.querySelector('#pnOk').addEventListener('click', () => { close(); claim('skkc', m.querySelector('#pn').value); }); },
     });
   });

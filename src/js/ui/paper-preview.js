@@ -8,7 +8,8 @@ const AUTHORS = ['김지현 외', 'Lee et al.', '박서윤', 'Choi & Kim', '정�
 const IC = {
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2.2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>',
-  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
+  // 실존 검증 배지(파란 인증 마크)
+  seal: '<svg viewBox="0 0 40 40" aria-hidden="true"><polygon points="20.00,1.80 23.99,5.12 29.10,4.24 30.89,9.11 35.76,10.90 34.88,16.01 38.20,20.00 34.88,23.99 35.76,29.10 30.89,30.89 29.10,35.76 23.99,34.88 20.00,38.20 16.01,34.88 10.90,35.76 9.11,30.89 4.24,29.10 5.12,23.99 1.80,20.00 5.12,16.01 4.24,10.90 9.11,9.11 10.90,4.24 16.01,5.12" fill="currentColor" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M13.2 20.4l4.6 4.6 9-9.4" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
 const STEPS = ['주제 분석', '실존 문헌 검증', '목차 설계', '본문 작성'];
@@ -26,10 +27,10 @@ function tocHtml(pv) {
 
 export function mountPreview(host, { label = '내 논문 작성 미리보기', cta = null } = {}) {
   host.innerHTML = `<div class="pv" data-state="idle">
-<div class="pv-top"><span class="pv-live"><i aria-hidden="true"></i><span>${esc(label)}</span></span><span class="pv-meta" data-pv="meta">주제를 적으면 바로 시작합니다</span></div>
+<div class="pv-top"><span class="pv-live"><i aria-hidden="true"></i><span>${esc(label)}</span></span><span class="pv-meta" data-pv="meta">주제를 적으면 바로 시작해요</span></div>
 <ol class="pv-steps" aria-label="작성 단계">${STEPS.map((s, i) => `<li data-s="${i}"><i aria-hidden="true">${IC.check}</i>${s}</li>`).join('')}</ol>
 <div class="pv-stage" data-pv="stage"><div class="pv-sheet" data-pv="sheet"></div></div>
-<div class="pv-verify"><span class="pv-v-ic">${IC.shield}</span><span class="pv-v-t"><b>참고문헌 실존 검증</b><small>DOI·KCI·RISS 원문과 한 편씩 대조</small></span><b class="pv-v-n num" data-pv="n">0/0</b><span class="pv-v-bar" aria-hidden="true"><i data-pv="bar"></i></span></div>
+<div class="pv-verify"><span class="pv-v-ic">${IC.seal}</span><span class="pv-v-t"><b>참고문헌 실존 검증</b><small>DOI·KCI·RISS 원문과 한 편씩 대조</small></span><b class="pv-v-n num" data-pv="n">0/0</b><span class="pv-v-bar" aria-hidden="true"><i data-pv="bar"></i></span></div>
 </div>`;
   const root = host.firstElementChild;
   const $ = (k) => root.querySelector(`[data-pv="${k}"]`);
@@ -57,11 +58,11 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
 
   function idle() {
     root.dataset.state = 'idle';
-    $('meta').textContent = '주제를 적으면 바로 시작합니다';
+    $('meta').textContent = '주제를 적으면 바로 시작해요';
     for (let i = 0; i < STEPS.length; i++) setStep(i, '');
     $('n').textContent = '0/0';
     $('bar').style.width = '0%';
-    sheet.innerHTML = `<div class="pv-empty"><p class="pv-empty-t">관심 주제나 키워드를 적으면<br>논문AI가 여기에서 바로 쓰기 시작합니다</p><div class="pv-sk" aria-hidden="true"><i style="width:46%"></i><i style="width:92%"></i><i style="width:98%"></i><i style="width:88%"></i><i style="width:95%"></i><i style="width:60%"></i></div></div>`;
+    sheet.innerHTML = `<div class="pv-empty"><p class="pv-empty-t">관심 주제나 키워드를 적으면<br>논문AI가 여기에서 바로 쓰기 시작해요</p><div class="pv-sk" aria-hidden="true"><i style="width:46%"></i><i style="width:92%"></i><i style="width:98%"></i><i style="width:88%"></i><i style="width:95%"></i><i style="width:60%"></i></div></div>`;
     stage.scrollTop = 0;
   }
 
@@ -71,11 +72,11 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
     const pv = buildPreview(info);
     const remain = Math.max(1, pv.pages - 2);
     root.dataset.state = 'run';
-    $('meta').textContent = [pv.typeLabel, pv.field, `${pv.pages}쪽`].filter(Boolean).join(' · ');
+    $('meta').textContent = [pv.typeLabel, pv.field, `${pv.pages} Page`].filter(Boolean).join(' · ');
     const visible = pv.intro.slice(0, 2);
     const hidden = pv.intro.slice(2);
-    sheet.innerHTML = `<p class="pv-kick">${esc(pv.typeLabel)} · 본문 ${pv.pages}쪽 · APA 7판</p>
-<div class="pv-ttl"><span class="pv-ttl-t">${esc(pv.workTitle)}</span><em>제목은 연구진이 다듬어 확정합니다</em></div>
+    sheet.innerHTML = `<p class="pv-kick">${esc(pv.typeLabel)} · 본문 ${pv.pages} Page · APA 7판</p>
+<div class="pv-ttl"><span class="pv-ttl-t">${esc(pv.workTitle)}</span><em>제목은 전문가가 다듬어 확정해 드려요</em></div>
 <p class="pv-toc-h">목차</p><ol class="pv-toc">${tocHtml(pv)}</ol>
 <p class="pv-ch">${esc(pv.toc[0][0])}</p><p class="pv-sec">${pv.toc[0][1].length ? `1. ${esc(pv.toc[0][1][0])}` : '연구의 필요성'}</p>
 <p class="pv-txt"><span data-pv="typed"></span><span class="pv-caret" aria-hidden="true"></span></p>
@@ -84,7 +85,7 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
 <p class="pv-sec">2. ${esc(pv.toc[0][1][1] || '연구 목적')}</p><p class="pv-txt">${pv.purpose.map((s) => sentenceHtml(s)).join('')}</p>
 <p class="pv-ch">${esc((pv.toc[1] || ['제2장 이론적 배경'])[0])}</p><p class="pv-sec">1. ${esc(((pv.toc[1] || [0, []])[1] || [])[0] || '주요 개념')}</p><p class="pv-txt">${pv.theory.map((s, i) => sentenceHtml(s, 4 + i)).join('')}</p>
 </div></div>
-<div class="pv-lock"><span class="pv-lock-ic">${IC.lock}</span><b>나머지 ${remain}쪽은 결제 후 완성됩니다</b><small>실존 참고문헌 ${pv.refs}편 · 석·박사 연구진 검수 · 메일로 전달</small>${cta ? `<a class="btn btn-primary btn-sm pv-lock-go" href="${esc(cta.href)}">${esc(cta.label)}</a>` : ''}</div></div>`;
+<div class="pv-lock"><span class="pv-lock-ic">${IC.lock}</span><b>결제하시면 나머지 ${remain} Page를 완성해 드려요</b><small>실존 참고문헌 ${pv.refs}편 · 석·박사 전문가 최종 검토 · 메일로 전달</small>${cta ? `<a class="btn btn-primary btn-sm pv-lock-go" href="${esc(cta.href)}">${esc(cta.label)}</a>` : ''}</div></div>`;
     const typed = $('typed');
     const zone = $('zone');
     if (reduce) {

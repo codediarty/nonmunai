@@ -8,6 +8,7 @@ import { execSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createTemplates } from '../src/templates/layout.mjs';
 import { loadGuides } from './guides.mjs';
+import { brandMark, FAVICON_SVG, APP_ICON_SVG } from '../src/templates/brand.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require = createRequire(import.meta.url);
@@ -18,10 +19,9 @@ const imgDir = path.join(root, 'src/assets/img');
 const ogDir = path.join(imgDir, 'og');
 fs.mkdirSync(ogDir, { recursive: true });
 
-const MARK = (s = 32) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${s}" height="${s}"><rect x="5" y="3.5" width="19" height="25" rx="2.5" fill="none" stroke="#0F1B3D" stroke-width="2.2"/><path d="M9.5 10h10M9.5 14.5h10M9.5 19h6" stroke="#0F1B3D" stroke-width="2.2" stroke-linecap="round"/><circle cx="24.5" cy="23.5" r="5.5" fill="#2346E8"/><path d="M22.2 23.6l1.6 1.6 3-3.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-// 작은 크기용 아이콘: 종이와 확인 표시를 굵게
-const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0F1B3D"/><rect x="15" y="11" width="28" height="38" rx="4" fill="#fff"/><path d="M21 21h16M21 28h16M21 35h9" stroke="#0F1B3D" stroke-width="3.6" stroke-linecap="round"/><circle cx="44" cy="45" r="11" fill="#2346E8" stroke="#0F1B3D" stroke-width="3"/><path d="M39.2 45.2l3.4 3.4 6-6.4" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-fs.writeFileSync(path.join(root, 'src/assets/favicon.svg'), ICON_SVG);
+const MARK = (s = 32) => brandMark({ size: s });
+const ICON_SVG = APP_ICON_SVG;
+fs.writeFileSync(path.join(root, 'src/assets/favicon.svg'), FAVICON_SVG);
 
 // 페이지 목록에서 OG 대상 모으기
 const site = JSON.parse(fs.readFileSync(path.join(root, 'site.config.json'), 'utf8'));
@@ -29,15 +29,15 @@ const T = createTemplates({ site, root, assetVersion: 'og' });
 const ctx = { site, T, root, assetVersion: 'og', guides: loadGuides(root) };
 const pageDir = path.join(root, 'src/content/pages');
 const targets = new Map();
-targets.set('/assets/img/og/default.png', { kicker: '논문 자동작성 AI', title: '프롬프트 한 줄로\n논문을 완성합니다', sub: '참고문헌은 모두 실존 문헌, 본문 인용까지 연결' });
+targets.set('/assets/img/og/default.png', { kicker: 'AI 논문 완성 서비스', title: '관심 주제 한 줄로\n논문을 완성합니다', sub: '하루 완성 · 참고문헌 100% 실존 검증 · 석·박사 전문가 최종 검토' });
 for (const f of fs.readdirSync(pageDir).filter((x) => x.endsWith('.mjs'))) {
   const mod = await import(pathToFileURL(path.join(pageDir, f)).href);
   for (const p of await mod.default(ctx)) {
     if (!p.ogImage || targets.has(p.ogImage)) continue;
     const isGuide = p.ogImage.includes('/og/guide-');
-    const title = p.path === '/' ? '프롬프트 한 줄로\n논문을 완성합니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
-    const kicker = p.path === '/' ? '논문 자동작성 AI' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
-    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '참고문헌은 모두 실존 문헌, 본문 인용까지 연결합니다' : p.path === '/ai-thesis/' ? '실존 참고문헌, 본문 인용, 8쪽부터 130쪽까지' : '' });
+    const title = p.path === '/' ? '관심 주제 한 줄로\n논문을 완성합니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
+    const kicker = p.path === '/' ? 'AI 논문 완성 서비스' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
+    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '하루 완성 · 참고문헌 100% 실존 검증 · 석·박사 전문가 최종 검토' : p.path === '/ai-thesis/' ? '실존 참고문헌과 본문 인용, 15 Page부터 130 Page까지' : '' });
   }
 }
 
@@ -61,10 +61,9 @@ html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#F5F7FB}
 .sheet{position:absolute;right:-40px;top:70px;width:470px;height:600px;background:#fff;border:1px solid #DDE3EE;border-radius:6px;box-shadow:0 30px 80px -30px rgba(15,27,61,.35);transform:rotate(-4deg)}
 .sheet .ln{position:absolute;left:44px;height:9px;border-radius:5px;background:#EDF0F6}
 .sheet svg{position:absolute;left:40px;top:230px}
-.top{position:relative;display:flex;align-items:center;gap:12px;font-weight:800;font-size:30px;letter-spacing:-.02em}
-.top b{color:#2346E8}
+.top{position:relative;display:flex;align-items:center;gap:12px;font-weight:800;font-size:31px;letter-spacing:-.045em}
 .k{position:relative;font-size:24px;font-weight:700;color:#2346E8;margin:0 0 18px}
-h1{position:relative;font-family:var(--sans);font-weight:800;font-size:${title.length > 40 ? 44 : title.length > 26 ? 52 : 62}px;line-height:1.22;letter-spacing:-.05em;margin:0;max-width:680px;word-break:keep-all;color:#0B1633}
+h1{position:relative;font-family:var(--serif);font-weight:700;font-size:${title.length > 40 ? 44 : title.length > 26 ? 52 : 62}px;line-height:1.26;letter-spacing:-.055em;margin:0;max-width:680px;word-break:keep-all;color:#0B1633}
 .s{position:relative;font-size:24px;color:#41506B;margin:20px 0 0;max-width:620px;word-break:keep-all}
 .foot{position:relative;font-size:19px;color:#5B6478;font-weight:600}
 </style></head><body><div class="c">
@@ -73,7 +72,7 @@ h1{position:relative;font-family:var(--sans);font-weight:800;font-size:${title.l
 <rect x="0" y="95" width="104" height="46" rx="23" fill="#EEF2FF" stroke="#2346E8" stroke-width="2"/><rect x="143" y="10" width="104" height="46" rx="23" fill="#E8F7F1" stroke="#0E9F6E" stroke-width="2"/><rect x="286" y="95" width="104" height="46" rx="23" fill="#F1F4F9" stroke="#0F1B3D" stroke-width="2"/>
 <path d="M60 95L170 58" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M222 58L330 95" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M106 118H282" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/></svg>
 ${[350, 382, 414, 446, 478].map((y, i) => `<span class="ln" style="top:${y}px;width:${[330, 280, 340, 300, 220][i]}px"></span>`).join('')}</div>
-<div class="top">${MARK(46)}<span>논문<b>AI</b></span></div>
+<div class="top">${MARK(40)}<span>논문AI</span></div>
 <div><p class="k">${esc(kicker)}</p><h1>${esc(title.includes('\n') || title.length < 17 ? title : title.replace(/, /, ',\n')).replace(/\n/g, '<br>')}</h1>${sub ? `<p class="s">${esc(sub)}</p>` : ''}</div>
 <div class="foot">운영 성균관컨설팅 · 성균관대학교 RISE사업 지원 기업</div></div></body></html>`;
 
@@ -83,7 +82,7 @@ let n = 0;
 for (const [rel, t] of targets) {
   await page.setContent(ogHtml(t), { waitUntil: 'networkidle' });
   await page.evaluate(async (txt) => {
-    await Promise.all([document.fonts.load(`800 56px "Pretendard Variable"`, txt.title), document.fonts.load(`700 24px "Pretendard Variable"`, txt.kicker + txt.sub + '논문AI 운영 성균관컨설팅')]);
+    await Promise.all([document.fonts.load(`700 56px "Noto Serif KR"`, txt.title), document.fonts.load(`800 31px "Pretendard Variable"`, '논문AI'), document.fonts.load(`700 24px "Pretendard Variable"`, txt.kicker + txt.sub + '논문AI 운영 성균관컨설팅')]);
     await document.fonts.ready;
   }, t);
   await page.waitForTimeout(150);

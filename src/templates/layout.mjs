@@ -1,5 +1,6 @@
 // 논문AI 페이지 레이아웃 템플릿 (빌드 시 사용)
 import fs from 'node:fs';
+import { brandMark, BRAND } from './brand.mjs';
 import path from 'node:path';
 
 export function esc(s) {
@@ -9,11 +10,11 @@ export function esc(s) {
 export const NAV = [
   {
     label: '논문 자동작성', href: '/ai-thesis/', children: [
-      { label: '논문 자동작성', href: '/ai-thesis/', desc: '프롬프트 한 줄로 논문 완성' },
+      { label: '논문 자동작성', href: '/ai-thesis/', desc: '관심 주제 한 줄로 논문 완성' },
       { label: '논문 작성 지원', href: '/thesis-writing/', desc: '주제부터 장별 원고까지' },
-      { label: '석사학위논문', href: '/master-thesis/', desc: '석사 80쪽 맞춤 작성' },
-      { label: '박사학위논문', href: '/dissertation/', desc: '박사 130쪽 심화 설계' },
-      { label: '학술지 논문', href: '/journal-paper/', desc: '투고 규정과 심사 대응' },
+      { label: '석사학위논문', href: '/master-thesis/', desc: '하루 완성 석사논문 80 Page' },
+      { label: '박사학위논문', href: '/dissertation/', desc: '하루 완성 박사논문 130 Page' },
+      { label: '학술지 논문', href: '/journal-paper/', desc: '하루 완성 학술지 논문 20 Page' },
       { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
       { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '문장·논리·형식 점검' },
       { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정표와 파란색 반영 표시' },
@@ -53,8 +54,10 @@ export function createTemplates({ site, root, assetVersion }) {
   }
 
   function logo(cls = 'logo') {
-    return `<a class="${cls}" href="${u('/')}" aria-label="논문AI 홈"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="5" y="3.5" width="19" height="25" rx="2.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9.5 10h10M9.5 14.5h10M9.5 19h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="24.5" cy="23.5" r="5.5" fill="#2346E8"/><path d="M22.2 23.6l1.6 1.6 3-3.2" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="logo-word">논문<b>AI</b></span></a>`;
+    const ft = /logo-ft/.test(cls);
+    return `<a class="${cls}" href="${u('/')}" aria-label="논문AI 홈"><span class="logo-mark" aria-hidden="true">${brandMark({ size: 30, ink: ft ? '#FFFFFF' : BRAND.navy, fold: ft ? BRAND.blueLight : BRAND.blue })}</span><span class="logo-word">논문AI</span>${ft ? '<span class="logo-en">NONMUN AI</span>' : ''}</a>`;
   }
+
 
   function header(page) {
     if (page.chrome === 'app') {
@@ -71,10 +74,10 @@ export function createTemplates({ site, root, assetVersion }) {
     }).join('');
     return `<header class="hd"><div class="wrap hd-in">${logo()}
 <nav class="nav" aria-label="주 메뉴"><ul class="nav-ul">${items}</ul></nav>
-<div class="hd-right"><a class="hd-link" href="${u('/orders/')}">주문 조회</a><a class="btn btn-primary btn-sm" href="${u('/paper/new/')}">논문 작성 시작</a>
+<div class="hd-right"><a class="hd-link" href="${u('/orders/')}">주문 조회</a><a class="btn btn-dark btn-sm hd-cta" href="${u('/paper/new/')}">논문 의뢰하기</a>
 <button class="hd-burger" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="mnav">${icon('menu')}</button></div></div>
 <div class="mnav" id="mnav" hidden><div class="mnav-in">${NAV.map((n) => `<div class="mnav-group"><a class="mnav-top" href="${u(n.href)}">${esc(n.label)}</a>${n.children ? `<div class="mnav-kids">${n.children.map((c) => `<a href="${u(c.href)}">${esc(c.label)}</a>`).join('')}</div>` : ''}</div>`).join('')}
-<div class="mnav-cta"><a class="btn btn-primary btn-block" href="${u('/paper/new/')}">논문 작성 시작</a><a class="btn btn-ghost btn-block" href="${u('/orders/')}">주문 조회</a></div></div></div></header>`;
+<div class="mnav-cta"><a class="btn btn-primary btn-block" href="${u('/paper/new/')}">논문 의뢰하기</a><a class="btn btn-ghost btn-block" href="${u('/orders/')}">주문 조회</a></div></div></div></header>`;
   }
 
   function footer(page) {
@@ -82,14 +85,14 @@ export function createTemplates({ site, root, assetVersion }) {
     if (page.chrome === 'admin') return '';
     const col = (title, links) => `<div class="ft-col"><h2 class="ft-h">${esc(title)}</h2><ul>${links.map(([l, h]) => `<li><a href="${u(h)}">${esc(l)}</a></li>`).join('')}</ul></div>`;
     return `<footer class="ft"><div class="wrap">
-<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>프롬프트 한 줄로 논문을 자동작성하고, 실존 참고문헌과 본문 인용까지 연결하는 논문 작성 서비스입니다. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있습니다.</p></div>
+<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>관심 주제 한 줄로 논문을 완성하고, 실존 참고문헌과 본문 인용까지 이어 드리는 AI 논문 작성 서비스예요. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있어요.</p></div>
 <div class="ft-cols">${col('서비스', [['논문 자동작성', '/ai-thesis/'], ['논문 작성 지원', '/thesis-writing/'], ['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['연구계획서', '/research-proposal/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/']])}
 ${col('무료 도구', [['무료 논문 설계', '/free/'], ['논문 목차 생성기', '/tools/toc/'], ['표본 수 계산기', '/tools/sample-size/'], ['참고문헌 생성기', '/tools/references/'], ['논문 작성 가이드', '/guide/']])}
 ${col('고객 지원', [['주문 조회', '/orders/'], ['가격 안내', '/pricing/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/']])}
 ${col('논문AI', [['서비스 소개', '/about/'], ['연구윤리 원칙', '/ethics/'], ['이용약관', '/terms/'], ['개인정보처리방침', '/privacy/'], ['환불 규정', '/refund/']])}</div></div>
 <div class="ft-biz"><p><b>논문AI</b> 운영 ${esc(b.operator)} (성균관대학교 RISE사업 지원 기업) · 대표 ${esc(b.ceo)} · 사업자등록번호 ${esc(b.bizNo)} · 통신판매업신고 ${esc(b.mailOrderNo)}</p>
 <p>${esc(b.address)} · 전화 ${esc(b.phone)} · 이메일 ${esc(b.email)}</p>
-<p class="ft-copy">© ${new Date().getFullYear()} 논문AI. 제공되는 결과물은 연구자의 연구를 돕는 참고 자료이며, 최종 제출물의 작성과 연구윤리 준수 책임은 연구자에게 있습니다.</p></div>
+<p class="ft-copy">© ${new Date().getFullYear()} 논문AI. All rights reserved. 서비스 이용에는 <a href="${u('/terms/')}">이용약관</a>이 적용됩니다.</p></div>
 </div></footer>`;
   }
 

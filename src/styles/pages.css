@@ -213,6 +213,7 @@
 .pt-unit { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 2px; }
 .pt-days { color: var(--muted); white-space: nowrap; font-size: 14px; }
 .pt-price { font-weight: 850; white-space: nowrap; font-size: 17px; letter-spacing: -0.03em; }
+.pt-list { display: block; font-size: 12.5px; font-weight: 600; color: var(--faint); letter-spacing: 0; }
 .page-sec + .page-sec { margin-top: 64px; }
 
 /* 가이드 */
@@ -313,8 +314,8 @@
 .biz-list li { display: grid !important; grid-template-columns: 1fr; gap: 0 !important; }
 .biz-list li span { font-size: 12.5px; color: var(--muted); }
 .biz-list li b { font-size: 14.5px; font-weight: 600; }
-.legal h2 { font-family: var(--sans); font-size: 19px; margin: 40px 0 12px; }
-.legal h3 { font-size: 16.5px; }
+.legal h2 { font-family: var(--sans); font-size: 20px; margin: 56px 0 4px; padding-top: 20px; border-top: 1px solid var(--rule); }
+.legal h3 { font-family: var(--sans); font-size: 16.5px; margin: 30px 0 10px; }
 .legal table { font-size: 14.5px; }
 .free-go { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 18px; }
 .out-sheet { padding: 0; }

@@ -1,0 +1,161 @@
+<!-- 논문AI 바로 결제 연결(nonmunai.kr, 2026.11.03): 논문AI 주문서에서 넘어온 경우에만 작동. 상품 페이지를 건너뛰고 결제 화면을 열고, 결제 화면 위에 논문AI 주문 요약을 보여 주며, 결제하기를 누를 때의 주문자 정보로 논문AI 서버에 주문을 등록하고 결제 완료 때 결제 확인 요청을 보냄. 다른 상품 결제에는 아무 일도 하지 않음 -->
+<script>
+(function () {
+  try {
+    var API = 'https://script.google.com/macros/s/AKfycbw8AgDtbWXfeGxhOU8GSBBctAlaWz4V7qdKtYJlDaLBgc6BbHYqmknxnKvCRcpN3ipS8A/exec';
+    var SITE = 'https://nonmunai.kr';
+    var KEY = 'nmOrder';
+    var MAX_AGE = 6 * 3600 * 1000;
+    var path = function () { return location.pathname.replace(/\/+$/, ''); };
+    var load = function () { try { var o = JSON.parse(sessionStorage.getItem(KEY) || 'null'); return o && o.v === 1 && Date.now() - (o.at || 0) < MAX_AGE ? o : null; } catch (e) { return null; } };
+    var save = function (o) { try { sessionStorage.setItem(KEY, JSON.stringify(o)); } catch (e) {} };
+    var won = function (n) { return Number(n || 0).toLocaleString('ko-KR') + '원'; };
+    var dec = function (s) {
+      s = String(s || '').replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4) s += '=';
+      var bin = atob(s), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return JSON.parse(new TextDecoder().decode(bytes));
+    };
+    var api = function (body) {
+      return fetch(API, { method: 'POST', body: JSON.stringify(body), credentials: 'omit' }).then(function (r) { return r.json(); });
+    };
+    var el = function (tag, css, text) { var e = document.createElement(tag); if (css) e.style.cssText = css; if (text != null) e.textContent = text; return e; };
+    var FONT = 'font-family:Pretendard,"Pretendard Variable",-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;';
+
+    /* 1) 상품 페이지: 논문AI에서 넘어오면 상품 페이지를 건너뛰고 바로 구매(결제 화면으로) */
+    var q = new URLSearchParams(location.search);
+    if (path() === '/shop_view' && q.get('nm')) {
+      var o = dec(q.get('nm'));
+      if (!o || o.v !== 1) return;
+      o.at = Date.now();
+      save(o);
+      var hide = el('style');
+      hide.textContent = 'html.nm-going body>*:not(#nmCover){visibility:hidden!important}';
+      document.documentElement.appendChild(hide);
+      document.documentElement.classList.add('nm-going');
+      var reveal = function () { document.documentElement.classList.remove('nm-going'); var c = document.getElementById('nmCover'); if (c) c.remove(); };
+      var cover = function () {
+        if (document.getElementById('nmCover') || !document.body) return;
+        var c = el('div', 'position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#fff;' + FONT + 'color:#0A1633;text-align:center');
+        c.id = 'nmCover';
+        var box = el('div');
+        var st = el('style'); st.textContent = '@keyframes nmspin{to{transform:rotate(360deg)}}';
+        box.appendChild(st);
+        box.appendChild(el('div', 'width:34px;height:34px;margin:0 auto 16px;border:3px solid #DCE3F5;border-top-color:#1F48E0;border-radius:50%;animation:nmspin .8s linear infinite'));
+        box.appendChild(el('b', 'display:block;font-size:17px;letter-spacing:-.02em', '결제 화면을 여는 중입니다'));
+        box.appendChild(el('p', 'margin:6px 0 0;font-size:13px;color:#5B6478', (o.label || '논문AI 의뢰') + ' · ' + won(o.price)));
+        c.appendChild(box);
+        document.body.appendChild(c);
+      };
+      var back = location.href.replace(/([?&])nm=[^&]*/, '$1').replace(/[?&]$/, '');
+      var tries = 0;
+      (function go() {
+        cover();
+        var D = window.SITE_SHOP_DETAIL;
+        if (D && typeof D.confirmOrderWithCartItems === 'function' && document.readyState !== 'loading') {
+          try { D.confirmOrderWithCartItems('normal', back); } catch (e) { reveal(); return; }
+          // 장바구니에 다른 상품이 있으면 나오는 '이 상품만 구매'를 대신 누른다
+          var k = 0;
+          (function only() { var b = document.getElementById('buy_now'); if (b && b.offsetParent !== null) { b.click(); return; } if (k++ < 30) setTimeout(only, 150); })();
+          setTimeout(reveal, 9000);
+          return;
+        }
+        if (tries++ < 100) setTimeout(go, 100); else reveal();
+      })();
+      return;
+    }
+
+    /* 2) 결제 화면·결제 완료 화면 */
+    var all = function (sel) {
+      var out = [], roots = [document];
+      for (var i = 0; i < roots.length; i++) {
+        var r = roots[i];
+        Array.prototype.push.apply(out, r.querySelectorAll(sel));
+        var hosts = r.querySelectorAll('*');
+        for (var j = 0; j < hosts.length; j++) if (hosts[j].shadowRoot) roots.push(hosts[j].shadowRoot);
+      }
+      return out;
+    };
+    var val = function (name) { var f = all('input[name="' + name + '"]')[0]; return f ? String(f.value || '').trim() : ''; };
+    var contactNow = function () {
+      var c = { name: val('ordererName'), phone: val('ordererCall'), email: val('ordererEmail') };
+      var ok = c.name.length >= 1 && c.phone.replace(/\D/g, '').length >= 9 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email);
+      return ok ? c : null;
+    };
+    var banner = function (o, done) {
+      var old = document.getElementById('nmBanner');
+      if (old) old.remove();
+      var b = el('div', FONT + 'box-sizing:border-box;max-width:960px;margin:16px auto;padding:18px 20px;border:1px solid #CFD8F5;border-left:4px solid #1F48E0;border-radius:12px;background:#F7F9FF;color:#0A1633;line-height:1.55;text-align:left');
+      b.id = 'nmBanner';
+      b.appendChild(el('p', 'margin:0 0 4px;font-size:12.5px;font-weight:700;color:#1F48E0', done ? '논문AI 의뢰 접수 완료' : '논문AI 의뢰'));
+      b.appendChild(el('p', 'margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em', o.label || '논문AI 의뢰'));
+      if (o.topic) b.appendChild(el('p', 'margin:4px 0 0;font-size:14px;color:#3A4560', '관심 주제: ' + o.topic));
+      var pr = el('p', 'margin:8px 0 0;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px');
+      if (o.list && o.list > o.price) {
+        pr.appendChild(el('s', 'color:#8C95AA;font-size:13.5px', '정가 ' + won(o.list)));
+        pr.appendChild(el('em', 'font-style:normal;font-weight:800;color:#C8102E;font-size:13.5px', '런칭 특가 ' + Math.floor((1 - o.price / o.list) * 100) + '% 할인'));
+      }
+      pr.appendChild(el('b', 'font-size:18px;font-weight:800', won(o.price)));
+      b.appendChild(pr);
+      b.appendChild(el('p', 'margin:8px 0 0;font-size:13px;color:#5B6478', done
+        ? '결제가 확인되는 대로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.'
+        : '결제가 확인되면 바로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.'));
+      if (done && o.orderNo && o.token) {
+        var a = el('a', 'display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;background:#1F48E0;color:#fff;font-size:14px;font-weight:700;text-decoration:none', '진행 상황 보기');
+        a.href = SITE + '/orders/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(o.token);
+        a.target = '_blank'; a.rel = 'noopener';
+        b.appendChild(a);
+      }
+      var main = document.querySelector('main');
+      if (main && main.parentNode) main.parentNode.insertBefore(b, main);
+      else if (document.body) document.body.insertBefore(b, document.body.firstChild);
+    };
+    var register = function (o) {
+      if (o.orderNo || o.busy || !o.contact || o.kind !== 'new' || (o.fails || 0) >= 3) return Promise.resolve(o);
+      o.busy = true;
+      var c = o.contact;
+      return api({ action: 'createOrder', service: o.service || 'paper', contact: c, pin: c.phone.replace(/\D/g, '').slice(-4), consents: { privacy: true, ethics: true, withdrawal: true, marketing: false }, input: o.input, design: null, clientQuote: { total: o.price }, links: [], hp: '' })
+        .then(function (r) {
+          if (!r || !r.ok) throw new Error((r && r.message) || 'createOrder');
+          o.orderNo = r.orderNo; o.token = r.token; save(o);
+          return api({ action: 'submitOrder', orderNo: r.orderNo, token: r.token, links: [] });
+        })
+        .then(function (r) { o.busy = false; o.submitted = !!(r && r.ok); save(o); return o; })
+        .catch(function () { o.busy = false; o.fails = (o.fails || 0) + 1; save(o); return o; });
+    };
+    // 결제하기를 누르는 순간의 주문자 정보로 등록한다(입력 도중 값으로 등록하지 않게)
+    var onPay = function (e) {
+      if (path() !== '/shop_payment') return;
+      var o = load();
+      if (!o || o.kind !== 'new' || o.orderNo) return;
+      var t = e.composedPath ? e.composedPath()[0] : e.target;
+      var btn = t && t.closest ? t.closest('button, [role="button"]') : null;
+      if (!btn || !/결제하기/.test(btn.textContent || '')) return;
+      var c = contactNow();
+      if (!c) return;
+      o.contact = c; save(o);
+      register(o);
+    };
+    document.addEventListener('click', onPay, true);
+    var shown = '';
+    var tick = function () {
+      var o = load();
+      if (!o) return;
+      var p = path();
+      if (p === '/shop_payment') {
+        if (!document.getElementById('nmBanner') && (document.querySelector('main') || document.body)) { banner(o, false); shown = 'pay'; }
+      } else if (p.indexOf('/shop_payment_complete') === 0) {
+        if (o.claimed) { if (shown !== 'done' || !document.getElementById('nmBanner')) { banner(o, true); shown = 'done'; } return; }
+        if (o.busy) return;
+        o.claimed = true; save(o);
+        register(o).then(function (r) {
+          if (r.orderNo && r.token) return api({ action: 'claimPayment', orderNo: r.orderNo, token: r.token, method: 'skkc', payerName: (r.contact && r.contact.name) || '' }).catch(function () {});
+        }).then(function () { banner(load() || o, true); shown = 'done'; });
+      }
+    };
+    setInterval(tick, 900);
+    tick();
+  } catch (e) {}
+})();
+</script>

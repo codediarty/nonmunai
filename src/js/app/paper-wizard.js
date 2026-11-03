@@ -11,9 +11,11 @@ import { classifyFeedback } from '../core/feedback.js';
 import { analyzeDocument } from '../core/diagnose-doc.js';
 import { designReportHtml, designSnapshot } from '../ui/report.js';
 import { $, toast } from '../ui/dom.js';
+// 가격표 분량 단위 '쪽'은 화면에서 'Page'로 보여 준다
+const UL = (l) => (l === '쪽' ? ' Page' : (l || ''));
 
 const TASKS = [
-  { v: 'full', t: '전체 구성·초고 완성', d: '주제·설계부터 장별 초고까지. 기존 자료가 있으면 함께 올려 주세요.' },
+  { v: 'full', t: '논문 완성', d: '주제·설계부터 장별 본문까지 완성해 드려요. 기존 자료가 있으면 함께 올려 주세요.' },
   { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
   { v: 'feedback', t: '교수님 피드백 반영', d: '피드백을 항목별로 반영하고 수정 대조표를 작성하며, 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
   { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
@@ -65,7 +67,7 @@ function baseItem(s) { return findItem(CONFIG.catalog, paperItemCode(s.paper.typ
 const steps = [
   {
     id: 'type', title: '어떤 논문을 준비하고 계신가요?', help: '논문 유형에 따라 목차 구성과 기준 분량, 가격이 달라집니다.',
-    render: (s) => choice('paper.typeId', s.paper.typeId, PAPER_TYPES.map((t) => ({ v: t.id, t: t.label, side: `${t.pages}쪽 내외` }))),
+    render: (s) => choice('paper.typeId', s.paper.typeId, PAPER_TYPES.map((t) => ({ v: t.id, t: t.label, side: `${t.pages} Page 내외` }))),
     valid: (s) => (s.paper.typeId ? null : '논문 유형을 골라 주세요.'),
   },
   {
@@ -173,20 +175,20 @@ ${s.paper.hasFormat === 'yes' ? `<div class="cond">${textField('paper.formatName
     id: 'volume', title: '분량과 일정을 정해 주세요', help: '모르는 항목은 그대로 두셔도 됩니다.',
     render: (s) => {
       const it = baseItem(s);
-      const base = it && it.baseUnits ? `${it.baseUnits}${it.unitLabel}` : '기준 분량';
+      const base = it && it.baseUnits ? `${it.baseUnits}${UL(it.unitLabel)}` : '기준 분량';
       const unitIsItem = it && it.unitLabel === '항목';
       const opts = unitIsItem
         ? [{ v: 'base', t: `기준 범위 이내 (${base})`, d: '붙여 넣은 피드백이 있으면 항목 수로 자동 계산합니다' }, { v: 'unknown', t: '잘 모르겠어요', d: '확인 후 초과분이 있을 때만 안내합니다' }]
-        : [{ v: 'base', t: `기준 분량 이내 (${base})`, d: '대부분의 경우 여기에 해당합니다' }, { v: 'custom', t: '분량을 알고 있어요', d: '쪽수를 적으면 추가 분량이 바로 계산됩니다' }, { v: 'unknown', t: '잘 모르겠어요', d: '기준 분량으로 먼저 진행하고 초과분만 나중에 안내합니다' }];
+        : [{ v: 'base', t: `기준 분량 이내 (${base})`, d: '대부분의 경우 여기에 해당합니다' }, { v: 'custom', t: '분량을 알고 있어요', d: '분량(Page)을 적으면 추가 분량이 바로 계산돼요' }, { v: 'unknown', t: '잘 모르겠어요', d: '기준 분량으로 먼저 진행하고 초과분만 나중에 안내합니다' }];
       return `<h3 class="sub-q">분량</h3>${choice('paper.pagesMode', s.paper.pagesMode, opts, { cols: unitIsItem ? 2 : 3, compact: true })}
-${s.paper.pagesMode === 'custom' ? `<div class="cond row-2">${textField('paper.pages', s.paper.pages ?? '', { label: '예상 쪽수', type: 'number', inputmode: 'numeric', placeholder: it ? String(it.baseUnits) : '60', hint: it && it.unitPrice ? `기준 ${base}를 넘는 부분은 ${it.unitSize}${it.unitLabel}당 ${won(it.unitPrice)}이 더해집니다.` : '' })}</div>` : ''}
+${s.paper.pagesMode === 'custom' ? `<div class="cond row-2">${textField('paper.pages', s.paper.pages ?? '', { label: '예상 분량(Page)', type: 'number', inputmode: 'numeric', placeholder: it ? String(it.baseUnits) : '80', hint: it && it.unitPrice ? `기준 ${base}를 넘는 부분은 ${it.unitSize}${UL(it.unitLabel)}마다 ${won(it.unitPrice)}이 더해져요.` : '' })}</div>` : ''}
 <h3 class="sub-q">희망 완료일과 결과 파일</h3>
 <div class="row-2">${textField('common.due', s.common.due, { label: '희망 완료일 (선택)', type: 'date', hint: '심사·제출 일정이 있다면 알려 주세요. 연구 전체 일정표에 반영됩니다.' })}${selectField('common.outputFormat', s.common.outputFormat, [{ v: 'docx', t: 'Word (docx)' }, { v: 'hwp', t: '한글 (hwp)' }, { v: 'pdf', t: 'PDF' }], { label: '결과 파일 형식' })}</div>
 <h3 class="sub-q">추가 옵션</h3>${addonsHtml(s)}`;
     },
     bind: (el) => { const d = el.querySelector('input[type=date]'); if (d) d.min = deadlineMin(); },
     valid: (s) => {
-      if (s.paper.pagesMode === 'custom' && !(Number(s.paper.pages) > 0)) return '예상 쪽수를 숫자로 적어 주세요.';
+      if (s.paper.pagesMode === 'custom' && !(Number(s.paper.pages) > 0)) return '예상 분량(Page)을 숫자로 적어 주세요.';
       return null;
     },
   },
@@ -224,7 +226,7 @@ function addonsHtml(s) {
   const box = (key, title, price, desc, extra = '') => `<label class="check addon${extra}"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}${extra.includes('is-off') ? ' disabled' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
   return `<div class="addons">
 ${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '논문 핵심을 담은 발표 자료 15~20장과 장표별 발표 스크립트를 함께 드립니다.') : ''}
-${en && task === 'full' ? box('english', '영문 논문 작성', en.unitPrice * enBlocks, `원고를 학술 영어로 작성합니다. ${en.unitSize}쪽마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위입니다.`) : ''}
+${en && task === 'full' ? box('english', '영문 논문 작성', en.unitPrice * enBlocks, `원고를 학술 영어로 작성해 드려요. ${en.unitSize} Page마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위입니다.`) : ''}
 ${ed ? box('editing', '논문 전체 첨삭·교정', ed.price, `피드백 반영과 함께 원고 전체의 문장·논리를 다듬습니다(기준 ${ed.baseUnits}${ed.unitLabel}).`) : ''}
 ${fm ? box('format', '학교·학술지 양식 상세 적용', fm.price, '여백, 글꼴, 제목 위계, 표·그림 서식, 목차 서식까지 제출 양식에 맞춥니다.') : ''}
 ${pr ? box('priority', '우선 처리', pr.price, prOff ? '현재 작업 일정상 우선 처리를 받을 수 없습니다.' : '작업 순서를 앞당겨 기본 납기를 줄입니다. 일정상 가능한 경우에만 선택할 수 있습니다.', prOff ? ' is-off' : '') : ''}
@@ -237,7 +239,7 @@ function docInfoHtml(s) {
   if (!i) return '';
   if (!i.ok) return `<p class="hint doc-info">${esc(i.message || '')}</p>`;
   const it = baseItem(s);
-  return `<div class="auto-card"><div class="auto-hd">${ICON.spark}<b>원고 자동 분석</b><span class="muted">${esc(i.name || '')}</span></div><dl class="auto-dl"><div><dt>예상 분량</dt><dd>약 ${i.pages}쪽</dd></div>${i.withSpaces ? `<div><dt>글자 수</dt><dd>${i.withSpaces.toLocaleString('ko-KR')}자</dd></div>` : ''}${i.chapters && i.chapters.length ? `<div><dt>장 구성</dt><dd>${i.chapters.length}개 장</dd></div>` : ''}${i.references ? `<div><dt>참고문헌</dt><dd>${i.references}건</dd></div>` : ''}${i.citeStyle ? `<div><dt>인용 형식</dt><dd>${esc(i.citeStyle)}</dd></div>` : ''}</dl>${it && it.unitLabel === '쪽' ? `<button type="button" class="btn btn-soft btn-sm" id="usePages">이 분량(약 ${i.pages}쪽)으로 견적 계산</button>` : ''}<p class="hint">쪽수는 한 쪽에 약 1,600자를 기준으로 추정했습니다. 최종 분량은 담당자가 확인합니다.</p></div>`;
+  return `<div class="auto-card"><div class="auto-hd">${ICON.spark}<b>원고 자동 분석</b><span class="muted">${esc(i.name || '')}</span></div><dl class="auto-dl"><div><dt>예상 분량</dt><dd>약 ${i.pages} Page</dd></div>${i.withSpaces ? `<div><dt>글자 수</dt><dd>${i.withSpaces.toLocaleString('ko-KR')}자</dd></div>` : ''}${i.chapters && i.chapters.length ? `<div><dt>장 구성</dt><dd>${i.chapters.length}개 장</dd></div>` : ''}${i.references ? `<div><dt>참고문헌</dt><dd>${i.references}건</dd></div>` : ''}${i.citeStyle ? `<div><dt>인용 형식</dt><dd>${esc(i.citeStyle)}</dd></div>` : ''}</dl>${it && it.unitLabel === '쪽' ? `<button type="button" class="btn btn-soft btn-sm" id="usePages">이 분량(약 ${i.pages}쪽)으로 견적 계산</button>` : ''}<p class="hint">쪽수는 한 쪽에 약 1,600자를 기준으로 추정했습니다. 최종 분량은 담당자가 확인합니다.</p></div>`;
 }
 
 function feedbackHtml(s) {
@@ -286,7 +288,7 @@ function summaryRows(s) {
     ['method', '연구방법', { auto: '추천받기', literature: '문헌연구·선행연구 분석', survey: '설문·통계', qualitative: '면담·사례', experiment: '실험·기술', other: '기타' }[s.common.method] || '-'],
     ['task', '요청 작업', task ? task.t : '-'],
     ['task', '올린 자료', (s.files || []).length ? `${s.files.length}개 파일` : '없음'],
-    ['volume', '분량·일정', `${s.paper.pagesMode === 'custom' ? `${s.paper.pages}쪽` : s.paper.pagesMode === 'base' ? '기준 분량 이내' : '확인 후 결정'} · ${s.common.due ? `희망일 ${s.common.due}` : '희망일 없음'} · ${({ docx: 'Word', hwp: '한글', pdf: 'PDF' })[s.common.outputFormat]}`],
+    ['volume', '분량·일정', `${s.paper.pagesMode === 'custom' ? `${s.paper.pages} Page` : s.paper.pagesMode === 'base' ? '기준 분량 이내' : '확인 후 결정'} · ${s.common.due ? `희망일 ${s.common.due}` : '희망일 없음'} · ${({ docx: 'Word', hwp: '한글', pdf: 'PDF' })[s.common.outputFormat]}`],
   ];
 }
 
@@ -357,7 +359,7 @@ export async function startPaperWizard(root) {
     if (e.target.id === 'usePages' && wctx.state.docInfo && wctx.state.docInfo.pages) {
       wctx.set('paper.pagesMode', 'custom');
       wctx.set('paper.pages', wctx.state.docInfo.pages, { rerender: true });
-      toast(`분량을 약 ${wctx.state.docInfo.pages}쪽으로 반영했습니다.`);
+      toast(`분량을 약 ${wctx.state.docInfo.pages} Page로 반영했어요.`);
     }
   });
   loadConfig().then((c) => { if (c && c.catalog) { CONFIG = c; wctx.refreshSide(); } });

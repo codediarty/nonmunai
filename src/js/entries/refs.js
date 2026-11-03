@@ -15,7 +15,7 @@ function preview() {
 }
 function renderList() {
   const list = store.get('refs', []).sort((a, b) => (a.sortKey < b.sortKey ? -1 : 1));
-  $('#refList').innerHTML = list.map((r, i) => `<li><span class="ref-item">${r.html}</span><button type="button" class="link-btn" data-del="${i}" aria-label="삭제">삭제</button></li>`).join('') || '<li class="muted">아직 추가한 항목이 없습니다.</li>';
+  $('#refList').innerHTML = list.map((r, i) => `<li><span class="ref-item">${r.html}</span><button type="button" class="link-btn" data-del="${i}" aria-label="삭제">삭제</button></li>`).join('') || '<li class="muted">아직 추가한 항목이 없어요.</li>';
   $('#refCount').textContent = list.length ? `${list.length}건` : '';
   for (const b of $$('[data-del]')) b.addEventListener('click', () => { const l = store.get('refs', []).sort((a, c) => (a.sortKey < c.sortKey ? -1 : 1)); l.splice(Number(b.dataset.del), 1); store.set('refs', l); renderList(); });
 }
@@ -36,12 +36,12 @@ if (form) {
     if (!list.some((x) => x.text === r.text)) list.push({ html: r.html, text: r.text, sortKey: r.sortKey });
     store.set('refs', list);
     renderList();
-    toast('목록에 추가했습니다.');
+    toast('목록에 추가했어요.');
   });
   $('#refCopyAll').addEventListener('click', async () => {
     const list = store.get('refs', []).sort((a, b) => (a.sortKey < b.sortKey ? -1 : 1));
-    if (!list.length) { toast('목록이 비어 있습니다.', { error: true }); return; }
-    try { await navigator.clipboard.writeText(list.map((r) => r.text).join('\n')); toast(`${list.length}건을 복사했습니다.`); } catch { toast('복사하지 못했습니다.', { error: true }); }
+    if (!list.length) { toast('목록이 비어 있어요.', { error: true }); return; }
+    try { await navigator.clipboard.writeText(list.map((r) => r.text).join('\n')); toast(`${list.length}건을 복사했어요.`); } catch { toast('복사하지 못했어요.', { error: true }); }
   });
   $('#refClear').addEventListener('click', () => { store.set('refs', []); renderList(); });
   setType();

@@ -83,7 +83,7 @@ export function isSimulation(o) {
   return !!(t && t.hasData === false && t.noDataPath === 'simulation') || (!o.input && !!o.quote && o.quote.mainCode === 'T-SIM');
 }
 
-const TASK_LABEL = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
+const TASK_LABEL = { full: '논문 완성(전체 구성·본문)', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문지 작성부터 통계 해석까지', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영', analyze: '설문 응답 통계 분석·해석' };
 const SURVEY_TARGET = { auto: '추천 받기', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인', nurse: '간호사' };
 const STAT_OUTPUT = { table: '논문 맞춤 통계분석 기본형', interp: '논문 맞춤 통계분석 표준형', chapter: '통계분석과 연구결과 작성', revise: '통계 재분석·피드백 반영' };
@@ -99,7 +99,7 @@ export function orderFacts(o) {
     const pt = PAPER_TYPES.find((t) => t.id === i.paper.typeId);
     if (c.topicKnown === 'free' && c.title) rows.push(['관심 주제', c.title]);
     rows.push(['논문 유형', pt ? pt.label : i.paper.typeId], ['요청 작업', TASK_LABEL[i.paper.task] || i.paper.task]);
-    if (i.paper.pages) rows.push(['분량', `약 ${i.paper.pages}쪽`]);
+    if (i.paper.pages) rows.push(['분량', `약 ${i.paper.pages} Page`]);
     if (i.paper.feedbackItems) rows.push(['피드백 항목', `${i.paper.feedbackItems}개`]);
     const mt = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' }[c.method];
     if (c.topicKnown === 'free' && mt) rows.push(['연구 방법', mt]);

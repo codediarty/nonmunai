@@ -353,7 +353,7 @@ ${o.allow.upload && o.status !== 'needs_materials' && !o.deleted ? `<details cla
     if (o.allow.deletion) btns.push('<button class="btn btn-ghost btn-sm" type="button" id="doDelete">자료 삭제 요청</button>');
     btns.push('<button class="btn btn-ghost btn-sm" type="button" id="doForget">이 기기에서 주문 지우기</button>');
     return `<div class="card card-manage"><div class="card-h"><h2>주문 관리</h2></div><div class="danger-zone">${btns.join('')}</div>
-<p class="hint">결제 후 취소·환불은 메시지로 요청해 주세요. 진행 단계에 따른 기준은 <a href="${url('/refund/')}" target="_blank">환불 규정</a>을 따릅니다.</p></div>`;
+<p class="hint">결제 후 취소·환불은 메시지로 요청해 주세요. 환불 기준은 <a href="${url('/refund/')}" target="_blank">이용약관의 환불 규정</a>을 따라요.</p></div>`;
   }
 
   /* -------------------------------------------------------------- 동작 */

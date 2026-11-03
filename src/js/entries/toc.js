@@ -18,7 +18,7 @@ if (form) {
   form.addEventListener('change', render);
   render();
   $('#tocCopy').addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(tocToText(current.toc)); toast('목차를 복사했습니다.'); } catch { toast('복사하지 못했습니다. 직접 선택해 복사해 주세요.', { error: true }); }
+    try { await navigator.clipboard.writeText(tocToText(current.toc)); toast('목차를 복사했어요.'); } catch { toast('복사하지 못했어요. 직접 선택해 복사해 주세요.', { error: true }); }
   });
   $('#tocDoc').addEventListener('click', () => {
     const lines = tocToText(current.toc).split('\n').map((l) => `<p style="margin:0 0 4pt ${(l.match(/^ */)[0].length / 2) * 14}pt;font-family:바탕">${l.trim().replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>`).join('');

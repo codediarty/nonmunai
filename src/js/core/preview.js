@@ -4,6 +4,10 @@
 import { POPULATIONS, FIELDS, guessField } from './kb.js';
 import { josa } from './engine.js';
 
+// 홈 첫 화면 예시 문장과 제목(주문서에는 그대로 옮기지 않는다)
+export const DEMO_PROMPT = '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해 주세요';
+export const DEMO_TITLE = 'MZ세대 직장인의 워라밸이 이직의도에 미치는 영향';
+export const DEMO_PROMPTS = [DEMO_PROMPT, '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해 주세요'];
 export const TYPE_LABEL = { short: '소논문', bachelor: '학사 졸업논문', journal: '학술지 투고논문', master: '석사학위논문', doctor: '박사학위논문', youth: '청소년 탐구논문', personal: '개인 관심연구', report: '연구보고서' };
 
 const TYPE_RULES = [
@@ -76,12 +80,12 @@ function splitTopic(t) {
 export function readPrompt(text) {
   const raw = String(text || '').replace(/\s+/g, ' ').trim();
   const typeRule = TYPE_RULES.find(([, re]) => re.test(raw));
-  const pm = raw.match(/(\d{1,3})\s*(?:쪽|페이지|p\b|P\b)/);
+  const pm = raw.match(/(\d{1,3})\s*(?:쪽|페이지|[Pp]ages?\b|p\b|P\b)/);
   const mj = readMajor(raw);
   const major = mj.label;
   const f = guessField(major || raw);
   let rest = (mj.text ? raw.replace(mj.text, ' ') : raw)
-    .replace(/\d{1,3}\s*(?:쪽|페이지|p\b|P\b)(?:\s*(?:짜리|분량|정도|내외|으로|로))?/g, ' ')
+    .replace(/\d{1,3}\s*(?:쪽|페이지|[Pp]ages?\b|p\b|P\b)(?:\s*(?:짜리|분량|정도|내외|으로|로))?/g, ' ')
     .replace(/^\s*(?:이에요|예요|이고|인데요?|입니다|에서|이며|이라서|학생|생)[.,]?/, ' ')
     .replace(/[가-힣A-Za-z]{2,12}\s?(?:학과|전공)(?:이에요|이고|인데|입니다|에서|이며|이라서)?/g, ' ')
     .replace(/[가-힣A-Za-z]{2,12}학\s*(?:석사|박사|학사)(?:\s*과정)?/g, ' ')
@@ -140,7 +144,7 @@ function hashNum(s) {
   return h;
 }
 
-const PAGES_DEFAULT = { short: 8, bachelor: 30, journal: 20, master: 80, doctor: 130, youth: 10, personal: 15, report: 20 };
+const PAGES_DEFAULT = { short: 15, bachelor: 30, journal: 20, master: 80, doctor: 130, youth: 10, personal: 15, report: 20 };
 export const refsFor = (pages) => Math.max(12, Math.min(90, Math.round((Number(pages) || 60) * 0.45)));
 
 function tocFor(typeId, task, k1, k2) {

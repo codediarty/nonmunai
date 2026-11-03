@@ -3,14 +3,14 @@
 // 측정도구는 '후보'로만 제시하며, 최종 선정 시 원척도와 국내 타당화 연구를 확인하도록 안내합니다.
 
 export const PAPER_TYPES = [
-  { id: 'master', label: '석사학위논문', short: '석사', pages: 70, level: 'degree', weeks: 10 },
-  { id: 'doctor', label: '박사학위논문', short: '박사', pages: 150, level: 'degree', weeks: 20 },
-  { id: 'journal', label: '학술지 투고논문', short: '학술지', pages: 22, level: 'journal', weeks: 6 },
+  { id: 'master', label: '석사학위논문', short: '석사', pages: 80, level: 'degree', weeks: 10 },
+  { id: 'doctor', label: '박사학위논문', short: '박사', pages: 130, level: 'degree', weeks: 20 },
+  { id: 'journal', label: '학술지 투고논문', short: '학술지', pages: 20, level: 'journal', weeks: 6 },
   { id: 'bachelor', label: '학사·졸업논문', short: '학사', pages: 30, level: 'basic', weeks: 5 },
   { id: 'report', label: '일반 연구보고서', short: '보고서', pages: 25, level: 'report', weeks: 4 },
   { id: 'youth', label: '청소년 탐구논문', short: '청소년 탐구', pages: 12, level: 'youth', weeks: 3 },
   { id: 'personal', label: '개인 관심연구', short: '개인 연구', pages: 15, level: 'basic', weeks: 4 },
-  { id: 'short', label: '소논문(8쪽)', short: '소논문', pages: 8, level: 'basic', weeks: 2 },
+  { id: 'short', label: '소논문(15 Page)', short: '소논문', pages: 15, level: 'basic', weeks: 2 },
 ];
 
 export const METHODS = [
