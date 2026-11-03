@@ -136,7 +136,7 @@ function render(root, o, cfg, token) {
       blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>성균관컨설팅 안전결제</h3>
 <p class="pay-lead">논문AI는 <b>성균관컨설팅</b>이 운영합니다. 결제는 운영사 공식 결제 페이지(skkc.co.kr)에서 카드, 간편결제, 계좌이체로 진행되고 영수증에도 성균관컨설팅으로 표시됩니다.</p>
 ${what}
-<div class="copy-row"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(link.url)}" target="_blank" rel="noopener">${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
+<div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(link.url)}" target="_blank" rel="noopener">${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
 <ol class="pay-steps"><li>결제 페이지가 열리면 주문번호가 자동으로 복사됩니다. 요청사항 칸에 붙여 넣어 주세요.</li><li>결제를 마치고 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 바로 작업 순서에 배정됩니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
 <ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul></div>`);
