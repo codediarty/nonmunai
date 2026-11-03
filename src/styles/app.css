@@ -116,6 +116,9 @@
 .consents { display: grid; gap: 12px; margin-top: 22px; padding: 18px; border: 1px solid var(--rule); border-radius: 14px; background: #fff; }
 .consents .check:first-child { padding-bottom: 12px; border-bottom: 1px solid var(--rule-2); }
 .consents small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.6; }
+.consent-note { margin: 20px 0 0; padding: 14px 16px; border-radius: 12px; background: var(--paper-2); border: 1px solid var(--rule-2); font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+.consent-note a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+.check.check-sm { margin-top: 12px; font-size: 14px; color: var(--ink-2); }
 
 /* 검토 */
 .rv-block + .rv-block { margin-top: 28px; }
@@ -206,6 +209,12 @@
 .pay-m h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
 .pay-m p { margin: 0; font-size: 14px; color: var(--ink-2); }
 .pay-m .btn { justify-self: start; }
+.pay-m .pay-lead { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
+.pay-what { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--rule-2); }
+.pay-what span { font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.pay-what b { font-size: 18px; font-weight: 800; color: var(--blue-2); white-space: nowrap; }
+.pay-steps { margin: 2px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.pay-steps b { color: var(--ink-2); }
 .bank-box { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 15px; padding: 12px 14px; background: #fff; border: 1px solid var(--rule); border-radius: 10px; }
 .bank-box dt { color: var(--muted); font-size: 13.5px; }
 .bank-box dd { margin: 0; font-weight: 700; }

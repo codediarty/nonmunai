@@ -34,6 +34,9 @@ var DEFAULT_CATALOG = {
     { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
     { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 8쪽 구성·초고 완성', price: 29000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 9000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 원고 초고(기준 8쪽)', '실존 참고문헌과 본문 인용', '수정 1회'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 19000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 2, includes: ['의견 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
+    // 묶음 상품: 가장 많이 찾는 분량을 상품 하나로 결제(본 상품 + 추가 분량과 금액이 같을 때만 결제 화면에서 씀)
+    { code: 'P-MASTER-FULL-80', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 80쪽 전체 구성·초고 완성', price: 197000, baseUnits: 80, unitLabel: '쪽', days: 6, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 초고(80쪽)', 'APA 7판 참고문헌 정리', '수정 1회'] },
+    { code: 'P-DOCTOR-FULL-130', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 130쪽 전체 구성·초고 완성', price: 328000, baseUnits: 130, unitLabel: '쪽', days: 11, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 초고(130쪽)', 'APA 7판 참고문헌 정리', '수정 1회'] },
     // 설문조사
     { code: 'S-FULL', service: 'survey', task: 'full', name: '설문조사 원스톱: 설문지 작성부터 통계 해석까지', price: 129000, days: 4, includes: ['연구 목적에 맞는 설문지 작성(검증된 척도)', '온라인 설문 제작과 설문조사 진행 관리', '응답 데이터 정리·익명화', '논문 맞춤 통계 분석과 결과 해석', '연구결과 정리'], excludes: ['응답자 모집·사례비(모집 의뢰 시 별도 견적)'] },
     { code: 'S-NEW', service: 'survey', task: 'new', name: '설문지 작성', price: 39000, days: 2, includes: ['연구 변인별 검증된 척도 선정과 문항 구성', '인구통계 문항 구성', '설문지 파일(Word)', '배포용 온라인 설문 링크'] },

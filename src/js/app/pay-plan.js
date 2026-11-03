@@ -13,6 +13,24 @@ export function linkForLine(line, links, catalog) {
   return '';
 }
 
+// 묶음 상품: 본 상품과 추가 분량 줄을 '석사 80쪽'처럼 상품 하나로 바꾼다(가격표의 묶음 금액과 같을 때만)
+export function mergeBundle(rows, links, catalog) {
+  const items = (catalog && catalog.items) || [];
+  const x = rows.find((r) => /-X$/.test(r.code || ''));
+  if (!x) return rows;
+  const mainCode = x.code.replace(/-X$/, '');
+  const main = rows.find((r) => r.code === mainCode);
+  const base = items.find((i) => i.code === mainCode);
+  if (!main || !base || !Number(base.unitSize)) return rows;
+  const pages = Number(base.baseUnits) + Number(x.qty) * Number(base.unitSize);
+  const b = items.find((i) => i.code === `${mainCode}-${pages}` && i.active !== false);
+  if (!b || Number(b.price) !== Number(main.amount) + Number(x.amount)) return rows;
+  const url = b.payUrl || links[b.code] || '';
+  if (!/^https?:\/\//.test(url)) return rows;
+  const merged = { code: b.code, name: b.name, qty: 1, unitPrice: Number(b.price), amount: Number(b.price), url };
+  return [merged, ...rows.filter((r) => r !== main && r !== x)];
+}
+
 // 결제할 상품 목록. 본 결제(남은 금액 = 견적 합계)이고 모든 줄에 상품이 있을 때만 돌려준다
 export function cartPlan(o, settings, catalog) {
   const pay = ((o && o.payments) || []).find((p) => p.status === 'requested');
@@ -22,7 +40,7 @@ export function cartPlan(o, settings, catalog) {
   const sum = lines.reduce((a, l) => a + Number(l.amount), 0);
   if (sum !== Number(o.amountDue)) return null;
   const links = productLinks(settings);
-  const rows = lines.map((l) => ({ code: l.code, name: l.name, qty: Number(l.qty) || 1, unitPrice: Number(l.unitPrice) || Number(l.amount), amount: Number(l.amount), url: linkForLine(l, links, catalog) }));
+  const rows = mergeBundle(lines.map((l) => ({ code: l.code, name: l.name, qty: Number(l.qty) || 1, unitPrice: Number(l.unitPrice) || Number(l.amount), amount: Number(l.amount), url: linkForLine(l, links, catalog) })), links, catalog);
   if (rows.some((r) => !/^https?:\/\//.test(r.url))) return null;
   return rows;
 }

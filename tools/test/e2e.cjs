@@ -310,12 +310,7 @@ async function fillContact(p, { email, all = false, irb = false, sim = false } =
   await W.fill(p, 'contact.phone', '01023456789');
   await W.fill(p, 'contact.email', email || mail('w'));
   await W.fill(p, 'pin', '2468');
-  await W.fill(p, 'pin2', '2468');
-  if (all) {
-    await p.click('#wzStep [data-bool="consents.all"]');
-    await p.waitForSelector('#wzStep [data-bool="consents.withdrawal"]:checked');
-  } else for (const k of ['privacy', 'ethics', 'withdrawal']) await p.check(`#wzStep [data-bool="consents.${k}"]`);
-  if (irb) await p.check('#wzStep [data-bool="consents.irb"]');
+  if (all) await p.check('#wzStep [data-bool="consents.marketing"]');
   if (sim) await p.check('#wzStep [data-bool="consents.simulation"]');
 }
 
@@ -1671,27 +1666,19 @@ async function tests() {
   });
 
   /* ---------------------------------------------------------------- 36 */
-  await check(36, '연락처 단계: 필수 동의 없이는 진행 불가, 내용 보기·전체 동의 동작, 선택 동의는 선택대로 저장', async () => withCtx({}, async (p) => {
+  await check(36, '연락처 단계: 동의 체크 없이 안내 한 줄로 진행, 약관·개인정보·환불 규정 링크, 선택 항목은 선택대로 저장', async () => withCtx({}, async (p) => {
     await paperToTask(p);
     await W.pick(p, 'paper.task', 'full');
     await W.go(p, 'volume'); await W.go(p, 'request'); await W.go(p, 'contact');
     await W.blocked(p, '이름을 입력해 주세요.');
     await W.fill(p, 'contact.name', '이동의'); await W.fill(p, 'contact.phone', '01055556666'); await W.fill(p, 'contact.email', mail('consent'));
-    await W.fill(p, 'pin', '2468'); await W.fill(p, 'pin2', '2468');
-    await W.blocked(p, '개인정보 수집·이용에 동의해 주세요.');
-    await p.check('#wzStep [data-bool="consents.privacy"]');
-    await W.blocked(p, '연구윤리 안내를 확인해 주세요.');
-    await p.check('#wzStep [data-bool="consents.ethics"]');
-    await W.blocked(p, '주문 제작 서비스 안내를 확인해 주세요.');
-    await p.click('#wzStep [data-terms="privacy"]');
-    await p.waitForSelector('.modal');
-    const terms = await text(p, '.modal');
-    for (const s of ['개인정보 수집·이용 안내', '보유 기간', '90일 뒤 자동 삭제', '동의를 거부할 수 있으나']) has(terms, s, '개인정보 안내');
-    await p.click('.modal .modal-x');
-    await p.click('#wzStep [data-bool="consents.all"]');
-    await p.waitForSelector('#wzStep [data-bool="consents.marketing"]:checked');
-    eq(await p.$$eval('#wzStep [data-bool^="consents."]:not([data-bool="consents.all"])', (els) => els.map((e) => e.checked)), [true, true, true, true], '전체 동의 뒤 동의 항목');
-    await p.uncheck('#wzStep [data-bool="consents.marketing"]');
+    await W.blocked(p, '주문 조회 비밀번호는 숫자 4~8자리로 정해 주세요.');
+    await W.fill(p, 'pin', '2468');
+    eq(await p.$$eval('#wzStep input[type=checkbox]', (els) => els.map((e) => e.dataset.bool)), ['consents.marketing'], '남은 체크 항목은 선택 항목 하나');
+    eq(await p.isChecked('#wzStep [data-bool="consents.marketing"]'), false, '선택 항목은 기본으로 꺼짐');
+    const note = await text(p, '#wzStep .consent-note');
+    for (const s of ['이용약관', '개인정보 처리방침', '환불 규정']) has(note, s, '주문 안내');
+    eq(await p.$$eval('#wzStep .consent-note a', (els) => els.map((e) => new URL(e.href).pathname)), ['/terms/', '/privacy/', '/refund/'], '안내 링크');
     await W.go(p, 'review');
     const order = await submitWizard(p);
     const a = await adminOrder(order.orderNo);
@@ -1792,9 +1779,7 @@ async function tests() {
     await W.go(p, 'deliver'); await W.go(p, 'contact');
     await fillContact(p);
     const irb = await text(p, '#wzStep');
-    for (const s of ['[필수] 응답자 보호 안내 확인', 'IRB', '익명화']) has(irb, s, '응답자 보호 안내');
-    await W.blocked(p, '응답자 보호 안내를 확인해 주세요.');
-    await p.check('#wzStep [data-bool="consents.irb"]');
+    for (const s of ['응답자 동의', 'IRB', '익명화']) has(irb, s, '응답자 보호 안내');
     await W.go(p, 'review');
   }));
 
@@ -1841,7 +1826,7 @@ async function tests() {
       await withCtx({ admin: true }, async (ap) => {
         await ap.goto(`${BASE}/admin/#catalog`);
         await ap.waitForSelector('.ad-cat');
-        const row = ap.locator('.ad-cat tbody tr', { has: ap.locator('td.ad-code', { hasText: /^P-MASTER-FULL/ }) });
+        const row = ap.locator('.ad-cat tbody tr', { has: ap.locator('td.ad-code', { hasText: /^\s*P-MASTER-FULL\s*$/ }) });
         eq(await row.count(), 1, '가격표의 석사 전체 작성 줄');
         await row.locator('[data-f="price"]').fill('179000');
         await ap.click('#catSave');

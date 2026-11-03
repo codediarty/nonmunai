@@ -25,7 +25,7 @@ const defaults = {
   common: { fieldId: '', fieldText: '', school: '', dept: '', topicKnown: '', title: '', keywords: [], keywordsText: '', method: 'auto', due: '', outputFormat: 'docx', request: '' },
   paper: { typeId: '', task: '', hasToc: '', tocText: '', hasFormat: '', formatName: '', pagesMode: 'base', pages: null, feedbackText: '', editScope: '' },
   addons: { priority: false, format: false, revisions: 0, ppt: false, english: false, editing: false },
-  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', pin2: '', consents: { privacy: false, ethics: false, withdrawal: false, marketing: false }, hp: '', docInfo: null,
+  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', consents: { privacy: true, ethics: true, withdrawal: true, marketing: false }, hp: '', docInfo: null,
 };
 
 let CONFIG = { catalog: null, settings: {} };

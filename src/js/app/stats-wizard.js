@@ -23,7 +23,7 @@ const defaults = {
   common: { purpose: '', fieldId: '', fieldText: '', title: '', due: '', request: '' },
   statistics: { hasData: '', noDataPath: '', methods: ['auto'], output: '', variables: '', feedbackText: '' },
   addons: { priority: false, revisions: 0, ppt: false, editing: false },
-  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', pin2: '', consents: { privacy: false, ethics: false, withdrawal: false, marketing: false, simulation: false }, hp: '', dataInfo: null,
+  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', consents: { privacy: true, ethics: true, withdrawal: true, marketing: false, simulation: false }, hp: '', dataInfo: null,
 };
 let CONFIG = { catalog: null, settings: {} };
 

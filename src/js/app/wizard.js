@@ -310,7 +310,9 @@ export async function submitOrder({ service, state, input, design, quote, draftK
     try {
       if (!order) {
         mark('create', 'is-now');
-        const r = await api('createOrder', { service, input, contact: state.contact, pin: state.pin, consents: state.consents, design, links: state.links || [], clientQuote: { total: quote.total }, hp: state.hp || '' }, { retries: 1 });
+        // 이용약관·개인정보·환불 규정은 연락처 단계의 안내로 알리고 주문서 제출로 적용한다(서버 기록용)
+        const consents = { ...(state.consents || {}), privacy: true, ethics: true, withdrawal: true };
+        const r = await api('createOrder', { service, input, contact: state.contact, pin: state.pin, consents, design, links: state.links || [], clientQuote: { total: quote.total }, hp: state.hp || '' }, { retries: 1 });
         order = { orderNo: r.orderNo, token: r.token, uploaded: [], sig, total: r.quote && typeof r.quote.total === 'number' ? r.quote.total : quote.total };
         state._pending = order;
         keep();

@@ -24,7 +24,7 @@ const defaults = {
   common: { purpose: '', fieldId: '', fieldText: '', topicKnown: '', title: '', keywords: [], keywordsText: '', due: '', request: '' },
   survey: { mode: '', hasPlan: '', hasQuestionnaire: '', target: 'auto', targetOther: '', targetN: 'auto', targetNCustom: '', recruit: '', analysis: 'auto', feedbackText: '' },
   addons: { priority: false, format: false, revisions: 0, ppt: false, editing: false },
-  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', pin2: '', consents: { privacy: false, ethics: false, withdrawal: false, marketing: false, irb: false }, hp: '',
+  files: [], links: [], contact: { name: '', email: '', phone: '' }, pin: '', consents: { privacy: true, ethics: true, withdrawal: true, marketing: false, irb: false }, hp: '',
 };
 let CONFIG = { catalog: null, settings: {} };
 
@@ -190,8 +190,8 @@ ${textArea('common.request', s.common.request, { label: '요청 사항 (선택)'
   },
   {
     ...contactStep(),
-    render: (s) => contactStep().render(s) + `<label class="check" style="margin-top:12px"><input type="checkbox" data-bool="consents.irb"${s.consents.irb ? ' checked' : ''}><span><b>[필수] 응답자 보호 안내 확인</b><small>사람을 대상으로 하는 조사이므로 응답자 동의를 받고, 소속 기관의 IRB 심의가 필요한지 확인하겠습니다. 응답 데이터는 개인을 알아볼 수 없도록 익명화합니다.</small></span></label>`,
-    valid: (s) => contactStep().valid(s) || (!s.consents.irb ? '응답자 보호 안내를 확인해 주세요.' : null),
+    render: (s) => contactStep().render(s) + `<p class="consent-note">사람을 대상으로 하는 조사라 응답자 동의를 받고 응답 데이터는 익명화합니다. 소속 기관의 IRB 심의가 필요한지는 함께 확인해 드립니다.</p>`,
+    valid: (s) => contactStep().valid(s),
   },
   {
     id: 'review', title: '주문 내용을 확인해 주세요', help: '견적형 주문은 확정 견적을 받은 뒤 결제합니다.',

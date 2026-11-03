@@ -36,7 +36,7 @@ for (const it of items) {
   if (it.service === 'paper') {
     family = '논문 · ' + TYPE[it.type];
     lines = paperTitle(it);
-    meta = `기준 ${it.baseUnits}${it.unitLabel} · 기본 납기 영업일 ${it.days}일`;
+    meta = /-\d+$/.test(it.code) ? `본문 ${it.baseUnits}${it.unitLabel} · 기본 납기 영업일 ${it.days}일` : `기준 ${it.baseUnits}${it.unitLabel} · 기본 납기 영업일 ${it.days}일`;
   } else if (it.service === 'survey') {
     family = '설문조사';
     lines = { 'S-FULL': ['설문지 작성부터', '통계 해석까지'], 'S-NEW': ['설문지', '작성'], 'S-EDIT': ['설문지', '점검·수정'], 'S-FB': ['설문지', '교수님 피드백 반영'], 'S-ANALYZE': ['설문 응답', '통계 분석·해석'] }[it.code];
@@ -128,7 +128,7 @@ const optionRows = (p) => {
   const o = [];
   const ppt = find('A-PPT'), en = find('A-ENGLISH');
   if (ppt) o.push(['심사 발표 PPT 제작', `<b>${won(ppt.price)}</b> · 논문 핵심을 담은 발표 자료와 스크립트`]);
-  if (en && p.service === 'paper' && /-FULL$/.test(p.code)) o.push(['영문 논문 작성', `<b>${en.unitSize}쪽마다 ${won(en.unitPrice)}</b> · 원고를 학술 영어로 작성`]);
+  if (en && p.service === 'paper' && /-FULL(-\d+)?$/.test(p.code)) o.push(['영문 논문 작성', `<b>${en.unitSize}쪽마다 ${won(en.unitPrice)}</b> · 원고를 학술 영어로 작성`]);
   const edCode = p.service === 'paper' ? (/-FB$/.test(p.code) ? p.code.replace(/-FB$/, '-EDIT') : '') : p.code === 'T-SIM' ? '' : 'P-MASTER-EDIT';
   const ed = edCode && find(edCode);
   if (ed) o.push(['논문 첨삭·교정', `<b>${won(ed.price)}</b>${p.service === 'paper' ? '' : '(석사 기준)'} · 직접 쓰신 원고 전체의 문장·논리를 다듬습니다`]);
@@ -139,7 +139,7 @@ const optionRows = (p) => {
   return o;
 };
 const STEPS = [
-  '<b>논문AI에서 주문서 작성</b><br>nonmunai.kr에서 주제와 필요한 작업을 고르고 자료를 올리면 연구 설계와 금액이 바로 계산됩니다.',
+  '<b>논문AI에서 주문서 작성</b><br><a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>에서 주제와 필요한 작업을 고르고 자료를 올리면 연구 설계와 금액이 바로 계산됩니다.',
   '<b>이 상품으로 결제</b><br>주문서를 내면 결제 화면에서 이 상품이 바로 열립니다. 요청사항에 논문AI 주문번호를 적어 주세요.',
   '<b>작업 순서 배정과 진행 안내</b><br>결제가 확인되면 예상 전달일이 정해지고, 단계가 바뀔 때마다 주문 페이지와 메일로 알려 드립니다.',
   '<b>결과물 전달</b><br>완성된 결과물을 주문 페이지에서 바로 내려받습니다.',
@@ -151,8 +151,8 @@ const WHY = [
   ['안심할 수 있는 자료 관리', '올린 자료와 결과물은 주문자만 열람할 수 있도록 안전하게 관리합니다.'],
 ];
 const whyHtml = `<table style="width:100%;border-collapse:separate;border-spacing:10px"><tr>${WHY.slice(0, 2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr><tr>${WHY.slice(2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr></table>`;
-const TRUST = `<div style="margin:0;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI는 성균관컨설팅이 운영하는 논문 전문 서비스입니다. 결제와 영수증, 카드 명세서는 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리됩니다.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '석·박사 연구진 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
-const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${LINE};font-size:13px;line-height:1.7;color:#8A93A6">논문AI는 성균관컨설팅이 운영합니다 · 성균관대학교 RISE사업 지원 기업 · 사업자등록번호 272-32-01885 · contact@skkc.co.kr</p>`;
+const TRUST = `<div style="margin:0;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영하는 논문 전문 서비스입니다. 주문은 논문AI에서, 결제와 영수증은 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리됩니다.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '석·박사 연구진 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
+const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${LINE};font-size:13px;line-height:1.7;color:#8A93A6">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영합니다 · 성균관대학교 RISE사업 지원 기업 · 사업자등록번호 272-32-01885 · contact@skkc.co.kr</p>`;
 const SAMPLE = { paper: ['sample-paper.png', '논문AI 연구 설계서와 목차 결과물 예시'], survey: ['sample-survey.png', '논문AI 설문지와 응답 분석 결과물 예시'], statistics: ['sample-stats.png', '논문AI 통계표와 해석 결과물 예시'] };
 // 상세 맨 위: 표지와 같은 남색 머리(구분, 한 줄 소개, 상품 기본 정보)
 const hero = (kicker, head, sub) => `<div style="margin:0 0 28px;padding:46px 30px 42px;border-radius:18px;background:${NAVY};text-align:center"><p style="margin:0;font-size:15px;font-weight:700;letter-spacing:.06em;color:#9DB0FF">${esc(kicker)}</p><h2 style="margin:14px 0 0;font-size:30px;line-height:1.42;font-weight:800;color:#FFFFFF;letter-spacing:-.03em">${head}</h2>${sub ? `<p style="margin:16px 0 0;font-size:16px;line-height:1.6;color:#C6CEE6">${esc(sub)}</p>` : ''}</div>`;
@@ -215,6 +215,7 @@ const STITLE = { 'S-FULL': ['설문지 작성부터', '통계 해석까지'], 'S
   'T-BASIC': ['논문 맞춤', '통계분석 기본형'], 'T-INTERP': ['논문 맞춤', '통계분석 표준형'], 'T-CHAPTER': ['통계분석과', '연구결과 작성'], 'T-FB': ['통계 재분석·', '피드백 반영'], 'T-SIM': ['학습용', '시뮬레이션'], 'T-ADV': ['심화 분석', '매개·조절효과'],
   'A-PPT': ['심사 발표', 'PPT 제작'], 'A-ENGLISH': ['영문 논문', '작성'], 'A-PRIORITY': ['우선 처리'], 'A-FORMAT': ['양식', '상세 적용'], 'A-REVISION': ['추가 수정'] };
 function cover(p) {
+  { const m = /^P-([A-Z]+)-FULL-(\d+)$/.exec(p.code); if (m) return { kicker: TYPE[m[1].toLowerCase()], title: [`${m[2]}쪽 논문`, '초고 완성'], tag: `서론부터 결론까지 장별 본문 ${m[2]}쪽` }; }
   if (p.code === 'P-SHORT-FULL') return { kicker: '소논문', title: ['8쪽 소논문', '초고 완성'], tag: '실존 참고문헌과 본문 인용까지' };
   if (p.service === 'paper') {
     const [, t, k] = p.code.split('-'); const type = t.toLowerCase(), task = { FULL: 'full', EDIT: 'edit', FB: 'feedback', PROP: 'proposal' }[k];

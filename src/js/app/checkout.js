@@ -44,7 +44,7 @@ function skkcLink(o, settings, catalog) {
 // 여러 상품을 함께 담아 한 번에 결제하는 안내
 function cartHtml(rows, o) {
   const qtyTxt = (r) => (r.qty > 1 ? `${r.qty}개` : '1개');
-  return `<p class="small">아래 상품을 <b>장바구니에 함께 담아 한 번에</b> 결제해 주세요. 상품마다 '장바구니'를 누르고, 수량은 표시된 개수로 맞춥니다. 요청사항에는 주문번호 <b>${esc(o.orderNo)}</b>를 적어 주세요.</p>
+  return `<p class="small">아래 상품을 <b>장바구니에 함께 담아 한 번에</b> 결제합니다. 상품마다 수량을 표시된 개수로 맞춰 '장바구니'에 담아 주세요.</p>
 <ol class="cart-list">${rows.map((r) => `<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a><span class="cart-q">${qtyTxt(r)}</span><b class="num">${won(r.amount)}</b></li>`).join('')}</ol>
 <p class="cart-total"><span>합계</span><b class="num">${won(rows.reduce((a, r) => a + r.amount, 0))}</b></p>`;
 }
@@ -124,17 +124,26 @@ function render(root, o, cfg, token) {
     const link = skkcLink(o, s, cfg.catalog || { items: [] });
     const blocks = [];
     if (methods.includes('toss')) blocks.push(`<div class="pay-m is-main"><h3>카드·간편결제</h3><div id="tossMethods"></div><div id="tossAgree"></div><button class="btn btn-primary btn-lg" type="button" id="tossPay">${won(o.amountDue)} 결제하기</button></div>`);
-    if (methods.includes('skkc')) blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>안전결제</h3><p>논문AI는 <b>성균관컨설팅</b>이 운영하는 논문 전문 서비스입니다. 결제는 운영사 결제 페이지(skkc.co.kr)에서 카드, 간편결제, 계좌이체로 안전하게 진행되고, 영수증과 카드 명세서에도 성균관컨설팅으로 표시됩니다.</p><ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul>
+    if (methods.includes('skkc')) {
+      const multi = link.cart && link.cart.length > 1;
+      const single = link.cart && link.cart.length === 1 ? link.cart[0] : null;
+      const what = multi ? cartHtml(link.cart, o)
+        : single ? `<p class="pay-what"><span>${esc(single.name.replace(/^\[논문AI\]\s*/, ''))}</span><b class="num">${won(o.amountDue)}</b></p>`
+        : link.unit ? `<p class="small">결제 페이지에서 수량을 <b>${link.unit.qty.toLocaleString('ko-KR')}개</b>로 맞추면 <b>${won(o.amountDue)}</b>이 됩니다(${won(link.unit.price)} × ${link.unit.qty.toLocaleString('ko-KR')}).</p>`
+        : link.chat ? `<p class="small">상담 채널에 주문번호를 남기시면 이 주문 금액(<b>${won(o.amountDue)}</b>)의 결제 링크를 바로 보내 드립니다.</p>`
+        : '';
+      const goLabel = link.chat ? '결제 링크 받기' : multi ? '첫 상품 담으러 가기' : `${won(o.amountDue)} 결제하기`;
+      blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>성균관컨설팅 안전결제</h3>
+<p class="pay-lead">논문AI는 <b>성균관컨설팅</b>이 운영합니다. 결제는 운영사 공식 결제 페이지(skkc.co.kr)에서 카드, 간편결제, 계좌이체로 진행되고 영수증에도 성균관컨설팅으로 표시됩니다.</p>
+${what}
+<div class="copy-row"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(link.url)}" target="_blank" rel="noopener">${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
+<ol class="pay-steps"><li>결제 페이지가 열리면 주문번호가 자동으로 복사됩니다. 요청사항 칸에 붙여 넣어 주세요.</li><li>결제를 마치고 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 바로 작업 순서에 배정됩니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
-${link.cart && link.cart.length > 1 ? cartHtml(link.cart, o)
-    : link.exact ? `<p class="small">결제 페이지에 이 주문 금액(${won(o.amountDue)})의 상품이 열립니다. 요청사항에 주문번호를 적고, 주문자 이름은 신청서와 같게 적어 주세요.</p>`
-    : link.unit ? `<div class="copy-row"><span class="muted small">수량</span><span class="copy-chip">${link.unit.qty.toLocaleString('ko-KR')}개</span><span class="muted small">(${won(link.unit.price)} × ${link.unit.qty.toLocaleString('ko-KR')} = ${won(o.amountDue)})</span></div><p class="small">결제 페이지에서 수량을 <b>${link.unit.qty.toLocaleString('ko-KR')}개</b>로 바꿔 <b>${won(o.amountDue)}</b>을 결제하고, 요청사항 칸에 주문번호 <b>${esc(o.orderNo)}</b>를 적어 주세요.</p>`
-    : link.chat ? `<p class="small">상담 채널에 주문번호 <b>${esc(o.orderNo)}</b>를 남기시면 이 주문 금액(<b>${won(o.amountDue)}</b>)의 결제 링크를 바로 보내 드립니다.</p>`
-    : `<p class="small">결제 페이지에서 <b>${won(o.amountDue)}</b>을 결제하고, 요청사항 칸에 주문번호 <b>${esc(o.orderNo)}</b>를 적어 주세요.</p>`}
-<div class="copy-row"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(link.url)}" target="_blank" rel="noopener">${link.chat ? '결제 링크 받기' : link.cart && link.cart.length > 1 ? '첫 상품부터 담기' : '결제 페이지 열기'}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div></div>`);
+<ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul></div>`);
+    }
     if (methods.includes('bank')) blocks.push(`<div class="pay-m"><h3>무통장입금</h3><dl class="bank-box"><dt>은행</dt><dd>${esc(s.bankName)}</dd><dt>계좌</dt><dd>${esc(s.bankAccount)}</dd><dt>예금주</dt><dd>${esc(s.bankHolder)}</dd><dt>금액</dt><dd>${won(o.amountDue)}</dd></dl><div class="field"><label class="label" for="payer">입금자명</label><input class="input" id="payer" placeholder="입금하신 분 이름" autocomplete="name"></div><button type="button" class="btn btn-ghost" id="bankDone">입금했어요</button></div>`);
     payBox = `<div class="card"><div class="card-h"><h2 class="serif">결제</h2><span class="num" style="font-family:var(--serif);font-size:24px;font-weight:700">${won(o.amountDue)}</span></div>
-${methods.length ? `<div class="pay-methods">${blocks.join('')}</div><p class="hint" style="margin-top:14px">결제가 확인되면 작업 순서에 배정되고 예상 전달일을 바로 알려 드립니다. 작업이 시작된 뒤에는 진행 단계에 따라 환불이 제한됩니다. <a href="${url('/refund/')}" target="_blank">환불 규정</a></p>` : note('결제 연결을 준비하고 있습니다. 결제 방법이 연결되면 메일로 바로 안내드리며, 그 전에는 결제가 진행되지 않습니다.', 'amber')}</div>`;
+${methods.length ? `<div class="pay-methods">${blocks.join('')}</div><p class="hint" style="margin-top:14px">결제가 확인되면 작업 순서에 배정되고 예상 전달일을 바로 알려 드립니다.</p>` : note('결제 연결을 준비하고 있습니다. 결제 방법이 연결되면 메일로 바로 안내드리며, 그 전에는 결제가 진행되지 않습니다.', 'amber')}</div>`;
   } else {
     payBox = `<div class="card"><div class="card-h"><h2>주문 상태</h2>${statusPill(o)}</div><p>${o.status === 'payment_review' ? '결제 확인을 기다리고 있습니다. 확인되는 대로 작업 순서에 배정됩니다.' : '결제할 금액이 없습니다.'}</p><a class="btn btn-primary" href="${url('/orders/')}?o=${o.orderNo}">주문 페이지로 이동</a></div>`;
   }
@@ -170,7 +179,7 @@ function bind(root, o, cfg, token) {
   const done = $('#skkcDone', root);
   if (done) done.addEventListener('click', () => {
     modal({
-      title: '결제를 마치셨나요?', html: `<p>성균관컨설팅 결제 페이지에서 <b>${won(o.amountDue)}</b> 결제를 마쳤다면 아래 버튼을 눌러 주세요. 담당자가 결제 내역을 확인합니다.</p><div class="field"><label class="label" for="pn">결제자 이름</label><input class="input" id="pn" value=""></div><button class="btn btn-primary btn-block" style="margin-top:14px" id="pnOk">결제 완료 알리기</button>`,
+      title: '결제를 마치셨나요?', html: `<p>성균관컨설팅 결제 페이지에서 <b>${won(o.amountDue)}</b> 결제를 마쳤다면 아래 버튼을 눌러 주세요. 결제 내역을 확인하는 대로 작업을 시작합니다.</p><div class="field"><label class="label" for="pn">결제자 이름</label><input class="input" id="pn" value="${esc((o.contact && o.contact.name) || '')}"></div><button class="btn btn-primary btn-block" style="margin-top:14px" id="pnOk">결제 완료 알리기</button>`,
       onOpen: (m, close) => { m.querySelector('#pnOk').addEventListener('click', () => { close(); claim('skkc', m.querySelector('#pn').value); }); },
     });
   });
