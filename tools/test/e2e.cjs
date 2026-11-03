@@ -44,6 +44,7 @@ const TITLES = {
   28: '고객은 다른 고객 주문/파일 접근 불가', 29: '비관리자는 관리자 접근 불가', 30: '관리자 상태 변경이 고객 화면에 반영',
   31: '가짜 자동 AI 생성·가짜 퍼센트 없음', 32: '작업지시문 복사에 선택한 주문 정보 반영', 33: '관리자 결과 파일 업로드 후 고객 다운로드',
   34: '모바일 화면에서 입력·결제 요약 사용 가능', 35: '결제사 미설정 시 결제 완료를 가장하지 않음', 36: '데이터·파일 삭제 및 개인정보 동의 처리',
+  41: '한 화면 논문 주문(관심 주제만, 제목 확정 없음)과 성균관컨설팅 결제 바로 연결',
   37: '실제 응답자 개인정보 비식별화 안내', 38: '제출·게재·유의성 보장 문구 없음', 39: '파일 보관 만료 및 접근 통제 테스트', 40: '관리자 가격 변경 시 신규 주문 가격 반영, 기존 주문 가격 유지',
 };
 // 같은 항목을 서버·계산 쪽에서 나눠 확인하는 기존 단위·API 테스트(node tools/test/run-all.mjs)
@@ -326,7 +327,7 @@ const pendingNo = (p, key) => p.evaluate((k) => { try { return ((JSON.parse(loca
 
 // 논문 신청서: 유형 → 분야 → 주제 → 목차 → 양식 → 연구방법 → 작업
 async function paperToTask(p, { type = 'master', title = '간호사의 직무스트레스가 이직의도에 미치는 영향: 회복탄력성의 매개효과' } = {}) {
-  await W.open(p, '/paper/new/', 'type');
+  await W.open(p, '/paper/new/?detail=1', 'type');
   await W.pick(p, 'paper.typeId', type); await W.go(p, 'field');
   await W.pick(p, 'common.fieldId', 'nursing'); await W.go(p, 'topic');
   await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', title); await W.go(p, 'toc');
@@ -425,20 +426,26 @@ async function tests() {
         const link = p.locator(`.svc a[href="${href}"]`);
         eq(await link.count(), 1, `홈 서비스 영역의 ${href} 버튼 수`);
         await Promise.all([p.waitForURL(`${BASE}${href}`), link.click()]);
+        if (href === '/paper/new/') {
+          // 논문은 한 화면 주문서(관심 주제·전공·논문 종류·받을 곳)
+          await p.waitForSelector('#qoForm #qoTopic');
+          has(await text(p, '.qo-h1'), '주제만 알려 주세요', '논문 주문서 제목');
+          return;
+        }
         await p.waitForSelector(`#wzStep[data-step="${first}"]`);
         eq(await text(p, '.wz-title h1'), h1, `${href} 신청서 제목`);
       });
     }
   });
   await check(1, '세 신청서는 서로 독립: 주소로 바로 열리고 임시 저장도 따로 관리', async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'doctor');
     await sleep(450);
     for (const [url, first] of [['/statistics/new/', 'purpose'], ['/survey/new/', 'purpose']]) {
       await W.open(p, url, first);
       eq(await p.$('#rsYes'), null, `${url}에 논문 신청서 이어쓰기 안내가 뜸`);
     }
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     ok(await p.$('#rsYes'), '논문 신청서 임시 저장이 사라짐');
     const keys = await p.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('nm:draft:')).sort());
     eq(keys, ['nm:draft:paper'], '임시 저장 키');
@@ -446,7 +453,7 @@ async function tests() {
 
   /* ---------------------------------------------------------------- 2 */
   await check(2, '신청서 논문 유형 선택지 순서: 석사→박사→학술지→학사→일반→청소년→개인', async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     const opts = await p.$$eval('#wzStep input[data-choice="paper.typeId"]', (els) => els.map((e) => [e.value, e.closest('label').querySelector('b').textContent.trim()]));
     eq(opts.map((x) => x[0]), ['master', 'doctor', 'journal', 'bachelor', 'report', 'youth', 'personal', 'short'], '유형 값 순서');
     eq(opts.map((x) => x[1]), ['석사학위논문', '박사학위논문', '학술지 투고논문', '학사·졸업논문', '일반 연구보고서', '청소년 탐구논문', '개인 관심연구', '소논문(8쪽)'], '유형 이름 순서');
@@ -460,7 +467,7 @@ async function tests() {
   /* ---------------------------------------------------------------- 3~7: 논문 신청서 하나로 접수까지 */
   const paperA = once(() => withCtx({}, async (p) => {
     const f = {};
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'master'); await W.go(p, 'field');
     await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
     f.topicErr = await W.blocked(p);
@@ -536,7 +543,7 @@ async function tests() {
     has(f.server.input.paper.tocText, '제2장 이론적 배경', '서버 목차 내용');
   });
   await check(4, '목차는 파일 없이 직접 입력만으로도 진행', async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'bachelor'); await W.go(p, 'field');
     await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
     await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', '초등학생의 독서 습관과 어휘력의 관계'); await W.go(p, 'toc');
@@ -978,7 +985,7 @@ async function tests() {
 
   /* ---------------------------------------------------------------- 22 */
   await check(22, '논문: 유형·작업·분량·옵션을 바꿀 때마다 견적과 모바일 요약 금액이 바로 바뀜', async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     for (const [t, price] of [['master', '159,000원'], ['doctor', '299,000원'], ['journal', '99,000원'], ['youth', '39,000원'], ['master', '159,000원']]) {
       await W.pick(p, 'paper.typeId', t);
       await W.waitPrice(p, price, `${t} 유형 금액`);
@@ -1187,7 +1194,7 @@ async function tests() {
 
   /* ---------------------------------------------------------------- 27 */
   await check(27, '작성 중 새로 고침: 이어서 작성하면 입력값·올린 파일·단계가 그대로이고 그대로 제출하면 파일도 접수', async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'doctor'); await W.go(p, 'field');
     await W.pick(p, 'common.fieldId', 'nursing'); await W.fill(p, 'common.fieldText', '간호학과'); await W.go(p, 'topic');
     await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', '중환자실 간호사의 도덕적 고뇌와 소진의 관계'); await W.go(p, 'toc');
@@ -1217,7 +1224,7 @@ async function tests() {
     eq(await p.evaluate(() => localStorage.getItem('nm:draft:paper')), null, '접수 뒤 임시 저장이 남음');
   }));
   await check(27, "'새로 시작'을 고르면 임시 저장과 파일이 지워지고 다시 묻지 않음", async () => withCtx({}, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'journal'); await sleep(450);
     await p.reload(); await p.waitForSelector('#rsNo');
     await p.click('#rsNo');
@@ -1550,7 +1557,7 @@ async function tests() {
 
   /* ---------------------------------------------------------------- 34 */
   await check(34, '모바일: 하단 요약 막대에 금액이 바로 보이고 미리보기로 견적을 펼치고 닫을 수 있음', async () => withCtx({ mobile: true }, async (p) => {
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     ok(await p.isVisible('#wzMbar'), '하단 요약 막대가 보이지 않음');
     await waitText(p, '#wzMbar', '유형을 고르면 금액이 나옵니다');
     await W.pick(p, 'paper.typeId', 'master');
@@ -1583,7 +1590,7 @@ async function tests() {
       });
       ok(r.hit && r.bottom <= r.barTop, `${where}: 다음 버튼이 하단 막대에 가려 누를 수 없음 (버튼 아래 ${r.bottom}, 막대 위 ${r.barTop}, 맞은 요소 ${r.at})`);
     };
-    await W.open(p, '/paper/new/', 'type');
+    await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'master'); await covered('유형'); await W.go(p, 'field');
     await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
     await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', '모바일 신청 확인: 고등학생의 진로 결정 수준'); await W.go(p, 'toc');
@@ -1630,7 +1637,7 @@ async function tests() {
         ok(!/paid=1/.test(p.url()), '결제 완료 화면으로 넘어감');
         const o = await getOrder(x);
         eq([o.status, o.paidAmount, o.amountDue], ['pending_payment', 0, pay.amount], '서버 결제 상태');
-        has(await text(p, '#app'), '결제 대기', '결제 화면 상태');
+        has(await text(p, '#app'), '결제 전', '결제 화면 상태');
       });
     } finally {
       await adminApi('adminSaveSettings', { settings: { skkcEnabled: 'true', bankEnabled: 'true' } });
@@ -1803,9 +1810,9 @@ async function tests() {
     const x = await deliveredOrder({ input: paperIn() });
     await withCtx({}, async (p) => {
       const bodies = [];
-      for (const u of ['/paper/new/', '/survey/new/', '/statistics/new/']) { await p.goto(BASE + u); await p.waitForSelector('#wzStep'); bodies.push(await text(p, 'body')); }
+      for (const u of ['/paper/new/', '/paper/new/?detail=1', '/survey/new/', '/statistics/new/']) { await p.goto(BASE + u); await p.waitForSelector(u === '/paper/new/' ? '#qoForm' : '#wzStep'); bodies.push(await text(p, 'body')); }
       await p.goto(ordersUrl(x)); await p.waitForSelector('#results'); bodies.push(await text(p, 'body'));
-      has(bodies[3], '제출 전에 내용과 출처를 직접 확인해 주세요', '결과물 확인 안내');
+      has(bodies[4], '제출 전에 내용과 출처를 직접 확인해 주세요', '결과물 확인 안내');
       await p.goto(checkoutUrl(await makeOrder({ input: paperIn() }))); await p.waitForSelector('.ord-no'); bodies.push(await text(p, 'body'));
       const all = bodies.join('\n');
       const m = all.match(/(합격|통과|게재|유의)[^.!?\n]{0,10}(보장|약속)(합니다|해 드립니다|드립니다)/);
@@ -1820,7 +1827,7 @@ async function tests() {
     const stale = await newCtx();
     try {
       const sp = await stale.newPage();
-      await W.open(sp, '/paper/new/', 'type');
+      await W.open(sp, '/paper/new/?detail=1', 'type');
       await W.pick(sp, 'paper.typeId', 'master');
       await W.waitPrice(sp, '159,000원', '가격 변경 전 화면 금액');
       await withCtx({ admin: true }, async (ap) => {
@@ -1834,7 +1841,7 @@ async function tests() {
       });
       // 새로 들어온 고객: 바뀐 가격으로 계산·접수
       await withCtx({}, async (p) => {
-        await W.open(p, '/paper/new/', 'type');
+        await W.open(p, '/paper/new/?detail=1', 'type');
         await W.pick(p, 'paper.typeId', 'master');
         await W.waitPrice(p, '179,000원', '가격 변경 뒤 새 고객 화면 금액');
         await W.go(p, 'field'); await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
@@ -1873,6 +1880,106 @@ async function tests() {
       if (it && it.price !== 159000) { it.price = 159000; await adminApi('adminSaveCatalog', { catalog: cat }); }
     }
   });
+
+  /* ---------------------------------------------------------------- 41 */
+  // 한 화면 주문: 관심 주제만 적고(제목 확정 없음) 내면 결제 대기 화면 없이 성균관컨설팅 결제 페이지로 바로 넘어간다
+  const SKKC = 'https://skkc.co.kr/shop_view/?idx=';
+  const withShop = async (fn) => {
+    const before = (await adminApi('adminGetSettings')).settings || {};
+    const links = { 'P-MASTER-FULL': `${SKKC}100`, 'P-MASTER-FULL-80': `${SKKC}148`, 'P-DOCTOR-FULL-130': `${SKKC}149`, 'P-SHORT-FULL': `${SKKC}147`, 'A-PRIORITY': `${SKKC}139`, 'X-19000': `${SKKC}141`, 'X-9000': `${SKKC}140`, 'P-MASTER-EDIT': `${SKKC}101` };
+    await adminApi('adminSaveSettings', { settings: { skkcEnabled: 'true', skkcProducts: JSON.stringify(links), tossEnabled: 'false' } });
+    try { return await fn(); } finally { await adminApi('adminSaveSettings', { settings: { skkcProducts: before.skkcProducts || '{}', skkcEnabled: before.skkcEnabled || 'true', tossEnabled: before.tossEnabled || 'false' } }); }
+  };
+  // 결제 페이지(외부)로 가는 요청은 막고 주소만 기록한다
+  const catchShop = async (p) => {
+    const hits = [];
+    await p.route('https://skkc.co.kr/**', (r) => { hits.push(r.request().url()); r.fulfill({ status: 200, contentType: 'text/html', body: '<html><body>성균관컨설팅 결제 페이지(테스트)</body></html>' }); });
+    return hits;
+  };
+  const prompt = '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해 주세요';
+  await check(41, '홈 프롬프트로 연 주문서는 주제·전공·석사 80쪽이 채워지고 미리보기가 써진 뒤 모자이크로 가려짐', async () => withCtx({}, async (p) => {
+    await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
+    await p.waitForSelector('#qoForm #qoTopic');
+    eq(await p.inputValue('#qoTopic'), prompt, '관심 주제 칸');
+    eq(await p.inputValue('#qoMajor'), '간호학', '전공 칸(프롬프트에서 읽음)');
+    eq(await p.$eval('input[name="qoPkg"]:checked', (e) => e.value), 'master80', '고른 논문 종류');
+    has(await text(p, '#qoSum'), '197,000원', '결제 금액');
+    has(await text(p, '#qoRead'), '#번아웃', 'AI가 읽은 키워드');
+    await p.waitForFunction(() => document.querySelector('#qoPv .pv') && document.querySelector('#qoPv .pv').dataset.state === 'done', null, { timeout: 20000 });
+    ok(await p.$('#qoPv .pv-lockzone.is-locked'), '미리보기 모자이크가 걸리지 않음');
+    has(await text(p, '#qoPv .pv-lock'), '나머지 78쪽은 결제 후 완성됩니다', '결제 후 완성 안내');
+    // 제목을 확정하라는 칸이나 추천 주제 목록은 없다
+    ok(!(await p.$('[data-path="common.title"], .rp-cands, [data-pick]')), '제목 확정 칸이나 추천 주제가 보임');
+  }));
+  await check(41, '주제와 연락처만 적어 내면 결제 대기 화면 없이 성균관컨설팅 묶음 상품(석사 80쪽) 결제로 이동', async () => withShop(() => withCtx({}, async (p) => {
+    const hits = await catchShop(p);
+    await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
+    await p.waitForSelector('#qoTopic');
+    const email = mail('qo');
+    await p.fill('#qoName', '김논문');
+    await p.fill('#qoPhone', '010-2468-1357');
+    await p.fill('#qoEmail', email);
+    await p.click('#qoSubmit');
+    await p.waitForSelector('.handoff-card', { timeout: 30000 });
+    const card = await text(p, '.handoff-card');
+    has(card, '197,000원', '결제 연결 화면 금액');
+    const orderNo = (card.match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+    ok(orderNo, `결제 연결 화면에 주문번호가 없음: ${card.slice(0, 120)}`);
+    await p.waitForFunction(() => location.hostname === 'skkc.co.kr', null, { timeout: 15000 });
+    eq(hits[0], `${SKKC}148`, '열린 결제 상품(석사 80쪽 묶음)');
+    // 주문 기록: 관심 주제(제목 아님), 석사 80쪽, 조회 비밀번호는 휴대전화 뒤 4자리
+    const r = await api('lookupOrder', { orderNo, contact: email, pin: '1357' }).catch((e) => ({ error: e }));
+    ok(!r.error, `휴대전화 뒤 4자리로 주문 조회가 안 됨: ${r.error && r.error.message}`);
+    const o = (await api('getOrder', { orderNo: r.orderNo, token: r.token })).order;
+    eq([o.input.common.topicKnown, o.input.common.title, o.input.common.fieldText], ['free', prompt, '간호학'], '주제 기록');
+    eq([o.input.paper.typeId, o.input.paper.pages, o.amount], ['master', 80, 197000], '논문 종류·쪽수·금액');
+    eq(o.status, 'pending_payment', '주문 상태');
+  })));
+  await check(41, '학교 양식·연구 방법은 보조 선택이고, 파일 없이 골라도 접수되며 요청 사항에 따로 보낸다고 남음', async () => withShop(() => withCtx({}, async (p) => {
+    await catchShop(p);
+    await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt: '사회복지학과 졸업논문인데 독거노인 고독사 예방 쪽으로 써줘' })}`);
+    await p.waitForSelector('#qoTopic');
+    eq(await p.$eval('input[name="qoFmt"]:checked', (e) => e.value), 'general', '기본 양식 선택');
+    await p.click('label.qo-fmt-sub');
+    await p.waitForSelector('[data-up="format"]');
+    // 연구 방법은 접힌 칸에서 한 번 눌러 바꾸고, 금액은 그대로
+    const before = await text(p, '#qoSum');
+    eq(await p.$eval('input[name="qoMethod"]:checked', (e) => e.value), 'auto', '기본 연구 방법');
+    await p.click('.qo-more > summary');
+    await p.click('label.qo-seg-i:has(input[name="qoMethod"][value="survey"])');
+    eq(await text(p, '#qoSum'), before, '연구 방법을 바꿔도 결제 요약 그대로');
+    await p.fill('#qoName', '박학사');
+    await p.fill('#qoPhone', '010-1111-2222');
+    const email = mail('fmt');
+    await p.fill('#qoEmail', email);
+    await p.click('#qoSubmit');
+    await p.waitForSelector('.handoff-card, .ord-no', { timeout: 30000 });
+    const orderNo = ((await text(p, '#app')).match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+    const lk = await api('lookupOrder', { orderNo, contact: email, pin: '2222' });
+    const o = (await api('getOrder', { orderNo: lk.orderNo, token: lk.token })).order;
+    eq([o.input.paper.typeId, o.input.paper.hasFormat], ['bachelor', 'no'], '학사·양식 파일 없음');
+    has(o.input.common.request, '학교 양식은 나중에', '양식 안내 기록');
+    eq(o.input.common.method, 'survey', '고른 연구 방법');
+  })));
+  await check(41, '옵션은 같은 화면에서 켜고 끄면 금액이 바로 바뀌고, 필수 칸이 비면 그 칸으로 안내', async () => withCtx({ mobile: true }, async (p) => {
+    await p.goto(`${BASE}/paper/new/`);
+    await p.evaluate(() => { try { localStorage.removeItem('nm:draft:quick'); } catch (e) { /* 무시 */ } });
+    await p.reload();
+    await p.waitForSelector('#qoTopic');
+    await p.click('#qoBar button');
+    await waitText(p, '#qoErr', '관심 주제나 키워드');
+    await p.fill('#qoTopic', '호텔 서비스 품질');
+    await p.fill('#qoMajor', '관광경영학');
+    await p.click('.qo-pkg:has(input[value="short8"])');
+    await waitText(p, '#qoBar', '29,000원');
+    await p.click('.qo-more > summary');
+    await p.click('.qo-add:has(input[data-add="priority"])');
+    await waitText(p, '#qoBar', '58,000원');
+    await p.click('.qo-add:has(input[data-add="priority"])');
+    await waitText(p, '#qoBar', '29,000원');
+    await p.click('#qoBar button');
+    await waitText(p, '#qoErr', '이름');
+  }));
 }
 
 /* =================================================================== 39: 시계를 앞당기는 확인(마지막) */

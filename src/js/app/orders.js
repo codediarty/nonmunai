@@ -72,11 +72,11 @@ function renderLookup(root, { orderNo = '', error = '' } = {}) {
   const list = Object.entries(myOrders.all() || {}).sort((a, b) => (b[1].at || 0) - (a[1].at || 0)).slice(0, 8);
   root.innerHTML = `<div class="wrap pg-wrap"><div class="lookup">
 <h1 class="lk-title">주문 조회</h1>
-<p class="muted lk-lead">주문번호와 주문할 때 적은 이메일 또는 휴대전화, 조회 비밀번호를 입력하세요.</p>
+<p class="muted lk-lead">주문번호와 주문할 때 적은 이메일 또는 휴대전화, 조회 비밀번호를 입력하세요. 비밀번호를 따로 정하지 않았다면 휴대전화 뒤 4자리입니다.</p>
 <form class="card" id="lk" novalidate>
 <div class="field"><label class="label" for="lkNo">주문번호</label><input class="input" id="lkNo" value="${esc(orderNo)}" placeholder="예: NA261101-AB12" autocomplete="off" autocapitalize="characters" maxlength="30"></div>
 <div class="field"><label class="label" for="lkContact">이메일 또는 휴대전화</label><input class="input" id="lkContact" placeholder="주문할 때 적은 연락처" autocomplete="email" maxlength="120"></div>
-<div class="field"><label class="label" for="lkPin">조회 비밀번호</label><input class="input" id="lkPin" type="password" inputmode="numeric" placeholder="숫자 4~8자리" maxlength="8" autocomplete="current-password"></div>
+<div class="field"><label class="label" for="lkPin">조회 비밀번호</label><input class="input" id="lkPin" type="password" inputmode="numeric" placeholder="휴대전화 뒤 4자리 또는 정한 숫자" maxlength="8" autocomplete="current-password"></div>
 <p class="wz-err" id="lkErr" role="alert">${esc(error)}</p>
 <button class="btn btn-primary btn-lg btn-block" type="submit" id="lkGo">주문 확인하기</button>
 </form>
@@ -312,7 +312,7 @@ ${closed ? '' : `<textarea class="textarea" id="msgText" rows="3" maxlength="400
   paymentsHtml() {
     const ps = this.o.payments || [];
     if (!ps.length) return '';
-    const st = { requested: '결제 대기', claimed: '확인 중', confirmed: '결제 완료', refunded: '환불', rejected: '확인 안 됨' };
+    const st = { requested: '결제 전', claimed: '확인 중', confirmed: '결제 완료', refunded: '환불', rejected: '확인 안 됨' };
     return `<ul class="pay-list">${ps.map((p) => `<li><span>${p.kind === 'extra' ? esc(p.memo || '추가 결제') : '주문 결제'}<small>${esc(fmtAt(p.confirmedAt || p.at))}</small></span><span class="num">${won(p.amount)}</span><em class="ps ps-${esc(p.status)}">${esc(st[p.status] || p.status)}</em></li>`).join('')}</ul>`;
   }
 

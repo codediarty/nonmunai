@@ -272,7 +272,7 @@ function hashStr(s) {
   return (h >>> 0).toString(36);
 }
 
-export async function submitOrder({ service, state, input, design, quote, draftKey }) {
+export async function submitOrder({ service, state, input, design, quote, draftKey, payNow = true }) {
   if (!apiReady()) {
     modal({ title: '접수 서버 연결 준비 중', html: `<p>온라인 접수 서버를 연결하는 중입니다. 작성하신 내용은 이 브라우저에 그대로 저장되어 있으니 잠시 후 다시 제출해 주세요.</p><p class="muted small">급한 의뢰는 contact@skkc.co.kr 로 연락 주세요.</p>` });
     return;
@@ -280,10 +280,10 @@ export async function submitOrder({ service, state, input, design, quote, draftK
   const files = state.files || [];
   const host = document.createElement('div');
   host.className = 'modal-back';
-  host.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="주문서 제출"><div class="modal-hd"><h2>주문서를 제출하고 있습니다</h2></div><div class="modal-bd"><ol class="sub-steps">
+  host.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="주문서 제출"><div class="modal-hd"><h2>${payNow ? '주문서를 보내고 결제를 준비하고 있습니다' : '주문서를 제출하고 있습니다'}</h2></div><div class="modal-bd"><ol class="sub-steps">
 <li data-s="create"><span class="ss-dot"></span><span>주문서 저장</span></li>
 <li data-s="files"><span class="ss-dot"></span><span>자료 파일 올리기 <em id="ssFiles">${files.length ? `0 / ${files.length}` : '없음'}</em></span></li>
-<li data-s="submit"><span class="ss-dot"></span><span>필수 자료 확인과 접수</span></li></ol>
+<li data-s="submit"><span class="ss-dot"></span><span>${payNow ? '접수하고 성균관컨설팅 결제 연결' : '필수 자료 확인과 접수'}</span></li></ol>
 <ul class="sub-files" id="ssList">${files.map((f) => `<li data-fid="${f.id}"><span>${esc(f.name)}</span><b class="muted">대기</b></li>`).join('')}</ul>
 <p class="wz-err" id="ssErr" role="alert"></p><div id="ssNote"></div><div class="sub-actions" id="ssAct"></div><p class="hint">큰 파일은 올리는 데 시간이 걸릴 수 있습니다. 이 창을 닫지 말아 주세요.</p></div></div>`;
   document.body.appendChild(host);
@@ -352,7 +352,7 @@ export async function submitOrder({ service, state, input, design, quote, draftK
       for (const f of files) await delBlob(f.id);
       for (const id of state.dropped || []) await delBlob(id);
       store.del(draftKey);
-      location.href = `${url('/checkout/')}?o=${encodeURIComponent(order.orderNo)}`;
+      location.href = `${url('/checkout/')}?o=${encodeURIComponent(order.orderNo)}${payNow ? '&pay=1' : ''}`;
     } catch (e) {
       fail(e.message || '제출하지 못했습니다.', run);
     }

@@ -1,7 +1,7 @@
 import { faqBlock, ctaBand, price, item, pageTiers, shortExtra } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
 import { computeQuote, DEFAULT_CATALOG, won } from '../../js/core/pricing.js';
-import { FIELDS } from '../../js/core/kb.js';
+import { readPrompt, TYPE_LABEL } from '../../js/core/preview.js';
 
 // 대표 가격: 가격표(pricing.js)로 계산해 늘 같은 값을 쓴다
 const quote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
@@ -13,7 +13,7 @@ const unit = (code) => won(item(code).unitPrice);
 // 자주 묻는 질문: 많이 찾는 검색어(석사논문 작성, 논문 자동작성, 논문 작성 AI, 논문 첨삭, 논문 컨설팅, 논문 통계분석, 비용 등)로 묻고 숫자로 답한다
 export const HOME_FAQ = [
   { q: '논문AI는 어떤 논문 작성 사이트인가요?', a: `논문AI(논문 AI)는 프롬프트 한 줄로 논문을 자동작성하는 AI 논문 작성 사이트입니다. 전공과 주제, 분량을 적으면 연구 설계부터 본문과 참고문헌까지 작성하고, 참고문헌은 모두 실제로 존재하는 문헌만 써서 본문 인용까지 연결합니다. 석사논문 작성, 박사논문 작성 같은 학위논문 작성부터 논문 첨삭·교정, 학위논문 컨설팅, 논문 통계분석, 논문 설문조사까지 한곳에서 맡길 수 있습니다.` },
-  { q: '논문 작성 AI로 정말 논문 한 편이 자동작성되나요?', a: `네. 전공과 주제, 분량을 한 줄로 적으면 제목, 연구모형, 가설, 목차가 바로 설계됩니다. 주문하시면 실존 문헌을 바탕으로 서론, 이론적 배경(선행연구 정리), 연구방법, 연구결과, 결론까지 장별 초고를 자동으로 작성하고, 석·박사 연구진이 문헌과 수치, 형식을 검수해 전달합니다. 문장 몇 줄을 만들어 주는 AI 논문 생성기와 달리 논문 한 편을 끝까지 완성합니다.` },
+  { q: '논문 작성 AI로 정말 논문 한 편이 자동작성되나요?', a: `네. 관심 주제와 전공만 적으면 논문AI와 석·박사 연구진이 주제를 다듬어 제목, 연구모형, 가설, 목차를 정합니다. 주문하시면 실존 문헌을 바탕으로 서론, 이론적 배경(선행연구 정리), 연구방법, 연구결과, 결론까지 장별 초고를 자동으로 작성하고, 석·박사 연구진이 문헌과 수치, 형식을 검수해 전달합니다. 문장 몇 줄을 만들어 주는 AI 논문 생성기와 달리 논문 한 편을 끝까지 완성합니다.` },
   { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80쪽은 ${won(Q80.total)}이고, 결제 후 영업일 ${Q80.days}일이면 받아 볼 수 있습니다. 기준 60쪽은 ${price('P-MASTER-FULL')}이며 10쪽을 늘릴 때마다 ${unit('P-MASTER-FULL')}이 더해집니다. 실존 참고문헌과 본문 인용, 석·박사 연구진 검수, 수정 1회가 모두 포함된 금액입니다.` },
   { q: '박사논문 작성도 맡길 수 있나요?', a: `네. 박사학위논문 130쪽은 ${won(Q130.total)}(기준 120쪽 ${price('P-DOCTOR-FULL')}, 10쪽마다 ${unit('P-DOCTOR-FULL')})입니다. 연구모형과 장별 집필 계획을 먼저 세운 뒤 장별 본문을 일관되게 작성합니다. 구조방정식(AMOS, PLS-SEM) 같은 심화 분석은 데이터를 확인한 뒤 견적을 드리고, 박사논문 컨설팅이 필요한 장만 따로 맡길 수도 있습니다.` },
   { q: '소논문이나 과제 논문도 맡길 수 있나요?', a: `네. 소논문 8쪽은 ${won(Q8.total)}이고 ${shortExtra()}이 더해집니다. 수업 과제, 학회 발표용 소논문, 청소년 탐구논문(10쪽 ${price('P-YOUTH-FULL')})도 실존 참고문헌과 본문 인용을 갖춘 형식으로 작성합니다.` },
@@ -22,15 +22,15 @@ export const HOME_FAQ = [
   { q: '논문 첨삭·교정 비용은 얼마인가요?', a: `석사논문 첨삭은 30쪽 기준 ${price('P-MASTER-EDIT')}, 박사학위논문은 40쪽 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 첨삭은 20쪽 기준 ${price('P-JOURNAL-EDIT')}입니다. 문장 다듬기와 문체 교정, 논리 흐름, 인용과 형식 수정까지 교정·교열을 한 번에 하고, 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드립니다.` },
   { q: '교수님 피드백 반영이나 논문 수정만 맡길 수 있나요?', a: `네. 교수님 의견이나 심사 피드백을 항목별로 반영하고, 수정 대조표와 반영 부분을 파란색으로 표시한 파일로 무엇을 어디서 고쳤는지 한눈에 보여 드립니다. 석사학위논문은 10개 항목 기준 ${price('P-MASTER-FB')}, 학술지 심사 의견 반영은 ${price('P-JOURNAL-FB')}입니다.` },
   { q: '연구계획서 작성도 해 주나요?', a: `네. 석사 연구계획서는 15쪽 기준 ${price('P-MASTER-PROP')}, 박사 연구계획서는 25쪽 기준 ${price('P-DOCTOR-PROP')}입니다. 연구 주제와 제목, 연구 목적과 필요성, 이론적 배경과 연구모형, 연구방법과 분석 계획, 참고문헌까지 심사에 바로 낼 수 있는 논문 연구계획서(프로포절)로 작성합니다.` },
-  { q: '논문 컨설팅은 어떻게 받나요? 비용은요?', a: `필요한 단계만 골라 맡기면 됩니다. 주제를 적으면 연구모형 설계, 가설 설정, 변수 설정, 연구방법론까지 담은 연구 설계를 주문서에서 무료로 먼저 받아 볼 수 있고, 그다음 연구계획서(${price('P-MASTER-PROP')}부터), 논문 작성, 첨삭, 통계분석 가운데 지금 막힌 단계만 신청합니다. 석사논문 컨설팅과 학위논문 컨설팅 모두 같은 방식입니다.` },
+  { q: '논문 컨설팅은 어떻게 받나요? 비용은요?', a: `필요한 단계만 골라 맡기면 됩니다. 주제를 적으면 연구모형 설계, 가설 설정, 변수 설정, 연구방법론까지 담은 연구 설계를 <a href="/free/">무료 논문 설계</a>에서 먼저 받아 볼 수 있고, 그다음 연구계획서(${price('P-MASTER-PROP')}부터), 논문 작성, 첨삭, 통계분석 가운데 지금 막힌 단계만 신청합니다. 석사논문 컨설팅과 학위논문 컨설팅 모두 같은 방식입니다.` },
   { q: '논문 통계분석(SPSS·AMOS)도 맡길 수 있나요?', a: `네. 가지고 있는 데이터로 SPSS 통계분석, 회귀분석, 매개효과·조절효과 분석(PROCESS Macro)을 진행하고 APA 형식 결과표와 해석을 드립니다. 논문 맞춤 통계분석 기본형은 ${price('T-BASIC')}, 표준형은 ${price('T-INTERP')}, 연구결과(4장) 작성까지는 ${price('T-CHAPTER')}입니다. AMOS 구조방정식처럼 모형이 복잡한 분석은 데이터를 확인한 뒤 견적을 드리고, 필요한 표본 수는 무료 계산기로 먼저 확인할 수 있습니다.` },
   { q: '논문 설문조사와 설문지 작성 대행도 되나요?', a: `네. 연구 변인에 맞는 검증된 척도로 논문 설문 문항을 구성하는 설문지 작성(${price('S-NEW')})부터, 온라인 설문조사 제작과 진행, 응답 분석과 해석까지 한 번에 맡기는 설문조사 원스톱(${price('S-FULL')})이 있습니다. 응답자 모집은 대상과 인원에 따라 견적을 드립니다.` },
   { q: 'KCI·SCI 학술지 논문 작성도 되나요?', a: `네. 학술지 투고논문은 투고 규정에 맞춘 20쪽 원고와 국문·영문 초록까지 ${price('P-JOURNAL-FULL')}부터 작성합니다. KCI 등재지 투고 준비와 심사 의견 반영도 맡길 수 있고, SCI·SCIE 학술지는 영문 논문 작성 옵션(10쪽마다 ${unit('A-ENGLISH')})으로 원고를 학술 영어로 작성합니다.` },
   { q: '영문 논문 교정이나 논문 번역도 가능한가요?', a: `영문 논문 작성 옵션을 고르면 원고를 처음부터 학술 영어로 작성하고 영문 초록과 참고문헌 형식까지 맞춥니다(10쪽마다 ${unit('A-ENGLISH')}). 이미 쓴 영문 원고의 교정이나 국문 논문의 영문 번역은 주문서 요청 사항에 적어 주시면 분량을 확인해 안내해 드립니다.` },
-  { q: '논문 작성 방법을 몰라도, 주제가 없어도 시작할 수 있나요?', a: '네. 관심 키워드와 전공만 적으면 연구할 만한 제목을 먼저 만들어 드립니다. 목차, 학교 양식, 연구방법, 분량도 모두 "잘 모르겠어요"로 진행할 수 있습니다. 석사논문 작성 방법과 일정은 가이드에서, 논문 목차 작성과 참고문헌 정리는 무료 도구에서 바로 해 볼 수 있습니다.' },
+  { q: '논문 작성 방법을 몰라도, 주제가 없어도 시작할 수 있나요?', a: '네. 관심 주제나 키워드와 전공만 적으면 됩니다. 제목과 목차, 연구방법은 연구진이 정하고, 양식은 일반적인 학위논문 양식이 기본입니다. 학교 양식이나 참고 자료가 있으면 올리기만 하면 되고, 없어도 주문할 수 있습니다. 석사논문 작성 방법과 일정은 가이드에서, 논문 목차 작성과 참고문헌 정리는 무료 도구에서 바로 해 볼 수 있습니다.' },
   { q: '논문 표절 검사나 AI 탐지는 어떻게 하나요?', a: '논문AI는 실존 문헌만 인용하고 모든 인용에 출처를 밝히며, 원문을 그대로 옮기지 않고 연구 주제에 맞게 새로 씁니다. 제출 전에는 학교에서 쓰는 표절 검사(유사도 검사)로 직접 확인하고, 고칠 부분이 있으면 수정 요청으로 반영합니다. AI 활용 기준은 학교와 학술지마다 다르니 제출처의 규정을 먼저 확인하세요.' },
   { q: '논문 심사 발표 PPT도 만들어 주나요?', a: `네. 논문 핵심을 담은 15~20장 발표 자료와 장표별 스크립트를 ${price('A-PPT')}에 만들어 드립니다. 논문 주문에 옵션으로 더하면 되고, 교수님 피드백 반영과 함께 신청하면 논문 심사 준비를 한 번에 마칠 수 있습니다.` },
-  { q: '결제는 어떻게 하나요?', a: '주문서를 내면 결제 화면에서 운영사 성균관컨설팅의 안전결제(카드, 간편결제, 계좌이체)로 바로 결제합니다. 응답자 모집처럼 조건에 따라 비용이 달라지는 작업만 견적을 확정한 뒤 결제합니다.' },
+  { q: '결제는 어떻게 하나요?', a: '주문서를 내면 운영사 성균관컨설팅의 안전결제(카드, 간편결제, 계좌이체) 페이지로 바로 이어집니다. 회원가입 없이 결제할 수 있고, 결제가 확인되면 작업이 시작됩니다. 응답자 모집처럼 조건에 따라 비용이 달라지는 작업만 견적을 확정한 뒤 결제합니다.' },
 ];
 
 // 자주 묻는 질문 페이지에만 싣는 이용 안내
@@ -46,32 +46,36 @@ const REFS = [
   { id: 'r3', cite: 'Cooper et al., 2020', html: 'Cooper, A. L., Brown, J. A., Rees, C. S., &amp; Leslie, G. D. (2020). Nurse resilience: A concept analysis. <i>International Journal of Mental Health Nursing, 29</i>(4), 553–575.', doi: '10.1111/inm.12721', n: 3 },
   { id: 'r4', cite: 'Shah et al., 2021', html: 'Shah, M. K., Gandrakota, N., Cimiotti, J. P., Ghose, N., Moore, M., &amp; Ali, M. K. (2021). Prevalence of and factors associated with nurse burnout in the US. <i>JAMA Network Open, 4</i>(2), Article e2036469.', doi: '10.1001/jamanetworkopen.2020.36469', n: 2 },
 ];
-// 예시 프롬프트와 논문 제목: 쉬운 말로
-export const DEMO_PROMPT = '간호학 석사 80쪽, 직무스트레스와 회복탄력성이 이직의도에 미치는 영향';
-export const DEMO_TITLE = '간호사의 직무스트레스와 회복탄력성이 이직의도에 미치는 영향';
+// 예시 프롬프트: 처음 오는 사람이 실제로 적을 법한 말(관심 주제·키워드 + 완성해 달라는 부탁)
+// 논문 제목은 그 말을 바탕으로 논문AI가 다듬은 결과로 보여 준다
+export const DEMO_PROMPT = '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해 주세요';
+export const DEMO_TITLE = '간호사의 번아웃이 이직의도에 미치는 영향: 회복탄력성의 매개효과';
+const DEMO_READ = readPrompt(DEMO_PROMPT);
 const ref = (id) => REFS.find((r) => r.id === id);
 const cite = (id) => `<cite class="hx-cite" data-ref="${id}" tabindex="0">(${ref(id).cite})</cite>`;
 
-const TYPE_OPTS = [['short', '소논문'], ['bachelor', '학사 졸업논문'], ['journal', '학술지 논문'], ['master', '석사학위논문'], ['doctor', '박사학위논문']];
-const PAGE_OPTS = [8, 10, 15, 20, 30, 40, 60, 80, 100, 120, 130, 150, 200];
+// 프롬프트에서 읽어 낸 내용(종류·전공·키워드) 칩
+export function readChips(r) {
+  const chips = [];
+  if (r.typeId) chips.push(TYPE_LABEL[r.typeId]);
+  if (r.pages) chips.push(`${r.pages}쪽`);
+  if (r.major) chips.push(r.major);
+  for (const k of r.keywords) chips.push(`#${k}`);
+  return chips.map((c) => `<span class="hx-chip">${esc(c)}</span>`).join('');
+}
 
 function heroWindow(T) {
-  const fieldOpts = `<option value="auto">자동 인식</option>${FIELDS.filter((f) => f.id !== 'other').map((f) => `<option value="${f.id}"${f.id === 'nursing' ? ' selected' : ''}>${esc(f.label)}</option>`).join('')}<option value="other">기타·융합</option>`;
-  const typeOpts = TYPE_OPTS.map(([v, t]) => `<option value="${v}"${v === 'master' ? ' selected' : ''}>${t}</option>`).join('');
-  const pageOpts = PAGE_OPTS.map((n) => `<option value="${n}"${n === 80 ? ' selected' : ''}>${n}쪽</option>`).join('');
-  const go = `${T.u('/paper/new/')}?${new URLSearchParams({ title: DEMO_TITLE, type: 'master', field: 'nursing', task: 'full', pages: '80' })}`;
+  const go = T.u('/paper/new/');
   return `<div class="hx-stage">
 <div class="hx-win" id="hxWin" data-mode="demo">
 <div class="hx-bar"><span class="hx-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="hx-bar-t">논문AI 자동작성</span><span class="hx-tag" id="hxTag">예시</span></div>
 <form class="hx-prompt" id="hxPrompt" action="${T.u('/paper/new/')}" method="get" autocomplete="off">
-<label class="sr" for="hxText">논문 프롬프트: 전공, 주제, 분량을 적어 주세요</label>
-<textarea class="hx-text" id="hxText" name="prompt" rows="2" spellcheck="false" maxlength="300" placeholder="전공, 주제, 분량을 한 줄로 적어 주세요">${DEMO_PROMPT}</textarea>
+<label class="sr" for="hxText">논문 프롬프트: 관심 주제와 전공을 편하게 적어 주세요</label>
+<textarea class="hx-text" id="hxText" name="prompt" rows="2" spellcheck="false" maxlength="200" placeholder="관심 주제나 키워드를 편하게 적어 주세요">${DEMO_PROMPT}</textarea>
 <div class="hx-ghost" id="hxGhost" aria-hidden="true"></div>
 <div class="hx-opts">
-<label class="hx-pill"><span>전공</span><select id="hxField" name="field">${fieldOpts}</select></label>
-<label class="hx-pill"><span>종류</span><select id="hxType" name="type">${typeOpts}</select></label>
-<label class="hx-pill"><span>분량</span><select id="hxPages" name="pages">${pageOpts}</select></label>
-<button class="hx-send" type="submit" aria-label="이 프롬프트로 논문 작성">${T.icon('arrow-up')}</button>
+<div class="hx-read" id="hxRead" aria-live="polite"><span class="hx-read-l">${T.icon('sparkles')}<span>AI가 읽은 내용</span></span><span class="hx-chips" id="hxChips">${readChips(DEMO_READ)}</span></div>
+<button class="hx-send" type="submit" aria-label="이 내용으로 내 논문 주문하기">${T.icon('arrow-up')}</button>
 </div>
 </form>
 <ol class="hx-steps" id="hxSteps" aria-label="작성 진행 단계">
@@ -88,9 +92,18 @@ function heroWindow(T) {
 <p class="hx-ttl" data-blk>${DEMO_TITLE}</p>
 <p class="hx-ch" data-blk>제1장 서론</p>
 <p class="hx-sec" data-blk>1. 연구의 필요성</p>
-<p class="hx-p" data-blk>간호 인력의 이직은 숙련 인력의 손실에 그치지 않고 남은 구성원의 업무 부담과 병원의 비용을 함께 키운다${cite('r1')}. 직무요구-자원 이론은 과도한 직무요구가 소진을 거쳐 부정적 결과로 이어진다고 설명하며${cite('r2')}, 실제로 소진과 업무 스트레스는 간호사가 일을 그만두는 주요 이유로 보고되었다${cite('r4')}. 한편 회복탄력성은 어려운 상황에서도 간호사가 잘 적응하도록 돕는 개인의 힘으로 주목받고 있어${cite('r3')}, 직무스트레스와 회복탄력성이 이직의도에 미치는 영향을 함께 살펴볼 필요가 있다.</p>
+<p class="hx-p" data-blk>간호 인력의 이직은 숙련 인력의 손실에 그치지 않고 남은 구성원의 업무 부담과 병원의 비용을 함께 키운다${cite('r1')}. 직무요구-자원 이론은 과도한 직무요구가 번아웃을 거쳐 부정적 결과로 이어진다고 설명하며${cite('r2')}, 실제로 번아웃은 간호사가 일을 그만두는 주요 이유로 보고되었다${cite('r4')}. 한편 회복탄력성은 어려운 상황에서도 간호사가 잘 적응하도록 돕는 개인의 힘으로 주목받고 있어${cite('r3')}, 번아웃이 이직의도로 이어지는 과정에서 회복탄력성의 역할을 살펴볼 필요가 있다.</p>
+<div class="pv-lockzone hx-lock" id="hxLock" aria-hidden="true"><div class="pv-mosaic"><div class="pv-mz-in">
+<p class="hx-sec">2. 연구의 목적</p>
+<p class="hx-p2">본 연구의 목적은 간호사의 번아웃이 이직의도에 미치는 영향을 확인하고, 이 관계에서 회복탄력성의 매개효과를 검증하는 데 있다. 이를 위한 구체적인 연구 문제는 다음과 같다.</p>
+<p class="hx-ch">제2장 이론적 배경</p>
+<p class="hx-sec">1. 번아웃의 개념과 선행연구</p>
+<p class="hx-p2">번아웃은 오랜 직무 스트레스로 정서적 고갈과 비인간화, 개인적 성취감 저하가 나타나는 상태를 말한다. 간호사의 번아웃은 환자 안전과 간호의 질, 조직의 성과에 직접 영향을 미친다는 점에서 국내외에서 꾸준히 연구되어 왔다.</p>
+<p class="hx-p2">선행연구는 번아웃이 높을수록 이직의도가 높아진다고 일관되게 보고하며, 이 관계를 설명하는 개인 자원으로 회복탄력성에 주목한다.</p>
+</div></div>
+<div class="pv-lock"><span class="pv-lock-ic">${T.icon('lock')}</span><b>나머지 78쪽은 결제 후 완성됩니다</b><small>실존 참고문헌 42편 · 석·박사 연구진 검수 · 메일로 전달</small></div></div>
 </div>
-<div class="hx-more" id="hxMore"><span class="hx-more-t" id="hxMoreT">${T.icon('lock')}<span>전체 80쪽 원고는 주문 후 완성됩니다</span></span><a class="btn btn-primary btn-sm" id="hxGo" href="${go}">이 논문 완성하기</a></div>
+<div class="hx-more" id="hxMore"><span class="hx-more-t" id="hxMoreT">${T.icon('mail-check')}<span>석사 80쪽 <b>${won(Q80.total)}</b> · 영업일 ${Q80.days}일 · 완성본 메일 전달</span></span><a class="btn btn-primary btn-sm" id="hxGo" href="${go}">내 논문 완성하기</a></div>
 </article>
 <aside class="hx-refpane" id="hxRefs" aria-label="참고문헌 실존 확인">
 <div class="hx-rp-hd"><span id="hxVerifyLabel">참고문헌 실존 확인</span><b class="num" id="hxVerifyN">42/42</b></div>
@@ -109,12 +122,13 @@ export default function home({ T }) {
 <div class="wrap hx-in">
 <div class="hx-copy">
 <h1 class="hx-h1" id="hx-h"><span class="eyebrow">${T.icon('sparkles')}논문 자동작성 AI</span><span class="h-display hx-h">프롬프트 한 줄로<br>논문을 완성합니다</span></h1>
-<p class="lead hx-lead">전공과 주제, 분량만 적으세요. 연구 설계부터 본문과 참고문헌까지 논문AI가 자동으로 작성합니다. 참고문헌은 모두 실제로 존재하는 문헌이고, 본문 인용까지 하나하나 연결됩니다.</p>
-<ul class="hx-proof">
-<li>${T.icon('badge-check')}<span><b>참고문헌 100% 실존</b><small>DOI·KCI·RISS로 한 편씩 대조</small></span></li>
-<li>${T.icon('quote')}<span><b>본문 인용 자동 연결</b><small>APA 7판, 학교·학술지 양식</small></span></li>
-<li>${T.icon('file-text')}<span><b>8쪽부터 130쪽까지</b><small>소논문부터 박사학위논문까지</small></span></li>
-</ul>
+<p class="lead hx-lead">관심 주제와 전공만 편하게 적으세요. 제목과 목차, 본문, 참고문헌까지 논문AI가 알아서 완성해 메일로 보내 드립니다.</p>
+<div class="hx-verify">
+<span class="hx-vic">${T.icon('shield-check')}</span>
+<div class="hx-vtx"><b>참고문헌 100% 실존 검증</b><p>모든 문헌을 DOI·KCI·RISS 원문과 한 편씩 대조하고 본문 인용과 1:1로 연결합니다. AI가 지어낸 가짜 문헌은 한 편도 넣지 않습니다.</p>
+<ul><li>${T.icon('check')}저자·연도</li><li>${T.icon('check')}제목·학술지</li><li>${T.icon('check')}권호·쪽</li><li>${T.icon('check')}DOI 원문</li></ul></div>
+</div>
+<ul class="hx-proof2"><li>${T.icon('file-text')}8쪽 소논문부터 130쪽 박사논문까지</li><li>${T.icon('graduation-cap')}석·박사 연구진 최종 검수</li></ul>
 <div class="hx-cta"><a class="btn btn-primary btn-lg" href="#hxPrompt" data-focus-prompt>내 주제로 논문 써 보기</a><a class="btn btn-ghost btn-lg" href="#pricing">가격 보기</a></div>
 <p class="hx-trust">${T.icon('building-2')}<span>운영 <b>성균관컨설팅</b> · 성균관대학교 RISE사업 지원 기업 · 석·박사 연구진 최종 검수</span></p>
 </div>
@@ -171,12 +185,12 @@ ${pageTiers(T)}
 
 <section class="sec sec-alt" aria-labelledby="flow-h">
 <div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="flow-h">논문 자동작성, 이렇게 진행됩니다</h2><p>프롬프트를 적는 순간 설계가 나오고, 결제하면 실존 문헌으로 본문을 작성해 연구진 검수까지 마친 원고를 드립니다.</p></div>
+<div class="sec-head"><h2 class="h-2" id="flow-h">논문 자동작성, 이렇게 진행됩니다</h2><p>관심 주제만 적고 결제하면 끝입니다. 나머지는 논문AI와 연구진이 알아서 완성해 메일로 보내 드립니다.</p></div>
 <ol class="flow4">
-<li><span class="flow4-n">1</span><b>프롬프트 입력</b><p>전공, 주제, 분량을 한 줄로 적습니다. 주제가 없으면 관심 키워드만 적어도 됩니다.</p></li>
-<li><span class="flow4-n">2</span><b>설계 받아 보고 결제</b><p>제목, 연구모형, 가설, 목차를 먼저 받아 보고, 마음에 들면 바로 결제합니다.</p></li>
-<li><span class="flow4-n">3</span><b>자동작성과 인용 연결</b><p>실존 문헌을 바탕으로 장별 본문을 쓰고, 문장마다 본문 인용을 연결합니다.</p></li>
-<li><span class="flow4-n">4</span><b>검수 후 전달</b><p>석·박사 연구진이 문헌, 수치, 형식을 검수해 원하는 파일 형식으로 전달합니다.</p></li>
+<li><span class="flow4-n">1</span><b>관심 주제 적기</b><p>관심 주제나 키워드, 전공을 편하게 적고 논문 종류를 고릅니다. 제목은 정하지 않아도 됩니다.</p></li>
+<li><span class="flow4-n">2</span><b>바로 결제</b><p>주문서를 내면 운영사 성균관컨설팅의 안전결제로 바로 이어집니다. 회원가입은 필요 없습니다.</p></li>
+<li><span class="flow4-n">3</span><b>집필과 실존 문헌 검증</b><p>연구진이 주제를 다듬어 제목을 정하고, 실존 문헌으로 장별 본문을 쓰며 인용을 하나하나 연결합니다.</p></li>
+<li><span class="flow4-n">4</span><b>검수 후 메일로 전달</b><p>석·박사 연구진이 문헌, 수치, 형식을 검수한 완성본을 메일로 보내 드립니다.</p></li>
 </ol>
 </div>
 </section>
@@ -229,19 +243,19 @@ ${[
 <div class="tab-panel" role="tabpanel" id="out-1" aria-labelledby="tab-1">
 <div class="art sheet"><div class="art-in">
 <p class="art-title">연구 설계서</p>
-<dl class="art-dl"><div><dt>연구 제목</dt><dd>${DEMO_TITLE}</dd></div><div><dt>연구 유형</dt><dd>양적 연구(설문조사) · 영향 관계와 매개효과 검증</dd></div><div><dt>연구 가설</dt><dd>H1 직무스트레스는 이직의도에 정(+)의 영향을 미칠 것이다.<br>H2 회복탄력성은 이직의도에 부(-)의 영향을 미칠 것이다.<br>H3 회복탄력성은 직무스트레스와 이직의도의 관계를 매개할 것이다.</dd></div><div><dt>분석 계획</dt><dd>신뢰도 분석, 상관분석, 위계적 회귀분석, PROCESS Macro Model 4(부트스트래핑 5,000회)</dd></div><div><dt>표본</dt><dd>최소 92명, 탈락률 15% 고려 109명 이상</dd></div></dl>
+<dl class="art-dl"><div><dt>연구 제목</dt><dd>${DEMO_TITLE}</dd></div><div><dt>연구 유형</dt><dd>양적 연구(설문조사) · 영향 관계와 매개효과 검증</dd></div><div><dt>연구 가설</dt><dd>H1 번아웃은 이직의도에 정(+)의 영향을 미칠 것이다.<br>H2 회복탄력성은 이직의도에 부(-)의 영향을 미칠 것이다.<br>H3 회복탄력성은 번아웃과 이직의도의 관계를 매개할 것이다.</dd></div><div><dt>분석 계획</dt><dd>신뢰도 분석, 상관분석, 위계적 회귀분석, PROCESS Macro Model 4(부트스트래핑 5,000회)</dd></div><div><dt>표본</dt><dd>최소 92명, 탈락률 15% 고려 109명 이상</dd></div></dl>
 </div></div></div>
 <div class="tab-panel" role="tabpanel" id="out-2" aria-labelledby="tab-2" hidden>
 <div class="art sheet art-page"><div class="art-in">
 <p class="pg-ch">제1장 서론</p><p class="pg-sec">1. 연구의 필요성</p>
 <p class="pg-body">의료 현장에서 간호 인력의 안정적 확보는 환자 안전과 의료 서비스의 질을 좌우하는 핵심 과제이다. 간호사의 이직은 숙련 인력의 손실뿐 아니라 남은 구성원의 업무 부담을 키운다<span class="pg-cite">(Bae, 2022)</span>. 직무요구-자원 이론은 과도한 직무요구가 소진을 거쳐 부정적 결과로 이어진다고 설명한다<span class="pg-cite">(Bakker et al., 2023)</span>.</p>
-<p class="pg-body pg-fade">특히 직무스트레스는 이직의도를 높이는 대표 요인으로 보고되어 왔으나, 같은 스트레스 속에서도 어려움에 잘 적응하도록 돕는 회복탄력성<span class="pg-cite">(Cooper et al., 2020)</span>이 이직의도를 얼마나 낮출 수 있는지는 충분히 검토되지 않았다.</p>
+<p class="pg-body pg-fade">특히 번아웃은 이직의도를 높이는 대표 요인으로 보고되어 왔으나, 같은 상황에서도 어려움에 잘 적응하도록 돕는 회복탄력성<span class="pg-cite">(Cooper et al., 2020)</span>이 이직의도를 얼마나 낮출 수 있는지는 충분히 검토되지 않았다.</p>
 <p class="art-cap">예시 문단입니다. 실제 원고는 주문하신 주제와 자료를 바탕으로 작성되며, 인용 문헌은 모두 실제로 확인되는 문헌만 사용합니다.</p>
 </div></div></div>
 <div class="tab-panel" role="tabpanel" id="out-3" aria-labelledby="tab-3" hidden>
 <div class="art sheet"><div class="art-in art-grid">
-<table class="apa"><caption><b>표 6</b><i>회복탄력성의 매개효과 검증</i></caption><thead><tr><th>경로</th><th><span class="st">B</span></th><th><span class="st">SE</span></th><th>95% CI</th></tr></thead><tbody><tr><td>직무스트레스 → 회복탄력성</td><td>-0.38</td><td>0.07</td><td>[-0.52, -0.24]</td></tr><tr><td>회복탄력성 → 이직의도</td><td>-0.44</td><td>0.09</td><td>[-0.62, -0.26]</td></tr><tr><td>간접효과</td><td>0.17</td><td>0.05</td><td>[0.08, 0.27]</td></tr></tbody><tfoot><tr><td colspan="4">부트스트래핑 5,000회. 예시 수치입니다.</td></tr></tfoot></table>
-<div class="easy"><p class="easy-h">결과 해석</p><p>직무스트레스가 높을수록 회복탄력성이 낮아지고, 회복탄력성이 낮을수록 이직의도가 높아졌습니다. 간접효과의 신뢰구간에 0이 없으므로 회복탄력성이 두 변인의 관계를 부분적으로 설명한다고 해석합니다.</p></div>
+<table class="apa"><caption><b>표 6</b><i>회복탄력성의 매개효과 검증</i></caption><thead><tr><th>경로</th><th><span class="st">B</span></th><th><span class="st">SE</span></th><th>95% CI</th></tr></thead><tbody><tr><td>번아웃 → 회복탄력성</td><td>-0.38</td><td>0.07</td><td>[-0.52, -0.24]</td></tr><tr><td>회복탄력성 → 이직의도</td><td>-0.44</td><td>0.09</td><td>[-0.62, -0.26]</td></tr><tr><td>간접효과</td><td>0.17</td><td>0.05</td><td>[0.08, 0.27]</td></tr></tbody><tfoot><tr><td colspan="4">부트스트래핑 5,000회. 예시 수치입니다.</td></tr></tfoot></table>
+<div class="easy"><p class="easy-h">결과 해석</p><p>번아웃이 높을수록 회복탄력성이 낮아지고, 회복탄력성이 낮을수록 이직의도가 높아졌습니다. 간접효과의 신뢰구간에 0이 없으므로 회복탄력성이 두 변인의 관계를 부분적으로 설명한다고 해석합니다.</p></div>
 </div></div></div>
 <div class="tab-panel" role="tabpanel" id="out-4" aria-labelledby="tab-4" hidden>
 <div class="art sheet"><div class="art-in">
@@ -283,7 +297,7 @@ ${[
 
 ${faqBlock(T, HOME_FAQ, { lead: '석사논문 작성부터 논문 첨삭, 통계분석, 비용까지 가장 많이 묻는 질문을 모았습니다.' })}
 
-${ctaBand(T, { title: '주제 한 줄이면 지금 바로 시작됩니다', text: '적어 주신 주제로 제목과 연구모형, 목차를 바로 설계해 드립니다. 설계는 무료입니다.', topic: true })}
+${ctaBand(T, { title: '관심 주제 한 줄이면 시작됩니다', text: '주제와 전공만 적으면 논문AI가 알아서 완성해 메일로 보내 드립니다. 참고문헌은 모두 실존 검증된 문헌입니다.', topic: true })}
 `;
   return [{
     path: '/',

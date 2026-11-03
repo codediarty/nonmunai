@@ -5,6 +5,7 @@ import { surveyPlan, statsPlan, METHOD_LABELS } from '../core/plans.js';
 import { classifyFeedback } from '../core/feedback.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { won } from '../core/render.js';
+import { includesFor } from '../core/pricing.js';
 
 const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문지 작성부터 통계 해석까지(작성·제작·조사·분석)', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영(수정표, 파란색 표시)', analyze: '설문 응답 통계 분석·해석' };
@@ -26,6 +27,7 @@ const korDate = (iso) => {
 export function designOf(o) {
   const i = o.input || {};
   const c = i.common || {};
+  if (c.topicKnown === 'free' && !(o.design && o.design.title)) return null;
   const title = (o.design && o.design.title) || c.title || '';
   if (!title && !(c.keywords || []).length) return null;
   try {
@@ -73,11 +75,13 @@ export function workBrief(o) {
     line('논문 첨삭 추가', i.addons && i.addons.editing ? '예(고객 원고 전체 문장·논리 첨삭)' : ''),
     line('포함 수정', o.revisions ? `${o.revisions.allowed}회 (사용 ${o.revisions.used}회)` : ''),
     line('연구 분야', field ? `${field.label}${c.fieldText ? ` (${c.fieldText})` : ''}` : c.fieldText),
-    line('연구 주제', c.title),
+    line(c.topicKnown === 'free' ? '관심 주제(고객이 편하게 적은 말, 제목 아님)' : '연구 주제', c.title),
     line('관심 키워드', (c.keywords || []).join(', ')),
+    line('희망 연구 방법', c.topicKnown === 'free' ? ({ auto: '연구진이 정함', survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' }[c.method || 'auto'] || c.method) : ''),
     line('학교·학과', [c.school, c.dept].filter(Boolean).join(' ')),
     line('목적', c.purpose),
   ]));
+  if (c.topicKnown === 'free') parts.push('■ 주제 다듬기\n  고객은 관심 주제와 키워드만 적었습니다. 고객에게 제목을 정해 달라고 하지 말고, 적은 키워드로 선행연구가 충분하고 검증 가능한 연구 주제를 연구진이 골라 제목을 확정합니다.\n  제목 후보는 2~3개를 검토해 가장 완성도가 높은 것으로 쓰고, 고른 이유를 작업 기록에 남깁니다.');
   parts.push(`■ 견적 내역\n${quoteText(o)}`);
 
   if (o.service === 'paper') parts.push(...paperBrief(o));
@@ -86,7 +90,8 @@ export function workBrief(o) {
 
   parts.push(`■ 고객 자료\n${filesText(o)}`);
   if (c.request) parts.push(`■ 고객 요청 사항(원문)\n${c.request}`);
-  if (q.includes && q.includes.length) parts.push(`■ 전달할 결과물(포함 범위)\n${q.includes.map((x) => `  · ${x}`).join('\n')}`);
+  const inc = includesFor(q.includes, o.input && o.input.paper && o.input.paper.pages);
+  if (inc.length) parts.push(`■ 전달할 결과물(포함 범위)\n${inc.map((x) => `  · ${x}`).join('\n')}`);
   if (q.excludes && q.excludes.length) parts.push(`■ 포함하지 않는 것\n${q.excludes.map((x) => `  · ${x}`).join('\n')}`);
   parts.push(`■ 전달 전 점검\n${checklist(o).map((x) => `  [ ] ${x}`).join('\n')}`);
   parts.push(`■ 결과물 파일 이름\n  ${o.orderNo}_${o.service === 'paper' ? '원고' : o.service === 'survey' ? '설문' : '분석결과'}_v1.docx (고객 이름을 파일명에 넣지 않음)`);

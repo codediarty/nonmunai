@@ -45,7 +45,7 @@ ${g.toc && g.toc.length ? `<nav class="g-toc" aria-label="목차"><b>이 글의 
 </aside></div></div>
 ${faq.length ? faqBlock(T, faq, { title: '자주 묻는 질문', id: 'gfaq' }) : ''}
 <section class="sec-tight"><div class="wrap"><h2 class="h-3" style="margin-bottom:16px">함께 읽으면 좋은 글</h2><div class="related">${[...related, ...more].map(card).join('')}</div></div></section>
-${ctaBand(T, { title: '내 주제로 바로 설계해 보기', text: '주제 한 줄이면 연구모형, 가설, 목차, 표본 수를 무료로 확인할 수 있습니다.', topic: true })}`,
+${ctaBand(T, { title: '내 주제로 바로 설계해 보기', text: '주제 한 줄이면 연구모형, 가설, 목차, 표본 수를 무료로 확인할 수 있습니다.', topic: 'free' })}`,
     });
   }
   return pages;

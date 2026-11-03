@@ -18,7 +18,7 @@ export function crumbs(T, list) {
 export function ctaBand(T, { title, text, primary, secondary, topic = false }) {
   return `<section class="cta-band"><div class="wrap cta-in">
 <div class="cta-copy"><h2 class="h-2">${title}</h2>${text ? `<p>${text}</p>` : ''}</div>
-${topic ? `<form class="cta-form" action="${T.u('/paper/new/')}" method="get"><label class="sr" for="ctaTopic">논문 주제 또는 관심 키워드</label><input class="input" id="ctaTopic" name="title" placeholder="예: 대학생의 SNS 이용과 우울의 관계" autocomplete="off"><button class="btn btn-primary btn-lg" type="submit">무료 설계 시작</button></form>`
+${topic ? `<form class="cta-form" action="${T.u(topic === 'free' ? '/free/' : '/paper/new/')}" method="get"><label class="sr" for="ctaTopic">관심 주제나 키워드</label><input class="input" id="ctaTopic" name="${topic === 'free' ? 'title' : 'prompt'}" placeholder="예: 간호사 이직이랑 번아웃 관련해서" autocomplete="off"><button class="btn btn-primary btn-lg" type="submit">${topic === 'free' ? '무료 설계 보기' : '논문 완성하기'}</button></form>`
     : `<div class="cta-actions">${primary ? `<a class="btn btn-primary btn-lg" href="${T.u(primary[1])}">${esc(primary[0])}</a>` : ''}${secondary ? `<a class="btn btn-ghost-inv btn-lg" href="${T.u(secondary[1])}">${esc(secondary[0])}</a>` : ''}</div>`}
 </div></section>`;
 }

@@ -1,6 +1,6 @@
 // 가격 계산 단위 테스트 (TESTS.md 22, 23, 40 일부)
 import assert from 'node:assert/strict';
-import { DEFAULT_CATALOG, computeQuote, addBusinessDays } from '../../src/js/core/pricing.js';
+import { DEFAULT_CATALOG, computeQuote, addBusinessDays, includesFor } from '../../src/js/core/pricing.js';
 
 export const tests = [];
 const t = (name, fn) => tests.push({ name, fn });
@@ -78,4 +78,17 @@ t('소논문 8쪽 전용 상품과 분량별 대표 요금', () => {
   assert.equal(q('doctor', 130).total, 328000);
   // 소논문은 전체 구성·초고 완성만 있음(첨삭·피드백 상품 없음)
   assert.ok(!DEFAULT_CATALOG.items.some((i) => /^P-SHORT-(EDIT|FB|PROP)$/.test(i.code)));
+});
+
+t('포함 항목의 기준 쪽수는 주문한 분량으로 표시', () => {
+  const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'full', pages: 80 } });
+  const inc = includesFor(q.includes, 80);
+  assert.ok(inc.includes('서론부터 결론까지 장별 초고(80쪽)'), inc.join(' / '));
+  assert.ok(!inc.some((x) => /기준 60쪽/.test(x)));
+  // 분량을 모르면 원래 문구 그대로, 항목 수 기준(피드백)은 건드리지 않음
+  assert.deepEqual(includesFor(q.includes, 0), q.includes);
+  const fb = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'feedback', feedbackItems: 10 } });
+  assert.deepEqual(includesFor(fb.includes, 45), fb.includes);
+  const ed = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'bachelor', task: 'edit', pages: 45 } });
+  assert.ok(includesFor(ed.includes, 45).includes('원고 첨삭(45쪽)'));
 });

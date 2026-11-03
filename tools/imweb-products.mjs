@@ -138,11 +138,32 @@ const optionRows = (p) => {
   o.push(['우선 처리', `<b>${won(find('A-PRIORITY').price)}</b> · 작업 순서를 앞당겨 납기를 줄입니다`]);
   return o;
 };
-const STEPS = [
-  '<b>논문AI에서 주문서 작성</b><br><a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>에서 주제와 필요한 작업을 고르고 자료를 올리면 연구 설계와 금액이 바로 계산됩니다.',
-  '<b>이 상품으로 결제</b><br>주문서를 내면 결제 화면에서 이 상품이 바로 열립니다. 요청사항에 논문AI 주문번호를 적어 주세요.',
-  '<b>작업 순서 배정과 진행 안내</b><br>결제가 확인되면 예상 전달일이 정해지고, 단계가 바뀔 때마다 주문 페이지와 메일로 알려 드립니다.',
-  '<b>결과물 전달</b><br>완성된 결과물을 주문 페이지에서 바로 내려받습니다.',
+const SITE_A = '<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>';
+// 진행 순서: 첫 단계만 상품에 따라 다르고 나머지는 같다
+const FIRST_STEP = {
+  full: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에 관심 주제와 전공, 논문 종류만 적으면 됩니다. 제목은 연구진이 다듬어 정합니다.`,
+  prop: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에 관심 주제와 전공만 적으면 됩니다. 제목과 연구 방향은 연구진이 다듬어 정합니다.`,
+  edit: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 원고를 올리면 분량이 자동으로 계산되고 금액이 바로 나옵니다.`,
+  fb: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 원고와 받은 피드백(파일이나 글)을 올리면 금액이 바로 나옵니다.`,
+  other: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 필요한 작업을 고르고 자료를 올리면 금액이 바로 계산됩니다.`,
+};
+const firstStep = (p) => {
+  if (p.service !== 'paper') return FIRST_STEP.other;
+  const t = p.code.split('-')[2];
+  return FIRST_STEP[{ FULL: 'full', PROP: 'prop', EDIT: 'edit', FB: 'fb' }[t] || 'other'];
+};
+const STEPS = (p) => [
+  firstStep(p),
+  '<b>이 상품으로 결제</b><br>주문서를 내면 이 결제 페이지로 바로 이어집니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.',
+  '<b>결제 확인과 작업 시작</b><br>결제가 확인되면 작업이 시작되고, 예상 전달일과 진행 상황을 메일로 알려 드립니다.',
+  p.service === 'paper' ? '<b>완성본 메일 전달</b><br>석·박사 연구진 검수를 마친 완성본을 메일로 보내 드립니다.' : '<b>결과물 메일 전달</b><br>석·박사 연구진 검수를 마친 결과물을 메일로 보내 드리고, 주문 페이지에서도 내려받을 수 있습니다.',
+];
+// 논문 상품: 실존 문헌 검증을 맨 앞에
+const WHY_PAPER = [
+  ['참고문헌 100% 실존 검증', '본문에 인용하는 문헌은 저자·연도·제목·학술지·DOI를 원문과 하나하나 대조해 실제로 있는 문헌만 씁니다.'],
+  ['주제 한 줄이면 충분합니다', '관심 주제와 전공만 적으면 연구 설계와 목차, 제목 다듬기까지 연구진이 알아서 진행해 완성본으로 드립니다.'],
+  ['석·박사 연구진의 검수', '원고와 분석 결과는 석·박사 연구진이 내용과 형식을 검토한 뒤 전달합니다.'],
+  ['진행 상황을 숨기지 않습니다', '지금 단계와 예상 전달일을 메일과 주문 페이지에서 언제든 확인하고, 담당자와 메시지를 주고받습니다.'],
 ];
 const WHY = [
   ['주제 한 줄로 바로 나오는 연구 설계', '연구모형, 가설, 목차, 필요한 표본 수를 연구 설계 엔진이 즉시 계산해 작업의 뼈대를 먼저 보여 드립니다.'],
@@ -150,7 +171,7 @@ const WHY = [
   ['진행 상황을 숨기지 않습니다', '주문 페이지에서 지금 단계와 예상 전달일을 언제든 확인하고, 담당자와 메시지를 주고받습니다.'],
   ['안심할 수 있는 자료 관리', '올린 자료와 결과물은 주문자만 열람할 수 있도록 안전하게 관리합니다.'],
 ];
-const whyHtml = `<table style="width:100%;border-collapse:separate;border-spacing:10px"><tr>${WHY.slice(0, 2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr><tr>${WHY.slice(2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr></table>`;
+const whyTable = (WHY) => `<table style="width:100%;border-collapse:separate;border-spacing:10px"><tr>${WHY.slice(0, 2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr><tr>${WHY.slice(2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr></table>`;
 const TRUST = `<div style="margin:0;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영하는 논문 전문 서비스입니다. 주문은 논문AI에서, 결제와 영수증은 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리됩니다.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '석·박사 연구진 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
 const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${LINE};font-size:13px;line-height:1.7;color:#8A93A6">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영합니다 · 성균관대학교 RISE사업 지원 기업 · 사업자등록번호 272-32-01885 · contact@skkc.co.kr</p>`;
 const SAMPLE = { paper: ['sample-paper.png', '논문AI 연구 설계서와 목차 결과물 예시'], survey: ['sample-survey.png', '논문AI 설문지와 응답 분석 결과물 예시'], statistics: ['sample-stats.png', '논문AI 통계표와 해석 결과물 예시'] };
@@ -182,8 +203,8 @@ for (const p of products) {
       + sec('받는 결과물', checks(inc)) + (SAMPLE[p.service] ? img(SAMPLE[p.service][0], SAMPLE[p.service][1]) : '')
       + (p.code === 'T-SIM' ? `<p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">교육과 연습을 위한 가상 데이터로 진행합니다.</p>` : '')
       + sec('함께 고르면 좋은 옵션', spec(optionRows(p)))
-      + sec('진행 순서', cards(STEPS))
-      + sec('논문AI가 다른 점', whyHtml);
+      + sec('진행 순서', cards(STEPS(p)))
+      + sec('논문AI가 다른 점', whyTable(p.service === 'paper' ? WHY_PAPER : WHY));
   }
   p.html = `<div style="max-width:780px;margin:0 auto;padding:8px 4px 24px;font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:16px;line-height:1.7;color:${INK2};word-break:keep-all">${body}${FOOT}</div>`;
 }
@@ -269,10 +290,10 @@ li b{display:block;color:#0F1B3D;font-size:30px;margin-bottom:8px;letter-spacing
 .foot{margin-top:auto;padding-top:28px;border-top:1px solid #DDE3EE;font-size:22px;line-height:1.7;color:#5B6478;text-align:center}
 .foot b{color:#0F1B3D}
 </style></head><body><div class="c"><div class="hd"><div class="brand">${mark('#FFFFFF', '#4D6BFF', 46)}<span>논문<b>AI</b></span></div>
-<h1>결제해 주셔서 감사합니다</h1><p class="lead">진행 상황과 결과물은 논문AI 주문 페이지에서 확인합니다.</p></div>
-<div class="bd"><ol><li><b>결제 화면으로 돌아가 알려 주세요</b>nonmunai.kr 결제 화면에서 '결제를 마쳤어요'를 누르면 바로 작업 순서에 배정되고, 예상 전달일을 알려 드립니다.</li>
-<li><b>아직 주문서를 내지 않았다면</b>nonmunai.kr에서 주문서를 작성해 주세요. 요청 사항에 결제한 상품 이름과 결제자 이름을 적으면 이 결제와 연결해 드립니다.</li>
-<li><b>진행 상황과 결과물</b>단계가 바뀔 때마다 메일로 알려 드리고, 결과물은 주문 페이지에서 내려받습니다. 주문 조회는 nonmunai.kr/orders에서 주문번호와 조회 비밀번호로 할 수 있습니다.</li></ol>
+<h1>결제해 주셔서 감사합니다</h1><p class="lead">이제 기다리시면 됩니다. 완성본은 메일로 보내 드립니다.</p></div>
+<div class="bd"><ol><li><b>결제가 확인되면 바로 시작합니다</b>결제가 확인되는 대로 작업 순서에 배정하고, 시작 안내와 예상 전달일을 메일로 보내 드립니다.</li>
+<li><b>아직 주문서를 내지 않았다면</b>nonmunai.kr에서 주문서를 내 주세요. 결제할 때와 같은 이름·연락처로 내면 이 결제와 연결해 드립니다.</li>
+<li><b>진행 상황과 완성본</b>단계가 바뀔 때마다 메일로 알려 드리고, 완성본도 메일로 받습니다. 조회 비밀번호는 따로 정하지 않았다면 휴대전화 뒤 4자리입니다.</li></ol>
 <p class="foot"><b>문의</b> contact@skkc.co.kr · 성균관컨설팅 상담 채널<br>논문AI 운영 성균관컨설팅 · 사업자등록번호 272-32-01885</p></div></div></body></html>`;
 
 const browser = await playwright.chromium.launch();
@@ -287,7 +308,7 @@ for (const p of products) {
 }
 await page.setViewportSize({ width: 1000, height: 1400 });
 await page.setContent(guideHtml(), { waitUntil: 'networkidle' });
-await loadFonts('결제해 주셔서 감사합니다 논문AI 결제 화면으로 돌아가 알려 주세요 아직 주문서를 내지 않았다면 진행 상황과 결과물 문의 운영 성균관컨설팅');
+await loadFonts('결제해 주셔서 감사합니다 논문AI 결제가 확인되면 바로 시작합니다 아직 주문서를 내지 않았다면 진행 상황과 완성본 문의 운영 성균관컨설팅');
 await page.waitForTimeout(150);
 await page.screenshot({ path: path.join(out, '논문AI-주문-안내.png'), type: 'png' });
 await browser.close();

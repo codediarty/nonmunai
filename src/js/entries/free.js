@@ -52,4 +52,13 @@ if (form) {
   form.addEventListener('submit', (e) => { e.preventDefault(); render(); });
   form.addEventListener('input', debounce(render, 300));
   form.addEventListener('change', debounce(render, 50));
+  // 다른 페이지에서 주제를 적고 넘어오면 그 주제로 바로 설계한다
+  const pre = (new URLSearchParams(location.search).get('title') || '').trim().slice(0, 200);
+  const yes = form.querySelector('input[name=known][value=yes]');
+  if (pre && yes && $('#fTitle')) {
+    yes.checked = true;
+    for (const el of $$('[data-when]', form)) el.hidden = el.dataset.when !== 'yes';
+    $('#fTitle').value = pre;
+    render();
+  }
 }

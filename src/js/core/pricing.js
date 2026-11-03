@@ -77,6 +77,12 @@ export function paperItemCode(typeId, task) {
   return 'P-' + String(typeId || 'master').toUpperCase() + '-' + ({ full: 'FULL', edit: 'EDIT', feedback: 'FB', proposal: 'PROP' }[task] || 'FULL');
 }
 
+// 포함 항목의 '기준 N쪽(내외)' 표기를 실제 주문 분량으로 바꾼다(주문한 쪽수가 있을 때만)
+export function includesFor(list, pages) {
+  const n = Number(pages) || 0;
+  return (list || []).map((x) => (n > 0 ? String(x).replace(/\(기준\s*\d+쪽(\s*내외)?\)/, `(${n}쪽)`) : x));
+}
+
 export function won(n) {
   return (Math.round(Number(n) || 0)).toLocaleString('ko-KR') + '원';
 }

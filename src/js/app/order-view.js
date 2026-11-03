@@ -21,7 +21,7 @@ export function pillClass(status) {
   return '';
 }
 
-export function statusPill(o) { return `<span class="status-pill ${pillClass(o.status)}"><i></i>${esc(o.statusLabel)}</span>`; }
+export function statusPill(o) { return `<span class="status-pill ${pillClass(o.status)}"><i></i>${esc(o.status === 'pending_payment' ? '결제 전' : o.statusLabel)}</span>`; }
 
 function fmtAt(iso) {
   if (!iso) return '';
@@ -97,9 +97,12 @@ export function orderFacts(o) {
   const field = FIELDS.find((f) => f.id === c.fieldId);
   if (o.service === 'paper' && i.paper) {
     const pt = PAPER_TYPES.find((t) => t.id === i.paper.typeId);
+    if (c.topicKnown === 'free' && c.title) rows.push(['관심 주제', c.title]);
     rows.push(['논문 유형', pt ? pt.label : i.paper.typeId], ['요청 작업', TASK_LABEL[i.paper.task] || i.paper.task]);
     if (i.paper.pages) rows.push(['분량', `약 ${i.paper.pages}쪽`]);
     if (i.paper.feedbackItems) rows.push(['피드백 항목', `${i.paper.feedbackItems}개`]);
+    const mt = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' }[c.method];
+    if (c.topicKnown === 'free' && mt) rows.push(['연구 방법', mt]);
   } else if (o.service === 'survey' && i.survey) {
     rows.push(['의뢰 유형', SURVEY_MODE[i.survey.mode] || i.survey.mode]);
     if (i.survey.target) rows.push(['응답 대상', i.survey.target === 'other' ? i.survey.targetOther : (SURVEY_TARGET[i.survey.target] || i.survey.target)]);
@@ -111,7 +114,8 @@ export function orderFacts(o) {
     if (o.design && o.design.methodLabel) rows.push(['분석', o.design.methodLabel]);
     if (t.hasData !== false) rows.push(['결과물', STAT_OUTPUT[t.output] || t.output]);
   }
-  if (field) rows.push(['연구 분야', c.fieldText ? `${field.label} (${c.fieldText})` : field.label]);
+  if (field && field.id !== 'other') rows.push(['연구 분야', c.fieldText ? `${field.label} (${c.fieldText})` : field.label]);
+  else if (c.fieldText) rows.push(['전공·분야', c.fieldText]);
   if (c.due) rows.push(['희망 마감일', c.due]);
   if (o.design && o.design.designLabel && o.service === 'paper') rows.push(['연구 설계', o.design.designLabel]);
   const files = (o.files && o.files.customer) || [];
@@ -126,5 +130,7 @@ export function factsTable(rows) {
 
 export function orderTitle(o) {
   const c = (o.input && o.input.common) || {};
+  // 관심 주제만 적은 주문은 제목이 정해지지 않았으므로 상품 이름을 제목으로 쓴다
+  if (c.topicKnown === 'free') return (o.design && o.design.title) || o.productName || '논문AI 주문';
   return (o.design && o.design.title) || c.title || o.productName || '논문AI 주문';
 }
