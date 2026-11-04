@@ -17,7 +17,7 @@ const UL = (l) => (l === '쪽' ? ' Page' : (l || ''));
 const TASKS = [
   { v: 'full', t: '논문 완성', d: '주제·설계부터 장별 본문까지 완성해 드려요. 기존 자료가 있으면 함께 올려 주세요.' },
   { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
-  { v: 'feedback', t: '교수님 피드백 반영·수정 보완·첨삭', d: '피드백을 항목별로 반영하고 부족한 내용은 수정 보완, 고친 원고는 첨삭해 드려요. 수정 대조표를 작성하고 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
+  { v: 'feedback', t: '교수님 피드백 반영·수정 보완·첨삭', d: '받은 피드백을 항목 수와 관계없이 한 번에 모두 반영하고, 부족한 내용은 수정 보완, 고친 원고는 첨삭해 드려요. 수정표가 포함되고 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
   { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
 ];
 const PROPOSAL_TYPES = ['master', 'doctor', 'bachelor'];
@@ -172,16 +172,17 @@ ${s.paper.hasFormat === 'yes' ? `<div class="cond">${textField('paper.formatName
     },
   },
   {
-    id: 'volume', title: '분량과 일정을 정해 주세요', help: '모르는 항목은 그대로 두셔도 됩니다.',
+    id: 'volume', title: (s) => (baseItem(s) && baseItem(s).baseUnits != null ? '분량과 일정을 정해 주세요' : '일정과 결과 파일을 정해 주세요'), help: '모르는 항목은 그대로 두셔도 됩니다.',
     render: (s) => {
       const it = baseItem(s);
+      const metered = !!(it && it.baseUnits != null);
       const base = it && it.baseUnits ? `${it.baseUnits}${UL(it.unitLabel)}` : '기준 분량';
       const unitIsItem = it && it.unitLabel === '항목';
       const opts = unitIsItem
         ? [{ v: 'base', t: `기준 범위 이내 (${base})`, d: '붙여 넣은 피드백이 있으면 항목 수로 자동 계산합니다' }, { v: 'unknown', t: '잘 모르겠어요', d: '확인 후 초과분이 있을 때만 안내합니다' }]
         : [{ v: 'base', t: `기준 분량 이내 (${base})`, d: '대부분의 경우 여기에 해당합니다' }, { v: 'custom', t: '분량을 알고 있어요', d: '분량(Page)을 적으면 추가 분량이 바로 계산돼요' }, { v: 'unknown', t: '잘 모르겠어요', d: '기준 분량으로 먼저 진행하고 초과분만 나중에 안내합니다' }];
-      return `<h3 class="sub-q">분량</h3>${choice('paper.pagesMode', s.paper.pagesMode, opts, { cols: unitIsItem ? 2 : 3, compact: true })}
-${s.paper.pagesMode === 'custom' ? `<div class="cond row-2">${textField('paper.pages', s.paper.pages ?? '', { label: '예상 분량(Page)', type: 'number', inputmode: 'numeric', placeholder: it ? String(it.baseUnits) : '80', hint: it && it.unitPrice ? `기준 ${base}를 넘는 부분은 ${it.unitSize}${UL(it.unitLabel)}마다 ${won(it.unitPrice)}이 더해져요.` : '' })}</div>` : ''}
+      return `${metered ? `<h3 class="sub-q">분량</h3>${choice('paper.pagesMode', s.paper.pagesMode, opts, { cols: unitIsItem ? 2 : 3, compact: true })}` : ''}
+${metered && s.paper.pagesMode === 'custom' ? `<div class="cond row-2">${textField('paper.pages', s.paper.pages ?? '', { label: '예상 분량(Page)', type: 'number', inputmode: 'numeric', placeholder: it ? String(it.baseUnits) : '80', hint: it && it.unitPrice ? `기준 ${base}를 넘는 부분은 ${it.unitSize}${UL(it.unitLabel)}마다 ${won(it.unitPrice)}이 더해져요.` : '' })}</div>` : ''}
 <h3 class="sub-q">희망 완료일과 결과 파일</h3>
 <div class="row-2">${textField('common.due', s.common.due, { label: '희망 완료일 (선택)', type: 'date', hint: '심사·제출 일정이 있다면 알려 주세요. 연구 전체 일정표에 반영됩니다.' })}${selectField('common.outputFormat', s.common.outputFormat, [{ v: 'docx', t: 'Word (docx)' }, { v: 'hwp', t: '한글 (hwp)' }, { v: 'pdf', t: 'PDF' }], { label: '결과 파일 형식' })}</div>
 <h3 class="sub-q">추가 옵션</h3>${addonsHtml(s)}`;

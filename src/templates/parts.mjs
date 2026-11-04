@@ -35,7 +35,7 @@ export function priceTable(T, codes, { caption = '' } = {}) {
     const ul = it.unitLabel === '쪽' ? ' Page' : (it.unitLabel || '');
     const unit = it.baseUnits ? `기준 ${it.baseUnits}${ul}` : '';
     const list = listPriceFor(c, it.price);
-    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${it.unitLabel === '항목' ? '<span class="pt-unit">수정 대조표 · 반영 부분 파란색 표시본 포함</span>' : unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
+    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${it.task === 'feedback' || it.task === 'revise' ? '<span class="pt-unit">항목 수와 관계없이 일괄 반영 · 수정표 포함</span>' : unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="price-table">${caption ? `<caption>${esc(caption)}</caption>` : ''}<thead><tr><th scope="col">상품</th><th scope="col">기본 납기</th><th scope="col">가격(부가세 포함)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }

@@ -66,7 +66,7 @@ function deliverables(s) {
   const out = [];
   if (['full', 'new', 'edit', 'feedback'].includes(m)) out.push('설문지(Word)');
   if (['full', 'new'].includes(m) || (needsRecruitQ(s) && s.survey.recruit !== 'none')) out.push('배포용 온라인 설문 링크와 참여 안내문');
-  if (m === 'feedback') out.push('수정 대조표와 반영 부분 파란색 표시본');
+  if (m === 'feedback') out.push('수정표와 반영 부분 파란색 표시본');
   if (m === 'full' || s.survey.recruit === 'us') out.push('익명화 응답 데이터');
   if (needsAnalysis(s)) out.push('APA 형식 통계표', '논문 맞춤 결과 해석');
   if (m === 'full') out.push('연구결과 정리');

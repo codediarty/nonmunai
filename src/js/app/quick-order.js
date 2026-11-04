@@ -20,7 +20,7 @@ const TASKS = [
   ['full', '논문 완성', '주제만 있으면 돼요'],
   ['proposal', '연구계획서', '심사용 계획서'],
   ['edit', '원고 첨삭', '이미 쓴 원고'],
-  ['feedback', '교수님 피드백 반영', '수정 보완·첨삭까지'],
+  ['feedback', '교수님 피드백 반영', '수정표까지 포함'],
 ];
 const PKG = {
   full: [
@@ -161,7 +161,7 @@ function s1Html() {
   if (!writeLike()) {
     const fb = S.task === 'feedback';
     return `<h2 class="qo-h"><span class="qo-n">1</span>원고를 올려 주세요</h2>
-<p class="qo-help">${fb ? '원고와 교수님 의견을 주시면 의견마다 원고에 반영하고, 부족한 내용은 수정 보완, 고친 문장은 첨삭까지 해 드려요. 무엇을 어디서 고쳤는지는 수정 대조표로 정리해 드려요.' : '문장과 논리, 인용과 형식을 다듬고 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드려요.'}</p>
+<p class="qo-help">${fb ? '원고와 교수님 의견을 주시면 의견 수와 관계없이 한 번에 모두 반영하고, 부족한 내용은 수정 보완, 고친 문장은 첨삭까지 해 드려요. 무엇을 어디서 고쳤는지 정리한 수정표도 함께 드려요.' : '문장과 논리, 인용과 형식을 다듬고 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드려요.'}</p>
 ${uploader(S, 'manuscript', { label: '기존 원고', required: true, hint: '한글·워드·PDF 모두 괜찮아요. 올리면 분량을 자동으로 계산해 드려요' })}
 <div id="qoDoc">${docInfoHtml()}</div>
 ${fb ? `<div class="field"><label class="label" for="qoFb">교수님 의견<span class="req">*</span></label><textarea class="textarea" id="qoFb" rows="5" data-k="feedbackText" maxlength="8000" placeholder="받은 의견을 그대로 붙여 넣어 주세요.\n예: 1. 연구의 필요성에 최근 자료를 보완할 것">${esc(S.feedbackText)}</textarea><p class="hint" id="qoFbCount">${fbCountText()}</p></div>
@@ -194,7 +194,7 @@ function s2Html() {
     const opts = EDIT_TYPES.filter((t) => findItem(CONFIG.catalog, paperItemCode(t, S.task)));
     const it = findItem(CONFIG.catalog, paperItemCode(S.etype, S.task));
     const unitName = (u) => (u === '쪽' ? ' Page' : u);
-    const unit = it && S.task === 'feedback' ? `피드백 반영·수정 보완·첨삭 ${won(it.price)}` : it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
+    const unit = it && S.task === 'feedback' ? `피드백 전체 일괄 반영·수정표 포함 ${won(it.price)}, 항목 수와 관계없이 한 가격이에요` : it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
     return `<h2 class="qo-h"><span class="qo-n">2</span>어떤 논문인가요?</h2>
 <div class="qo-seg" role="radiogroup" aria-label="논문 종류">${opts.map((t) => `<label class="qo-seg-i${S.etype === t ? ' is-on' : ''}"><input type="radio" name="qoEtype" value="${t}"${S.etype === t ? ' checked' : ''}>${esc((PAPER_TYPES.find((x) => x.id === t) || {}).short || t)}</label>`).join('')}</div>
 <p class="hint">${esc(unit)}</p>
@@ -270,7 +270,7 @@ function docInfoHtml() {
 }
 function fbCountText() {
   const n = S.feedbackText ? classifyFeedback(S.feedbackText).count : 0;
-  return n ? `의견 ${n}개 항목으로 나눠 반영해 드려요.` : '붙여 넣으면 항목 수를 자동으로 세어서 금액에 반영해요.';
+  return n ? `의견 ${n}개 항목을 모두 반영해 드려요. 항목 수와 관계없이 금액은 같아요.` : '붙여 넣으면 의견을 항목별로 나눠 빠짐없이 반영해 드려요.';
 }
 
 function orderLabel() {
@@ -286,7 +286,7 @@ function summaryHtml(q) {
   const { pages } = selection();
   const code = q.lines[0] ? q.lines[0].code : '';
   const list = listPriceFor(code, q.total);
-  const task = { full: '전체 구성·본문 완성', proposal: '연구계획서 작성', edit: '문장·논리·형식 교정', feedback: '의견별 반영과 수정 대조표' }[S.task];
+  const task = { full: '전체 구성·본문 완성', proposal: '연구계획서 작성', edit: '문장·논리·형식 교정', feedback: '피드백 일괄 반영·수정표 포함' }[S.task];
   const extras = q.lines.filter((l) => /^A-/.test(l.code));
   const eta = q.days ? etaDate(new Date(), q.days, String((CONFIG.settings || {}).holidays || '').split(/[,\s]+/).filter(Boolean)) : null;
   const inc = includesFor(q.includes, pages);
@@ -343,7 +343,7 @@ function editSample() {
 <p class="pv-txt">MZ세대 직장인의 이직은 <del>회사에 큰 손해다</del><ins>숙련 인력의 손실과 남은 구성원의 업무 부담으로 이어진다</ins><cite class="pv-cite"><span class="pv-cite-a">Hom</span> et al., 2017<i>${ICON.check}</i></cite>. <del>그래서</del><ins>이에 따라</ins> 이직의도에 영향을 미치는 요인을 <ins>체계적으로</ins> 살펴볼 필요가 있다.</p>
 ${S.task === 'feedback' ? '<table class="pv-rev"><thead><tr><th>교수님 의견</th><th>반영 내용</th><th>위치</th></tr></thead><tbody><tr><td>최근 자료 보완</td><td>최근 5년 국내 실태 자료 추가</td><td>1장 1절</td></tr><tr><td>표 형식 통일</td><td>APA 7판 형식으로 정리</td><td>4장</td></tr></tbody></table>' : ''}
 <div class="pv-lockzone is-on is-locked"><div class="pv-mosaic"><div class="pv-mz-in"><p class="pv-txt">원고 전체의 문장과 논리 흐름, 인용과 참고문헌 형식을 함께 다듬고, 고친 부분은 색으로 표시해 한눈에 확인할 수 있게 정리해 드려요. 수정 내역 표시본과 깨끗한 정리본을 함께 드려요.</p><p class="pv-txt">제2장 이론적 배경의 문단 순서를 바로잡고 중복 서술을 줄였으며, 연구 가설과 분석 방법의 용어를 통일했습니다.</p></div></div>
-<div class="pv-lock"><span class="pv-lock-ic">${ICON.check}</span>${S.task === 'feedback' ? '<b>받은 의견을 하나하나 이렇게 반영해 드려요</b><small>수정 대조표 + 반영 표시본 + 최종 정리본 · 메일로 전달</small>' : '<b>원고 전체를 이렇게 다듬어 드려요</b><small>수정 표시본 + 깨끗한 정리본 · 메일로 전달</small>'}</div></div>
+<div class="pv-lock"><span class="pv-lock-ic">${ICON.check}</span>${S.task === 'feedback' ? '<b>받은 의견을 하나하나 이렇게 반영해 드려요</b><small>수정표 + 반영 표시본 + 최종 정리본 · 메일로 전달</small>' : '<b>원고 전체를 이렇게 다듬어 드려요</b><small>수정 표시본 + 깨끗한 정리본 · 메일로 전달</small>'}</div></div>
 </div></div></div>`;
 }
 

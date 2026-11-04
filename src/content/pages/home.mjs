@@ -257,7 +257,7 @@ ${pageTiers(T)}
 <div class="svc2">
 ${[
     ['file-pen-line', '논문 첨삭·교정', '문장과 논리, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
-    ['message-square-text', '교수님 피드백 반영', '피드백 반영과 수정 보완, 첨삭까지 하고 반영한 부분을 파란색으로 표시해 드려요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
+    ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정 보완, 첨삭까지 해 드려요. 수정표 포함이에요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
     ['clipboard-list', '연구계획서', '연구 목적과 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `석사 ${price('P-MASTER-PROP')}`, '/research-proposal/'],
     ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문조사 진행, 설문 결과 정리와 통계 해석까지 한 번에 맡길 수 있어요.', price('S-FULL'), '/survey/'],
     ['chart-column', '논문 맞춤 통계분석', '주제와 가설에 맞는 분석을 설계하고 APA 통계표와 해석을 드려요.', `표준형 ${price('T-INTERP')}`, '/statistics/'],

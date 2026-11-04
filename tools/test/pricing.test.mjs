@@ -20,9 +20,16 @@ t('추가 분량·옵션 가산', () => {
   assert.equal(q.total, 99000 + 19000 + 29000 + 19000 + 19000);
   assert.equal(q.payableNow, true);
 });
-t('피드백 항목 수 기반 가산', () => {
-  const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'feedback', feedbackItems: 17 } });
-  assert.equal(q.total, 99000 + 2 * 19000);
+t('피드백 반영은 항목 수와 관계없이 한 가격', () => {
+  for (const n of [null, 3, 17, 60]) {
+    const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'feedback', feedbackItems: n } });
+    assert.equal(q.total, 99000, String(n));
+    assert.equal(q.lines.length, 1, '추가 분량 줄 없음');
+    assert.ok(!q.notes.some((x) => /undefined|기준 분량/.test(x)), q.notes.join(' / '));
+  }
+  const doc = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'doctor', task: 'feedback', feedbackItems: 40, pages: 200 } });
+  assert.equal(doc.total, 99000);
+  assert.ok(doc.includes.includes('수정표 포함(의견·수정 내용·쪽)'));
 });
 t('설문 모집 의뢰는 견적형(결제 불가)', () => {
   const q = computeQuote(DEFAULT_CATALOG, { service: 'survey', survey: { mode: 'full', recruit: 'us' } });

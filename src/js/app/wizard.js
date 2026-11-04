@@ -135,7 +135,7 @@ export function createWizard(opts) {
     $('#wzCount', root).textContent = `${cur + 1} / ${vs.length}단계`;
     $('#wzBar', root).style.width = `${((cur + 1) / vs.length) * 100}%`;
     stepEl.dataset.step = s.id;
-    stepEl.innerHTML = `<h2 class="wz-q">${s.title}</h2>${s.help ? `<p class="wz-help">${s.help}</p>` : ''}<div class="wz-body">${s.render(state, ctx)}</div><p class="wz-err" role="alert" id="wzErr"></p>
+    stepEl.innerHTML = `<h2 class="wz-q">${typeof s.title === 'function' ? s.title(state) : s.title}</h2>${s.help ? `<p class="wz-help">${s.help}</p>` : ''}<div class="wz-body">${s.render(state, ctx)}</div><p class="wz-err" role="alert" id="wzErr"></p>
 <div class="wz-nav">${cur > 0 ? '<button type="button" class="btn btn-ghost btn-lg" data-prev>이전</button>' : '<span></span>'}<button type="submit" class="btn btn-primary btn-lg" id="wzNext">${last ? (s.submitLabel ? s.submitLabel(state) : '제출하기') : '다음'}</button></div>`;
     if (s.bind) s.bind(stepEl, state, ctx);
     const first = stepEl.querySelector('input:not([type=hidden]):not([type=file]),textarea,select');

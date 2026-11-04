@@ -49,7 +49,7 @@ const TITLES = {
 };
 // 같은 항목을 서버·계산 쪽에서 나눠 확인하는 기존 단위·API 테스트(node tools/test/run-all.mjs)
 const BACKEND = {
-  3: 'engine: 키워드로 추천 주제 생성', 8: 'backend: 첨삭 원고 없으면 제출 불가', 9: 'pricing: 피드백 항목 수 가산', 15: 'pricing: 모집 의뢰는 견적형',
+  3: 'engine: 키워드로 추천 주제 생성', 8: 'backend: 첨삭 원고 없으면 제출 불가', 9: 'pricing: 피드백 반영은 항목 수와 관계없이 한 가격', 15: 'pricing: 모집 의뢰는 견적형',
   17: 'pricing: 데이터 유무에 따른 가격', 18: 'backend: 시뮬레이션 동의 필수·결과 파일명 표시', 22: 'pricing: 유형·작업·분량·옵션 가산, backend: 서버 가격=화면 가격',
   23: 'backend: 견적형 결제 불가→견적 확정', 24: 'backend: 필수 자료 누락 시 missing_files', 25: 'backend: 형식·내용 검사(위장 파일 차단)',
   28: 'backend: 다른 주문 토큰·위조 티켓 거부, 조회 잠금', 29: 'backend: 토큰 없으면 거부·로그인 제한·비밀번호 변경 시 토큰 무효', 30: 'backend: 자료 보완 요청→보완 완료',
