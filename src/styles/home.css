@@ -302,7 +302,7 @@
 .flow4 p { margin: 0; font-size: 15px; line-height: 1.7; color: var(--muted); }
 
 /* ---------------------------------------------------------------- 하루 완성 바로가기 */
-/* 전공 전문가 검수 항목 */
+/* 전공 박사 검수 항목 */
 .qc-card { margin: 52px 0 0; padding: 26px 30px 24px; border: 1px solid var(--rule); border-radius: 16px; background: #fff; box-shadow: 0 26px 50px -40px rgba(11, 22, 51, .45); }
 .qc-hd { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid var(--rule-2); }
 .qc-hd b { font-family: var(--serif); font-size: 21px; font-weight: 700; letter-spacing: -0.045em; color: var(--ink); }

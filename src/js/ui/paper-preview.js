@@ -75,7 +75,7 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
     let ci = 0;
     const partsHtml = (parts) => parts.map((x) => (x.t != null ? esc(x.t) : citeHtml(x.cite, ci++))).join('');
     sheet.innerHTML = `<p class="pv-kick">${esc(pv.typeLabel)} · 본문 ${pv.pages} Page · APA 7판</p>
-<div class="pv-ttl"><span class="pv-ttl-t">${esc(pv.workTitle)}</span><em>제목은 전문가가 다듬어 확정해 드려요</em></div>
+<div class="pv-ttl"><span class="pv-ttl-t">${esc(pv.workTitle)}</span><em>제목은 전공 박사가 다듬어 확정해 드려요</em></div>
 <p class="pv-toc-h">목차</p><ol class="pv-toc">${tocHtml(pv)}</ol>
 <p class="pv-ch">${esc(pv.toc[0][0])}</p><p class="pv-sec">${pv.toc[0][1].length ? `1. ${esc(pv.toc[0][1][0])}` : '연구의 필요성'}</p>
 <div class="pv-flow" data-pv="flow"></div>

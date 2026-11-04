@@ -171,7 +171,7 @@ ${uploader(S, 'feedback', { label: '의견이 담긴 파일', hint: '메모가 �
   return `<h2 class="qo-h"><span class="qo-n">1</span>어떤 논문을 쓸까요?</h2>
 <div class="field qo-topic"><label class="label" for="qoTopic">관심 주제나 키워드<span class="req">*</span></label>
 <textarea class="textarea qo-ta" id="qoTopic" rows="3" data-k="topic" maxlength="200" placeholder="관심 주제나 키워드를 입력하세요">${esc(S.topic)}</textarea>
-<p class="hint">예: 직장인 워라밸이랑 이직 관련해서 · 제목은 정하지 않아도 괜찮아요. 전문가가 다듬어서 가장 좋은 제목으로 정해 드려요.</p>
+<p class="hint">예: 직장인 워라밸이랑 이직 관련해서 · 제목은 정하지 않아도 괜찮아요. 전공 박사가 다듬어서 가장 좋은 제목으로 정해 드려요.</p>
 <div id="qoRead">${parseChips()}</div></div>
 <div class="field"><label class="label" for="qoMajor">전공 분야<span class="req">*</span></label><input class="input" id="qoMajor" data-k="major" list="qoMajors" maxlength="60" value="${esc(S.major)}" placeholder="나의 전공 분야를 입력하세요">${majors}<p class="hint">예: 간호학, 경영학, 사회복지학 · 목록에 없어도 그대로 적어 주세요.</p></div>`;
 }
