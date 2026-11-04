@@ -45,7 +45,7 @@ export const STATUS_STEPS = [
   ['자료 확인', '올려 주신 원고·양식·데이터를 확인하고, 빠진 자료가 있으면 바로 말씀드려요.'],
   ['작업 준비', '연구 설계와 작업 범위를 확정해요.'],
   ['작성·분석 진행', 'AI 집필과 통계분석을 진행해요.'],
-  ['품질 검토', '석·박사 전문가가 문헌·수치·형식을 검토하고 다듬어요.'],
+  ['전문가 검수', '같은 전공 분야의 석·박사 전문가가 설계, 문헌, 수치, 형식을 검수하고 바로잡아요.'],
   ['전달 완료', '주문 페이지에서 결과물을 내려받고 수정을 요청할 수 있어요.'],
 ];
 
@@ -95,10 +95,10 @@ export { tocToText };
 export const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
 const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
 export const TIERS = [
-  { kind: '소논문', pages: 15, typeId: 'short', desc: '수업 과제와 학회 발표용 한 편', inc: ['주제와 연구 질문 정리', '본문 15 Page', '실존 참고문헌과 본문 인용', '수정 1회 포함'], cta: '소논문 의뢰하기' },
-  { kind: '학사 졸업논문', pages: 30, typeId: 'bachelor', desc: '졸업 요건에 맞춘 학부 논문', inc: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전문가 최종 검토, 수정 1회'], cta: '졸업논문 의뢰하기' },
-  { kind: '석사학위논문', pages: 80, typeId: 'master', featured: true, desc: '연구 설계부터 결론까지 학위논문 한 편', inc: ['연구모형·가설·분석 계획 연구 설계서', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '석·박사 전문가 최종 검토, 수정 1회'], cta: '석사논문 의뢰하기' },
-  { kind: '박사학위논문', pages: 130, typeId: 'doctor', desc: '장별 집필 계획으로 끝까지 일관되게', inc: ['연구모형과 장별 집필 계획', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '석·박사 전문가 최종 검토, 수정 1회'], cta: '박사논문 의뢰하기' },
+  { kind: '소논문', pages: 15, typeId: 'short', desc: '수업 과제와 학회 발표용 한 편', inc: ['주제와 연구 질문 정리', '본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 전문가 최종 검수, 수정 1회'], cta: '소논문 의뢰하기' },
+  { kind: '학사 졸업논문', pages: 30, typeId: 'bachelor', desc: '졸업 요건에 맞춘 학부 논문', inc: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 전문가 최종 검수, 수정 1회'], cta: '졸업논문 의뢰하기' },
+  { kind: '석사학위논문', pages: 80, typeId: 'master', featured: true, desc: '연구 설계부터 결론까지 학위논문 한 편', inc: ['연구모형·가설·분석 계획 연구 설계서', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 전문가 최종 검수, 수정 1회'], cta: '석사논문 의뢰하기' },
+  { kind: '박사학위논문', pages: 130, typeId: 'doctor', desc: '장별 집필 계획으로 끝까지 일관되게', inc: ['연구모형과 장별 집필 계획', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 전문가 최종 검수, 수정 1회'], cta: '박사논문 의뢰하기' },
 ];
 
 function tierCard(T, { kind, pages, typeId, desc, inc, featured = false, cta }) {
@@ -111,7 +111,7 @@ function tierCard(T, { kind, pages, typeId, desc, inc, featured = false, cta }) 
 <p class="tier-desc">${esc(desc)}</p>
 <p class="tier-was"${list ? '' : ' hidden'}><s class="num" data-tier-list>${list ? `${wonNum(list)}원` : ''}</s><em class="num" data-tier-off>${list ? `${discountRate(list, q.total)}%` : ''}</em></p>
 <p class="tier-price"><b class="num" data-tier-total>${wonNum(q.total)}</b>원</p>
-<p class="tier-meta"><span>AI 집필 하루 완성</span><span>전문가 최종 검토</span></p>
+<p class="tier-meta"><span>실존 참고문헌</span><span>전공 전문가 최종 검수</span></p>
 <a class="btn ${featured ? 'btn-primary' : 'btn-dark'} btn-block" href="${href}">${esc(cta)}</a>
 <ul class="tier-inc">${inc.map((x) => `<li>${T.icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul>
 </article>`;

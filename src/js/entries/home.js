@@ -223,6 +223,7 @@ if (win) {
   // 마지막 문단 중간에서 끊기며 나머지는 모자이크로 가려진다
   const playDemo = async () => {
     if (reduce) {
+      setStep(5, 'wait');
       lock.classList.add('is-on', 'is-locked');
       setLift(finalLift());
       freeScroll();
@@ -267,6 +268,8 @@ if (win) {
     setLift(finalLift(), 900);
     await wait(500); if (!alive()) return;
     setStep(4, 'done');
+    // 마지막 단계(전공 전문가 검수)는 결제 뒤에 사람이 하는 일이라 '대기'로 둔다
+    setStep(5, 'wait');
     wcaret.remove();
     await wait(700); if (!alive()) return;
     freeScroll();

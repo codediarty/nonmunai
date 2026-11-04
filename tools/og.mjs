@@ -29,15 +29,15 @@ const T = createTemplates({ site, root, assetVersion: 'og' });
 const ctx = { site, T, root, assetVersion: 'og', guides: loadGuides(root) };
 const pageDir = path.join(root, 'src/content/pages');
 const targets = new Map();
-targets.set('/assets/img/og/default.png', { kicker: 'AI 논문 완성 서비스', title: '관심 주제 한 줄로\n논문을 완성합니다', sub: '하루 완성 · 참고문헌 100% 실존 검증 · 석·박사 전문가 최종 검토' });
+targets.set('/assets/img/og/default.png', { kicker: '전공 전문가가 검수하는 AI 논문', title: '관심 주제 한 줄로\n논문을 완성합니다', sub: '전공 분야 전문가 최종 검수 · 참고문헌 100% 실존 검증' });
 for (const f of fs.readdirSync(pageDir).filter((x) => x.endsWith('.mjs'))) {
   const mod = await import(pathToFileURL(path.join(pageDir, f)).href);
   for (const p of await mod.default(ctx)) {
     if (!p.ogImage || targets.has(p.ogImage)) continue;
     const isGuide = p.ogImage.includes('/og/guide-');
     const title = p.path === '/' ? '관심 주제 한 줄로\n논문을 완성합니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
-    const kicker = p.path === '/' ? 'AI 논문 완성 서비스' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
-    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '하루 완성 · 참고문헌 100% 실존 검증 · 석·박사 전문가 최종 검토' : p.path === '/ai-thesis/' ? '실존 참고문헌과 본문 인용, 15 Page부터 130 Page까지' : '' });
+    const kicker = p.path === '/' ? '전공 전문가가 검수하는 AI 논문' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
+    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '전공 분야 전문가 최종 검수 · 참고문헌 100% 실존 검증' : p.path === '/ai-thesis/' ? '실존 참고문헌과 본문 인용, 15 Page부터 130 Page까지' : '' });
   }
 }
 
@@ -95,7 +95,8 @@ for (const [rel, t] of targets) {
 const iconPage = await browser.newPage({ viewport: { width: 512, height: 512 }, deviceScaleFactor: 1 });
 for (const [size, file] of [[32, 'favicon-32.png'], [180, 'apple-touch-icon.png'], [192, 'img/logo-192.png'], [512, 'img/logo-512.png']]) {
   await iconPage.setViewportSize({ width: size, height: size });
-  await iconPage.setContent(`<html><body style="margin:0;background:transparent">${ICON_SVG.replace('<svg ', `<svg width="${size}" height="${size}" `)}</body></html>`);
+  const svg = size === 32 ? FAVICON_SVG : ICON_SVG;
+  await iconPage.setContent(`<html><body style="margin:0;background:transparent">${svg.replace('<svg ', `<svg width="${size}" height="${size}" `)}</body></html>`);
   await iconPage.screenshot({ path: path.join(root, 'src/assets', file), omitBackground: true });
 }
 await browser.close();

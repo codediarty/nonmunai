@@ -84,7 +84,7 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
 <p class="pv-sec">2. ${esc(pv.toc[0][1][1] || '연구 목적')}</p><p class="pv-txt">${pv.purpose.map(partsHtml).join('')}</p>
 <p class="pv-ch">${esc((pv.toc[1] || ['제2장 이론적 배경'])[0])}</p><p class="pv-sec">1. ${esc(((pv.toc[1] || [0, []])[1] || [])[0] || '주요 개념')}</p><p class="pv-txt">${pv.theory.map(partsHtml).join('')}</p>
 </div></div>
-<div class="pv-lock"><span class="pv-lock-ic">${IC.lock}</span><b>결제하시면 나머지 ${remain} Page를 완성해 드려요</b><small>실존 참고문헌 ${pv.refs}편 · 석·박사 전문가 최종 검토 · 메일로 전달</small>${cta ? `<a class="btn btn-primary btn-sm pv-lock-go" href="${esc(cta.href)}">${esc(cta.label)}</a>` : ''}</div></div>`;
+<div class="pv-lock"><span class="pv-lock-ic">${IC.lock}</span><b>결제하시면 나머지 ${remain} Page를 완성해 드려요</b><small>실존 참고문헌 ${pv.refs}편 · 전공 분야 전문가 최종 검수 후 메일로 전달</small>${cta ? `<a class="btn btn-primary btn-sm pv-lock-go" href="${esc(cta.href)}">${esc(cta.label)}</a>` : ''}</div></div>`;
     const flow = $('flow');
     const zone = $('zone');
     // 화면 안 위치(지면 스크롤 칸 기준)

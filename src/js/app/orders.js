@@ -251,7 +251,7 @@ ${this.manageCard()}
     if (o.deleted) banners.push(note('올리신 파일과 결과물, 연구 자료가 삭제되었습니다. 주문번호와 결제 기록만 관련 법령에 따라 정해진 기간 보관됩니다.', ''));
     const cells = [
       ['예상 전달일', o.status === 'delivered' || o.status === 'completed' ? (o.deliveredAt ? fmtAt(o.deliveredAt).replace(/ \d\d:\d\d$/, '') + ' 전달' : '전달 완료') : (o.etaLabel || (['quote_requested', 'pending_payment', 'payment_review', 'draft'].includes(o.status) ? '결제 후 확정' : '확인 중'))],
-      ['현재 단계', o.statusLabel],
+      ['현재 단계', o.status === 'review' ? '전문가 검수' : o.statusLabel],
       o.queuePosition && !['delivered', 'completed', 'cancelled'].includes(o.status) ? ['작업 순서', `${o.queuePosition}번째`] : o.filesExpireAt ? ['내려받기 기한', o.deleted ? '파일 삭제됨' : `${Number(o.filesExpireAt.slice(5, 7))}월 ${Number(o.filesExpireAt.slice(8, 10))}일`] : ['주문 금액', won(o.amount)],
     ];
     return `<div class="card ord-card"><div class="ord-head"><div class="ord-hd-txt"><p class="ord-no">주문번호 ${esc(o.orderNo)} · ${esc(fmtAt(o.createdAt))} 접수</p><h1 class="ord-title">${esc(title)}</h1>${(() => { const sub = title === o.productName ? (o.summary || '') : [o.productName, o.summary].filter(Boolean).join(' · '); return sub ? `<p class="muted small">${esc(sub)}</p>` : ''; })()}${sim ? '<p><span class="sim-mark">가상 데이터, 실제 연구 결과 아님</span></p>' : ''}</div>${statusPill(o)}</div>
