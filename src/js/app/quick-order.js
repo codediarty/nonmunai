@@ -20,7 +20,7 @@ const TASKS = [
   ['full', '논문 완성', '주제만 있으면 돼요'],
   ['proposal', '연구계획서', '심사용 계획서'],
   ['edit', '원고 첨삭', '이미 쓴 원고'],
-  ['feedback', '교수님 피드백 반영', '수정 대조표 포함'],
+  ['feedback', '교수님 피드백 반영', '수정 보완·첨삭까지'],
 ];
 const PKG = {
   full: [
@@ -161,7 +161,7 @@ function s1Html() {
   if (!writeLike()) {
     const fb = S.task === 'feedback';
     return `<h2 class="qo-h"><span class="qo-n">1</span>원고를 올려 주세요</h2>
-<p class="qo-help">${fb ? '원고와 교수님 의견을 주시면 항목별로 반영하고, 무엇을 어디서 고쳤는지 수정 대조표로 정리해 드려요.' : '문장과 논리, 인용과 형식을 다듬고 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드려요.'}</p>
+<p class="qo-help">${fb ? '원고와 교수님 의견을 주시면 의견마다 원고에 반영하고, 부족한 내용은 수정 보완, 고친 문장은 첨삭까지 해 드려요. 무엇을 어디서 고쳤는지는 수정 대조표로 정리해 드려요.' : '문장과 논리, 인용과 형식을 다듬고 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드려요.'}</p>
 ${uploader(S, 'manuscript', { label: '기존 원고', required: true, hint: '한글·워드·PDF 모두 괜찮아요. 올리면 분량을 자동으로 계산해 드려요' })}
 <div id="qoDoc">${docInfoHtml()}</div>
 ${fb ? `<div class="field"><label class="label" for="qoFb">교수님 의견<span class="req">*</span></label><textarea class="textarea" id="qoFb" rows="5" data-k="feedbackText" maxlength="8000" placeholder="받은 의견을 그대로 붙여 넣어 주세요.\n예: 1. 연구의 필요성에 최근 자료를 보완할 것">${esc(S.feedbackText)}</textarea><p class="hint" id="qoFbCount">${fbCountText()}</p></div>
@@ -194,7 +194,7 @@ function s2Html() {
     const opts = EDIT_TYPES.filter((t) => findItem(CONFIG.catalog, paperItemCode(t, S.task)));
     const it = findItem(CONFIG.catalog, paperItemCode(S.etype, S.task));
     const unitName = (u) => (u === '쪽' ? ' Page' : u);
-    const unit = it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
+    const unit = it && S.task === 'feedback' ? `피드백 반영·수정 보완·첨삭 ${won(it.price)}` : it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
     return `<h2 class="qo-h"><span class="qo-n">2</span>어떤 논문인가요?</h2>
 <div class="qo-seg" role="radiogroup" aria-label="논문 종류">${opts.map((t) => `<label class="qo-seg-i${S.etype === t ? ' is-on' : ''}"><input type="radio" name="qoEtype" value="${t}"${S.etype === t ? ' checked' : ''}>${esc((PAPER_TYPES.find((x) => x.id === t) || {}).short || t)}</label>`).join('')}</div>
 <p class="hint">${esc(unit)}</p>
@@ -235,7 +235,7 @@ function moreHtml() {
 <div class="qo-more-in">
 ${wantsMethod ? `<div class="field qo-method"><span class="label" id="qoMethodL">연구 방법</span><div class="qo-seg" role="radiogroup" aria-labelledby="qoMethodL">${METHODS.map(([v, t]) => `<label class="qo-seg-i${curMethod === v ? ' is-on' : ''}"><input type="radio" name="qoMethod" value="${v}"${curMethod === v ? ' checked' : ''}>${t}</label>`).join('')}</div><p class="hint">어떤 방법을 골라도 금액은 같아요.</p></div>` : ''}
 ${direct ? '' : `<div class="qo-adds">
-${ppt ? box('ppt', '심사 발표 PPT', ppt.price, '발표 자료 15~20장과 장표별 스크립트') : ''}
+${ppt ? box('ppt', '심사 발표 PPT·PDF', ppt.price, '발표 자료 15~20장(PPT·PDF)과 장표별 스크립트') : ''}
 ${pr ? box('priority', '우선 처리', pr.price, prOff ? '지금은 작업 일정상 받을 수 없어요' : '작업 순서를 앞당겨 더 빨리 보내 드려요', prOff) : ''}
 ${en && S.task === 'full' ? box('english', '영문 논문으로 작성', en.unitPrice * enBlocks, `${en.unitSize} Page마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위`) : ''}
 ${fm && S.task !== 'feedback' ? box('format', '학교 양식 상세 적용', fm.price, '여백, 글꼴, 표·그림, 목차 서식까지 제출 양식에 맞춰 드려요') : ''}
@@ -278,7 +278,7 @@ function orderLabel() {
   const p = curPkg();
   return writeLike()
     ? `${p ? p.t : (TYPE_LABEL[typeId] || '논문')} ${pageLabel(pages)}`.trim()
-    : `${(PAPER_TYPES.find((t) => t.id === typeId) || {}).short || ''} ${S.task === 'edit' ? '원고 첨삭·교정' : '교수님 피드백 반영'}`.trim();
+    : `${(PAPER_TYPES.find((t) => t.id === typeId) || {}).short || ''} ${S.task === 'edit' ? '원고 첨삭·교정' : '피드백 반영·수정 보완·첨삭'}`.trim();
 }
 const verb = () => ({ edit: '첨삭 의뢰하기', feedback: '반영 의뢰하기', proposal: '의뢰하기', full: '의뢰하기' }[S.task]);
 

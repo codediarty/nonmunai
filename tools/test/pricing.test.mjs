@@ -11,7 +11,7 @@ t('논문 유형·작업 변경 시 가격 즉시 변경', () => {
   assert.equal(computeQuote(DEFAULT_CATALOG, base).total, 99000);
   assert.equal(computeQuote(DEFAULT_CATALOG, { ...base, paper: { typeId: 'doctor', task: 'full' } }).total, 199000);
   assert.equal(computeQuote(DEFAULT_CATALOG, { ...base, paper: { typeId: 'master', task: 'edit' } }).total, 49000);
-  assert.equal(computeQuote(DEFAULT_CATALOG, { ...base, paper: { typeId: 'master', task: 'feedback' } }).total, 59000);
+  assert.equal(computeQuote(DEFAULT_CATALOG, { ...base, paper: { typeId: 'master', task: 'feedback' } }).total, 99000);
   assert.equal(computeQuote(DEFAULT_CATALOG, { ...base, paper: { typeId: 'journal', task: 'full' } }).total, 99000);
 });
 t('추가 분량·옵션 가산', () => {
@@ -22,7 +22,7 @@ t('추가 분량·옵션 가산', () => {
 });
 t('피드백 항목 수 기반 가산', () => {
   const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'feedback', feedbackItems: 17 } });
-  assert.equal(q.total, 59000 + 2 * 19000);
+  assert.equal(q.total, 99000 + 2 * 19000);
 });
 t('설문 모집 의뢰는 견적형(결제 불가)', () => {
   const q = computeQuote(DEFAULT_CATALOG, { service: 'survey', survey: { mode: 'full', recruit: 'us' } });
@@ -53,8 +53,8 @@ t('심사 발표 PPT·영문 논문 작성·논문 첨삭 옵션', () => {
   const en = q.lines.find((l) => l.code === 'A-ENGLISH');
   assert.equal(en.qty, 8);
   assert.equal(en.amount, 8 * 29000);
-  assert.ok(q.lines.some((l) => l.code === 'A-PPT' && l.amount === 39000));
-  assert.equal(q.total, 99000 + 8 * 29000 + 39000);
+  assert.ok(q.lines.some((l) => l.code === 'A-PPT' && l.amount === 49000));
+  assert.equal(q.total, 99000 + 8 * 29000 + 49000);
   // 영문 작성은 전체 구성·초고 완성에만, 논문 첨삭은 피드백 반영·통계·설문에만 붙는다
   const fb = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'doctor', task: 'feedback' }, addons: { english: true, editing: true } });
   assert.ok(!fb.lines.some((l) => l.code === 'A-ENGLISH'));
@@ -63,16 +63,16 @@ t('심사 발표 PPT·영문 논문 작성·논문 첨삭 옵션', () => {
   assert.ok(!full.lines.some((l) => /-EDIT$/.test(l.code)));
   const st = computeQuote(DEFAULT_CATALOG, { service: 'statistics', statistics: { hasData: true, output: 'interp' }, addons: { editing: true, editingType: 'journal', ppt: true } });
   assert.ok(st.lines.some((l) => l.code === 'P-JOURNAL-EDIT'));
-  assert.equal(st.total, 69000 + 39000 + 39000);
+  assert.equal(st.total, 69000 + 39000 + 49000);
   const sv = computeQuote(DEFAULT_CATALOG, { service: 'survey', survey: { mode: 'full', recruit: 'none' }, addons: { editing: true, editingType: 'nope' } });
   assert.ok(sv.lines.some((l) => l.code === 'P-MASTER-EDIT'), '알 수 없는 유형은 석사 기준');
 });
 t('논문 완성 대표 요금(소논문 15·학사 30·학술지 20·석사 80·박사 130 Page)', () => {
   const q = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
-  assert.equal(q('short', 15).total, 29000);
+  assert.equal(q('short', 15).total, 49000);
   assert.equal(q('short', 15).days, 2);
-  assert.equal(q('short', 20).total, 29000 + 9000);
-  assert.equal(q('short', 25).total, 29000 + 9000 * 2);
+  assert.equal(q('short', 20).total, 49000 + 9000);
+  assert.equal(q('short', 25).total, 49000 + 9000 * 2);
   assert.ok(q('short', 20).lines.some((l) => l.code === 'P-SHORT-FULL-X' && l.qty === 1));
   assert.equal(q('bachelor', 30).total, 59000);
   assert.equal(q('journal', 20).total, 99000);
@@ -99,14 +99,14 @@ t('포함 항목의 분량은 주문한 Page로 표시', () => {
 });
 
 t('정가와 할인 행사 할인율', () => {
-  // 할인 행사 가격은 정가의 반값(50%)
-  for (const [code, price, list] of [['P-SHORT-FULL', 29000, 59000], ['P-BACHELOR-FULL', 59000, 119000], ['P-JOURNAL-FULL', 99000, 199000], ['P-MASTER-FULL', 99000, 199000], ['P-DOCTOR-FULL', 199000, 399000], ['P-BACHELOR-PROP', 29000, 59000], ['P-MASTER-PROP', 69000, 139000], ['P-DOCTOR-PROP', 99000, 199000]]) {
+  // 정가는 판매가의 두 배보다 높게 잡고, 할인율은 55~60%(반값으로 딱 떨어지지 않게)
+  for (const [code, price, list, rate] of [['P-SHORT-FULL', 49000, 109000, 55], ['P-BACHELOR-FULL', 59000, 139000, 57], ['P-JOURNAL-FULL', 99000, 229000, 56], ['P-MASTER-FULL', 99000, 249000, 60], ['P-DOCTOR-FULL', 199000, 459000, 56], ['P-BACHELOR-PROP', 29000, 69000, 57], ['P-MASTER-PROP', 69000, 159000, 56], ['P-DOCTOR-PROP', 99000, 229000, 56]]) {
     assert.equal(listPriceFor(code, price), list, code);
-    assert.equal(discountRate(list, price), 50, code);
+    assert.equal(discountRate(list, price), rate, code);
   }
   // 정가가 없거나 판매가보다 낮으면 표시하지 않음
   assert.equal(listPriceFor('T-BASIC', 49000), 0);
-  assert.equal(listPriceFor('P-SHORT-FULL', 60000), 0);
+  assert.equal(listPriceFor('P-SHORT-FULL', 120000), 0);
   assert.equal(discountRate(0, 99000), 0);
   assert.equal(pageLabel(80), '80 Page');
 });

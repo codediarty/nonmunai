@@ -663,7 +663,7 @@ async function tests() {
   }));
   await check(10, '처음부터 끝까지: 설계·모집(응답 수집)·분석·해석 범위를 안내하고 결과물에 반영', async () => {
     const f = await surveyS();
-    for (const w of ['설문지 작성부터 통계 해석까지 범위', '설문지 작성', '응답 수집', '모집', '통계분석', '해석']) has(f.fullNote, w, '범위 안내');
+    for (const w of ['설문지 작성부터 설문 결과·통계 해석까지 범위', '설문지 작성', '응답 수집', '모집', '통계분석', '해석']) has(f.fullNote, w, '범위 안내');
     for (const d of ['설문지(Word)', '익명화 응답 데이터', 'APA 형식 통계표', '논문 맞춤 결과 해석', '연구결과 정리']) ok(f.deliverables.includes(d), `받을 결과물에 "${d}" 없음: ${f.deliverables.join(', ')}`);
     eq(f.planErr, '연구계획서가 있는지 골라 주세요.', '자료 단계 안내');
   });
@@ -994,7 +994,7 @@ async function tests() {
     await W.go(p, 'field'); await W.pick(p, 'common.fieldId', 'edu'); await W.go(p, 'topic');
     await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', '교사의 직무스트레스와 소진의 관계'); await W.go(p, 'toc');
     await W.pick(p, 'paper.hasToc', 'no'); await W.go(p, 'format'); await W.pick(p, 'paper.hasFormat', 'no'); await W.go(p, 'method'); await W.go(p, 'task');
-    for (const [task, price] of [['edit', '49,000원'], ['feedback', '59,000원'], ['proposal', '69,000원'], ['full', '99,000원']]) {
+    for (const [task, price] of [['edit', '49,000원'], ['feedback', '99,000원'], ['proposal', '69,000원'], ['full', '99,000원']]) {
       await W.pick(p, 'paper.task', task);
       await W.waitPrice(p, price, `${task} 작업 금액`);
     }
@@ -1009,7 +1009,7 @@ async function tests() {
   }));
   await check(22, '설문: 의뢰 유형을 바꾸면 견적이 바뀌고, "+금액" 표시는 실제로 그만큼 더해짐', async () => withCtx({}, async (p) => {
     await surveyToMode(p);
-    for (const [mode, price] of [['full', '129,000원'], ['new', '39,000원'], ['edit', '29,000원'], ['analyze', '69,000원']]) {
+    for (const [mode, price] of [['full', '149,000원'], ['new', '39,000원'], ['edit', '29,000원'], ['analyze', '69,000원']]) {
       await W.pick(p, 'survey.mode', mode); await W.waitPrice(p, price, `${mode} 유형 금액`);
     }
     await W.go(p, 'materials'); await W.upload(p, 'data', [csv()]); await W.go(p, 'analysis');
@@ -1021,7 +1021,7 @@ async function tests() {
     await W.go(p, 'analysis');
     await surchargeLabelsHold(p, 'survey.analysis', '처음부터 끝까지');
     await W.go(p, 'deliver');
-    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '158,000원', '설문 우선 처리');
+    await p.check('#wzStep [data-bool="addons.priority"]'); await W.waitPrice(p, '178,000원', '설문 우선 처리');
   }));
   await check(22, '통계: 결과물·분석 방법을 바꾸면 견적이 바뀌고, "+금액"·"별도 견적" 표시가 실제 견적과 일치', async () => withCtx({}, async (p) => {
     await statsToData(p);
@@ -1941,8 +1941,8 @@ async function tests() {
     eq(await p.$eval('input[name="qoPkg"]:checked', (e) => e.value), 'master80', '고른 논문 종류');
     const sum = await text(p, '#qoSum');
     has(sum, '99,000원', '결제 금액');
-    has(sum, '199,000원', '정가');
-    has(sum, '반값', '할인 표시');
+    has(sum, '249,000원', '정가');
+    has(sum, '60% 할인', '할인 표시');
     has(await text(p, '#qoRead'), '번아웃', 'AI가 읽은 키워드');
     await p.waitForFunction(() => document.querySelector('#qoPv .pv') && document.querySelector('#qoPv .pv').dataset.state === 'done', null, { timeout: 20000 });
     ok(await p.$('#qoPv .pv-lockzone.is-locked'), '미리보기 모자이크가 걸리지 않음');
@@ -2016,7 +2016,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 15000 });
       await p.waitForSelector('#nmBanner', { timeout: 8000 });
       const banner = await text(p, '#nmBanner');
-      for (const s of ['석사학위논문 80 Page', '199,000원', '온라인 단독 반값', '99,000원']) has(banner, s, '결제 화면 안내');
+      for (const s of ['석사학위논문 80 Page', '249,000원', '온라인 단독 60% 할인', '99,000원']) has(banner, s, '결제 화면 안내');
       await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', '최간호'); set('ordererCall', '010-3456-7890'); set('ordererEmail', 'e2e-direct@example.com'); });
       await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
       await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });
@@ -2069,12 +2069,12 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
     await p.fill('#qoTopic', '호텔 서비스 품질');
     await p.fill('#qoMajor', '관광경영학');
     await p.click('.qo-pkg:has(input[value="short15"])');
-    await waitText(p, '#qoBar', '29,000원');
+    await waitText(p, '#qoBar', '49,000원');
     await p.click('.qo-more > summary');
     await p.click('.qo-add:has(input[data-add="priority"])');
-    await waitText(p, '#qoBar', '58,000원');
+    await waitText(p, '#qoBar', '78,000원');
     await p.click('.qo-add:has(input[data-add="priority"])');
-    await waitText(p, '#qoBar', '29,000원');
+    await waitText(p, '#qoBar', '49,000원');
     await p.click('#qoBar button');
     await waitText(p, '#qoErr', '이름');
   }));

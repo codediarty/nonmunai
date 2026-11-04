@@ -18,7 +18,7 @@ const SLOTS_BY_SERVICE = {
 const NEXT = {
   paper: [
     { href: '/statistics/new/', t: '통계분석 의뢰', d: '데이터 분석과 결과 해석까지' },
-    { href: '/survey/new/', t: '설문조사 의뢰', d: '설문지 작성부터 통계 해석까지' },
+    { href: '/survey/new/', t: '설문조사 의뢰', d: '설문지 작성부터 설문 결과·통계 해석까지' },
     { href: '/paper/new/?task=feedback', t: '교수님 피드백 반영', d: '심사 의견을 항목별로 반영' },
   ],
   survey: [

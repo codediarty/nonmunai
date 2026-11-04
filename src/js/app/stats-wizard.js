@@ -61,7 +61,7 @@ function extraAddonsHtml(s) {
   const ed = findItem(cat, paperItemCode(EDIT_TYPE[s.common.purpose] || 'master', 'edit'));
   const box = (key, title, price, desc) => `<label class="check addon"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
   return `<div class="addons">
-${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '분석 결과와 논문 핵심을 담은 발표 자료 15~20장과 발표 스크립트를 드립니다.') : ''}
+${ppt ? box('ppt', '심사 발표 PPT·PDF 제작', ppt.price, '분석 결과와 논문 핵심을 담은 발표 자료 15~20장(PPT·PDF)과 발표 스크립트를 드립니다.') : ''}
 ${ed && !isSim(s) ? box('editing', '논문 첨삭·교정', ed.price, `직접 쓰신 논문 원고의 문장·논리를 다듬습니다(${esc(ed.name)}, 기준 ${ed.baseUnits}${ed.unitLabel}). 원고는 주문 뒤 올려 주셔도 됩니다.`) : ''}
 ${pr ? box('priority', '우선 처리', pr.price, '일정상 가능한 경우 작업 순서를 앞당깁니다.') : ''}
 </div>`;

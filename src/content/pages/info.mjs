@@ -17,11 +17,11 @@ export default function info({ T }) {
   const LP = (code, t, pg) => won(listPriceFor(code, fullQuote(t, pg).total));
   const B = (code) => item(code).baseUnits;
   const pricingFaq = [
-    { q: '논문 작성 비용은 얼마인가요?', a: `논문AI에서 주문하시면 ${PROMO_NAME}으로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
+    { q: '논문 작성 비용은 얼마인가요?', a: `논문AI에서 주문하시면 ${PROMO_NAME}로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
     { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 논문AI에서 주문하시면 ${PROMO_NAME} ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 박사의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
-    { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 박사학위논문 ${B('P-DOCTOR-EDIT')} Page 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 ${B('P-JOURNAL-EDIT')} Page 기준 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이에요. 교수님 피드백 반영은 석사학위논문 ${B('P-MASTER-FB')}개 항목 기준 ${price('P-MASTER-FB')}이에요.` },
+    { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 박사학위논문 ${B('P-DOCTOR-EDIT')} Page 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 ${B('P-JOURNAL-EDIT')} Page 기준 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이에요. 교수님 피드백 반영·수정 보완·첨삭은 석사·박사학위논문 모두 ${price('P-MASTER-FB')}이에요.` },
     { q: '논문 컨설팅 비용은 얼마인가요?', a: `연구 설계(연구모형, 가설, 목차, 표본 수)는 무료 논문 설계에서 먼저 받아 보실 수 있어요. 연구계획서 작성은 석사 ${price('P-MASTER-PROP')}, 박사 ${price('P-DOCTOR-PROP')}이고, 필요한 단계만 골라 맡기실 수 있어서 막힌 단계의 비용만 내시면 돼요.` },
-    { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 기본형 ${price('T-BASIC')}, 표준형 ${price('T-INTERP')}이고, 연구결과(4장) 작성까지 맡기시면 ${price('T-CHAPTER')}이에요. 매개·조절효과 같은 심화 분석은 ${price('T-ADV')}이 더해지고, 설문지 작성부터 통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요.` },
+    { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 기본형 ${price('T-BASIC')}, 표준형 ${price('T-INTERP')}이고, 연구결과(4장) 작성까지 맡기시면 ${price('T-CHAPTER')}이에요. 매개·조절효과 같은 심화 분석은 ${price('T-ADV')}이 더해지고, 설문지 작성부터 설문 결과·통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요.` },
     { q: '표시된 가격에 부가세가 포함되어 있나요?', a: '네, 모든 가격은 부가세를 포함한 금액이에요.' },
     { q: '응답자 모집 같은 작업은 어떻게 결제하나요?', a: '응답자 모집이나 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은, 자료를 먼저 확인하고 견적을 확정해 드린 뒤에 결제하시면 돼요.' },
   ];
@@ -44,7 +44,7 @@ export default function info({ T }) {
     description: `논문 작성 비용(${PROMO_NAME}): 석사논문 80 Page ${W('master', 80)}, 박사논문 130 Page ${W('doctor', 130)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 소논문 15 Page ${W('short', 15)}. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수 포함. 논문 첨삭, 컨설팅, 통계분석·설문조사 가격까지 한눈에 보세요.`,
     keywords: ['논문 작성 비용', '논문 첨삭 비용', '논문 컨설팅 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 자동작성 가격', '논문 교정 비용', '논문 통계분석 비용', '설문조사 비용'],
     crumbs: [['홈', '/'], ['가격 안내', '/pricing/']], faq: pricingFaq, priority: '0.9', styles: ['site', 'home'], scripts: ['pricing'],
-    body: `${pageHead(T, `논문 한 편, ${PROMO_NAME}으로`, `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}에서 ${PROMO_NAME} ${qn('master', 80)}, 박사학위논문 130 Page는 정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)}에서 ${qn('doctor', 130)}이에요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수까지 모두 기본으로 들어 있어요.`, '/pricing/', '가격 안내')}
+    body: `${pageHead(T, `논문 한 편, ${PROMO_NAME}로`, `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}에서 ${PROMO_NAME} ${qn('master', 80)}, 박사학위논문 130 Page는 정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)}에서 ${qn('doctor', 130)}이에요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수까지 모두 기본으로 들어 있어요.`, '/pricing/', '가격 안내')}
 <section class="sec sec-tight" id="tiers" aria-labelledby="tiers-h"><div class="wrap">
 <div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 완성</h2><p>관심 주제와 전공을 적고 논문 종류만 고르시면 바로 시작해요. AI가 집필하고 같은 전공 분야 박사가 최종 검수를 마친 완성본을 상품별 기본 납기 안에 메일로 보내 드려요.</p></div>
 ${pageTiers(T)}

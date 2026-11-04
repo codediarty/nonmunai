@@ -95,7 +95,7 @@
       if (o.list && o.list > o.price) {
         pr.appendChild(el('s', 'color:#8C95AA;font-size:13.5px', '정가 ' + won(o.list)));
         var off = Math.floor((1 - o.price / o.list) * 100);
-        pr.appendChild(el('em', 'font-style:normal;font-weight:800;color:#C8102E;font-size:13.5px', off === 50 || off === 51 ? '온라인 단독 반값' : '온라인 단독 ' + off + '% 할인'));
+        pr.appendChild(el('em', 'font-style:normal;font-weight:800;color:#C8102E;font-size:13.5px', off === 50 || off === 51 ? '온라인 단독가' : '온라인 단독 ' + off + '% 할인'));
       }
       pr.appendChild(el('b', 'font-size:18px;font-weight:800', won(o.price)));
       b.appendChild(pr);

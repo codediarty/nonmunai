@@ -17,7 +17,7 @@ const UL = (l) => (l === '쪽' ? ' Page' : (l || ''));
 const TASKS = [
   { v: 'full', t: '논문 완성', d: '주제·설계부터 장별 본문까지 완성해 드려요. 기존 자료가 있으면 함께 올려 주세요.' },
   { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
-  { v: 'feedback', t: '교수님 피드백 반영', d: '피드백을 항목별로 반영하고 수정 대조표를 작성하며, 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
+  { v: 'feedback', t: '교수님 피드백 반영·수정 보완·첨삭', d: '피드백을 항목별로 반영하고 부족한 내용은 수정 보완, 고친 원고는 첨삭해 드려요. 수정 대조표를 작성하고 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
   { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
 ];
 const PROPOSAL_TYPES = ['master', 'doctor', 'bachelor'];
@@ -225,7 +225,7 @@ function addonsHtml(s) {
   const prOff = CONFIG.settings && String(CONFIG.settings.priorityEnabled) === 'false';
   const box = (key, title, price, desc, extra = '') => `<label class="check addon${extra}"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}${extra.includes('is-off') ? ' disabled' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
   return `<div class="addons">
-${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '논문 핵심을 담은 발표 자료 15~20장과 장표별 발표 스크립트를 함께 드립니다.') : ''}
+${ppt ? box('ppt', '심사 발표 PPT·PDF 제작', ppt.price, '논문 핵심을 담은 발표 자료 15~20장(PPT·PDF)과 장표별 발표 스크립트를 함께 드립니다.') : ''}
 ${en && task === 'full' ? box('english', '영문 논문 작성', en.unitPrice * enBlocks, `원고를 학술 영어로 작성해 드려요. ${en.unitSize} Page마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위입니다.`) : ''}
 ${ed ? box('editing', '논문 전체 첨삭·교정', ed.price, `피드백 반영과 함께 원고 전체의 문장·논리를 다듬습니다(기준 ${ed.baseUnits}${ed.unitLabel}).`) : ''}
 ${fm ? box('format', '학교·학술지 양식 상세 적용', fm.price, '여백, 글꼴, 제목 위계, 표·그림 서식, 목차 서식까지 제출 양식에 맞춥니다.') : ''}

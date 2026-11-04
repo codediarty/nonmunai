@@ -10,7 +10,7 @@ import { esc, won, readLineHtml } from '../core/render.js';
 
 const PURPOSES = [['master', '석사학위논문'], ['doctor', '박사학위논문'], ['journal', '학술지 논문'], ['course', '졸업논문·과제'], ['org', '기업·기관 조사'], ['personal', '개인 연구']];
 const MODES = [
-  { v: 'full', t: '설문지 작성부터 통계 해석까지', badge: '추천', d: '설문지 작성, 온라인 설문 진행, 응답 정리, 논문 맞춤 통계 분석과 해석까지 한 번에', code: 'S-FULL' },
+  { v: 'full', t: '설문지 작성부터 설문 결과·통계 해석까지', badge: '추천', d: '설문지 작성, 온라인 설문 진행, 설문 결과 정리, 논문 맞춤 통계 분석과 해석까지 한 번에', code: 'S-FULL' },
   { v: 'new', t: '설문지 작성', d: '연구 변인에 맞는 검증된 척도로 문항을 구성하고 배포용 링크까지 만듭니다', code: 'S-NEW' },
   { v: 'edit', t: '설문지 점검·수정', d: '이미 만든 설문지의 문항과 척도를 점검하고 고칩니다', code: 'S-EDIT' },
   { v: 'feedback', t: '교수님 피드백 반영', d: '설문지 의견을 항목별로 반영해 수정표를 작성하고, 반영 부분은 파란색으로 표시합니다', code: 'S-FB' },
@@ -50,7 +50,7 @@ function extraAddonsHtml(s) {
   const ed = findItem(cat, paperItemCode(EDIT_TYPE[s.common.purpose] || 'master', 'edit'));
   const box = (key, title, price, desc) => `<label class="check addon"><input type="checkbox" data-bool="addons.${key}"${s.addons[key] ? ' checked' : ''}><span><b>${title} <em class="num">+${won(price)}</em></b><small>${desc}</small></span></label>`;
   return `<div class="addons">
-${ppt ? box('ppt', '심사 발표 PPT 제작', ppt.price, '조사 결과와 논문 핵심을 담은 발표 자료 15~20장과 발표 스크립트를 드립니다.') : ''}
+${ppt ? box('ppt', '심사 발표 PPT·PDF 제작', ppt.price, '조사 결과와 논문 핵심을 담은 발표 자료 15~20장(PPT·PDF)과 발표 스크립트를 드립니다.') : ''}
 ${ed ? box('editing', '논문 첨삭·교정', ed.price, `직접 쓰신 논문 원고의 문장·논리를 다듬습니다(${esc(ed.name)}, 기준 ${ed.baseUnits}${ed.unitLabel}). 원고는 주문 뒤 올려 주셔도 됩니다.`) : ''}
 ${pr ? box('priority', '우선 처리', pr.price, '가능한 경우 작업 순서를 앞당깁니다. 응답 수집 기간은 줄어들지 않습니다.') : ''}
 </div>`;
@@ -105,10 +105,10 @@ ${s.common.topicKnown === 'no' ? `<div class="cond">${textField('common.keywords
     },
   },
   {
-    id: 'mode', title: '무엇을 맡기시겠어요?', help: '처음이라면 설문지 작성부터 통계 해석까지 맡기기를 추천합니다.',
+    id: 'mode', title: '무엇을 맡기시겠어요?', help: '처음이라면 설문지 작성부터 설문 결과·통계 해석까지 맡기기를 추천합니다.',
     render: (s) => {
       let out = choice('survey.mode', s.survey.mode, MODES.map((m) => { const it = findItem(CONFIG.catalog, m.code); return { v: m.v, t: m.t, d: m.d, badge: m.badge, side: it ? `${won(it.price)}부터` : '' }; }));
-      if (s.survey.mode === 'full') out += note('<b>설문지 작성부터 통계 해석까지 범위</b><br>① 연구 목적에 맞는 설문지 작성과 척도 선정 ② 온라인 설문 제작과 참여 안내문 ③ 설문조사 진행과 응답 수집 관리(직접 수집 또는 모집 의뢰) ④ 응답 데이터 정리·익명화 ⑤ 논문 맞춤 통계분석과 결과 해석 ⑥ 연구결과 정리. 응답자 모집을 맡기실 경우 모집 비용은 확정 견적 후 결제합니다.');
+      if (s.survey.mode === 'full') out += note('<b>설문지 작성부터 설문 결과·통계 해석까지 범위</b><br>① 연구 목적에 맞는 설문지 작성과 척도 선정 ② 온라인 설문 제작과 참여 안내문 ③ 설문조사 진행과 응답 수집 관리(직접 수집 또는 모집 의뢰) ④ 설문 결과 정리(문항별 응답 결과 표·그래프)와 응답 데이터 정리·익명화 ⑤ 논문 맞춤 통계분석과 결과 해석 ⑥ 연구결과 정리. 응답자 모집을 맡기실 경우 모집 비용은 확정 견적 후 결제합니다.');
       return out;
     },
     valid: (s) => (s.survey.mode ? null : '의뢰 유형을 골라 주세요.'),

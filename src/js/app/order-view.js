@@ -86,7 +86,7 @@ export function isSimulation(o) {
 }
 
 const TASK_LABEL = { full: '논문 완성(전체 구성·본문)', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
-const SURVEY_MODE = { full: '설문지 작성부터 통계 해석까지', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영', analyze: '설문 응답 통계 분석·해석' };
+const SURVEY_MODE = { full: '설문지 작성부터 설문 결과·통계 해석까지', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영', analyze: '설문 응답 통계 분석·해석' };
 const SURVEY_TARGET = { auto: '추천 받기', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인', nurse: '간호사' };
 const STAT_OUTPUT = { table: '논문 맞춤 통계분석 기본형', interp: '논문 맞춤 통계분석 표준형', chapter: '통계분석과 연구결과 작성', revise: '통계 재분석·피드백 반영' };
 const RECRUIT = { us: '모집·배포 의뢰', self: '직접 수집', none: '설문지만' };

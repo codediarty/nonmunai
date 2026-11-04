@@ -1,6 +1,6 @@
 import { faqBlock, ctaBand, price, item, pageTiers, verifiedBadge, verifiedCard } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
-import { computeQuote, DEFAULT_CATALOG, won, listPriceFor, offText, PROMO_NAME, PROMO_SHORT } from '../../js/core/pricing.js';
+import { computeQuote, DEFAULT_CATALOG, won, listPriceFor, offText, discountRate, PROMO_NAME, PROMO_SHORT } from '../../js/core/pricing.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPT, DEMO_TITLE } from '../../js/core/preview.js';
 import { HOME_FAQ as FAQ_TOP, ALL_FAQ } from '../faq.mjs';
 
@@ -182,7 +182,7 @@ ${REFS.map((r) => `<tr><td><b>${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><small
 
 <section class="sec" id="pricing" aria-labelledby="tier-h">
 <div class="wrap">
-<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME}</p><h2 class="h-2 price-h" id="tier-h">석사논문 <span class="nowrap">80 Page</span>, <span class="num nowrap" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원</h2><p>정가 ${won(L80)}인 석사학위논문을 논문AI에서는 반값에 맡기실 수 있어요. 박사학위논문 130 Page는 정가 ${won(L130)}에서 <span data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요. 실존 참고문헌과 본문 인용, <span class="nowrap">전공 분야 박사</span>의 최종 검수까지 모두 들어 있어요.</p></div>
+<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME}</p><h2 class="h-2 price-h" id="tier-h">석사논문 <span class="nowrap">80 Page</span>, <span class="num nowrap" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원</h2><p>정가 ${won(L80)}인 석사학위논문을 논문AI에서는 ${discountRate(L80, Q80.total)}% 할인된 가격에 맡기실 수 있어요. 박사학위논문 130 Page는 정가 ${won(L130)}에서 <span data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요. 실존 참고문헌과 본문 인용, <span class="nowrap">전공 분야 박사</span>의 최종 검수까지 모두 들어 있어요.</p></div>
 ${pageTiers(T)}
 <p class="tiers-foot">학술지 투고논문 20 Page는 ${won(Q20.total)}이에요. 논문 첨삭, 교수님 피드백 반영, 통계분석 가격은 <a href="${T.u('/pricing/')}">전체 가격표</a>에서 확인해 보세요.</p>
 </div>
@@ -257,11 +257,11 @@ ${pageTiers(T)}
 <div class="svc2">
 ${[
     ['file-pen-line', '논문 첨삭·교정', '문장과 논리, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
-    ['message-square-text', '교수님 피드백 반영', '수정 대조표를 만들고 반영한 부분을 파란색으로 표시해 드려요.', `석사 10개 항목 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
+    ['message-square-text', '교수님 피드백 반영', '피드백 반영과 수정 보완, 첨삭까지 하고 반영한 부분을 파란색으로 표시해 드려요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
     ['clipboard-list', '연구계획서', '연구 목적과 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `석사 ${price('P-MASTER-PROP')}`, '/research-proposal/'],
-    ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문조사 진행, 통계 해석까지 한 번에 맡길 수 있어요.', price('S-FULL'), '/survey/'],
+    ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문조사 진행, 설문 결과 정리와 통계 해석까지 한 번에 맡길 수 있어요.', price('S-FULL'), '/survey/'],
     ['chart-column', '논문 맞춤 통계분석', '주제와 가설에 맞는 분석을 설계하고 APA 통계표와 해석을 드려요.', `표준형 ${price('T-INTERP')}`, '/statistics/'],
-    ['presentation', '심사 발표 PPT', '논문 핵심을 담은 발표 자료와 장표별 스크립트를 만들어 드려요.', `${price('A-PPT')}`, '/pricing/'],
+    ['presentation', '심사 발표 PPT·PDF', '논문 핵심을 담은 발표 자료(PPT·PDF)와 장표별 스크립트를 만들어 드려요.', `${price('A-PPT')}`, '/pricing/'],
   ].map(([ic, t, d, p, h]) => `<a class="svc2-item" href="${T.u(h)}"><span class="svc2-ic">${T.icon(ic)}</span><b>${esc(t)}</b><span class="svc2-d">${esc(d)}</span><span class="svc2-p">${esc(p)}</span></a>`).join('')}
 </div>
 <div class="svc svc-quick"><span class="svc-quick-t">바로 신청하기</span><a class="btn btn-dark" href="${T.u('/paper/new/')}">논문 의뢰하기</a><a class="btn btn-ghost" href="${T.u('/survey/new/')}">설문조사 의뢰하기</a><a class="btn btn-ghost" href="${T.u('/statistics/new/')}">통계분석 의뢰하기</a></div>
@@ -364,7 +364,7 @@ ${ctaBand(T, { title: '관심 주제 한 줄이면 시작돼요', text: '주제�
         { '@type': 'Offer', name: '학술지 투고논문 20 Page 완성', price: Q20.total, priceCurrency: 'KRW', url: T.abs('/journal-paper/') },
         { '@type': 'Offer', name: '논문 첨삭·교정', price: item('P-MASTER-EDIT').price, priceCurrency: 'KRW', url: T.abs('/thesis-editing/') },
         { '@type': 'Offer', name: '교수님 피드백 반영', price: item('P-MASTER-FB').price, priceCurrency: 'KRW', url: T.abs('/professor-feedback/') },
-        { '@type': 'Offer', name: '설문조사 원스톱(설문지 작성부터 통계 해석까지)', price: item('S-FULL').price, priceCurrency: 'KRW', url: T.abs('/survey/') },
+        { '@type': 'Offer', name: '설문조사 원스톱(설문지 작성부터 설문 결과·통계 해석까지)', price: item('S-FULL').price, priceCurrency: 'KRW', url: T.abs('/survey/') },
         { '@type': 'Offer', name: '논문 맞춤 통계분석 표준형', price: item('T-INTERP').price, priceCurrency: 'KRW', url: T.abs('/statistics/') },
       ] },
     }],

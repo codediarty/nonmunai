@@ -35,7 +35,7 @@ export function priceTable(T, codes, { caption = '' } = {}) {
     const ul = it.unitLabel === '쪽' ? ' Page' : (it.unitLabel || '');
     const unit = it.baseUnits ? `기준 ${it.baseUnits}${ul}` : '';
     const list = listPriceFor(c, it.price);
-    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
+    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${it.unitLabel === '항목' ? '<span class="pt-unit">수정 대조표 · 반영 부분 파란색 표시본 포함</span>' : unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="price-table">${caption ? `<caption>${esc(caption)}</caption>` : ''}<thead><tr><th scope="col">상품</th><th scope="col">기본 납기</th><th scope="col">가격(부가세 포함)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -91,7 +91,7 @@ export const readLine = readLineHtml;
 
 export { tocToText };
 
-// 논문 완성 가격 카드(소논문 15 Page·학사 30 Page·석사 80 Page·박사 130 Page): 정가와 할인 이름(온라인 단독 반값)을 함께 보여 준다(동작은 js/app/tiers.js)
+// 논문 완성 가격 카드(소논문 15 Page·학사 30 Page·석사 80 Page·박사 130 Page): 정가와 할인 이름(온라인 단독가)을 함께 보여 준다(동작은 js/app/tiers.js)
 export const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
 const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
 export const TIERS = [
