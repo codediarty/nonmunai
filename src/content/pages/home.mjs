@@ -61,6 +61,22 @@ export function readChips(r) {
   return chips.map((c) => `<span class="hx-chip">${esc(c)}</span>`).join('');
 }
 
+// 히어로 작성 화면: 주제를 보내면 먼저 떠오르는 연구 설계 카드(연구모형 그림), 지면 목차, 집필 현황 표시
+const TOC = [['제1장 서론', 1], ['제2장 이론적 배경', 9], ['제3장 연구 방법', 29], ['제4장 연구 결과', 44], ['제5장 결론', 71]];
+const MODEL_SVG = `<svg class="hx-model" viewBox="0 0 320 136" role="img" aria-label="연구모형: 워라밸(일-여가, 일-가족, 일-성장 균형)이 이직의도에 미치는 영향">
+<g class="hx-mb" style="--d:0s"><rect x="6" y="4" width="124" height="130" rx="11" fill="#F5F7FF" stroke="#D5DDFB"/><text x="68" y="20" text-anchor="middle" font-size="11" font-weight="800" fill="#2346E8">워라밸</text></g>
+<g class="hx-mb" style="--d:.08s"><rect x="18" y="30" width="100" height="28" rx="7" fill="#fff" stroke="#C9D3FF"/><text x="68" y="48" text-anchor="middle" font-size="11" font-weight="700" fill="#1B2B6B">일-여가 균형</text></g>
+<g class="hx-mb" style="--d:.14s"><rect x="18" y="66" width="100" height="28" rx="7" fill="#fff" stroke="#C9D3FF"/><text x="68" y="84" text-anchor="middle" font-size="11" font-weight="700" fill="#1B2B6B">일-가족 균형</text></g>
+<g class="hx-mb" style="--d:.2s"><rect x="18" y="102" width="100" height="28" rx="7" fill="#fff" stroke="#C9D3FF"/><text x="68" y="120" text-anchor="middle" font-size="11" font-weight="700" fill="#1B2B6B">일-성장 균형</text></g>
+<g class="hx-mb" style="--d:.28s"><rect x="212" y="59" width="100" height="32" rx="8" fill="#2346E8"/><text x="262" y="79" text-anchor="middle" font-size="12" font-weight="800" fill="#fff">이직의도</text></g>
+<path class="hx-ml" pathLength="1" style="--d:.36s" d="M118,44 L204.3,66.9" fill="none" stroke="#2346E8" stroke-width="1.6"/>
+<path class="hx-ml" pathLength="1" style="--d:.44s" d="M118,80 L204.0,75.4" fill="none" stroke="#2346E8" stroke-width="1.6"/>
+<path class="hx-ml" pathLength="1" style="--d:.52s" d="M118,116 L204.5,83.8" fill="none" stroke="#2346E8" stroke-width="1.6"/>
+<g class="hx-mb" style="--d:.66s" fill="#2346E8"><path d="M212,69 L203.4,70.3 L205.2,63.6Z"/><path d="M212,75 L204.2,78.9 L203.8,71.9Z"/><path d="M212,81 L205.7,87.1 L203.3,80.5Z"/></g>
+<g class="hx-mb" style="--d:.72s" font-size="9.5" font-weight="700" fill="#5B6478" text-anchor="middle"><text x="162" y="48">H1-1</text><text x="162" y="91">H1-2</text><text x="154" y="117">H1-3</text></g>
+</svg>`;
+const PLAN_TAGS = ['가설 3개', '변인 4개', '위계적 회귀분석', '실존 문헌 근거'];
+
 const wasPrice = (list, total) => (list ? `<s class="num">${won(list)}</s><em>${offText(list, total, { short: true })}</em>` : '');
 
 function heroWindow(T) {
@@ -92,6 +108,7 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 <div class="hx-page" id="hxPage">
 <p class="hx-meta" data-blk>석사학위논문 · 본문 80 Page · APA 7판</p>
 <p class="hx-ttl" data-blk>${DEMO_TITLE}</p>
+<div class="hx-tocx" data-blk><p class="hx-tocx-h">목차</p><ol>${TOC.map(([t, pg]) => `<li data-blk><span>${t}</span><i aria-hidden="true"></i><b class="num">${pg}</b></li>`).join('')}</ol></div>
 <p class="hx-ch" data-blk>제1장 서론</p>
 <p class="hx-sec" data-blk>1. 연구의 필요성</p>
 <div class="hx-flow" id="hxFlow">${NEED_SHOWN.map((p) => `<p class="hx-p">${withCites(p)}</p>`).join('')}</div>
@@ -110,6 +127,8 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 <div class="pv-lock"><span class="pv-lock-ic">${T.icon('lock')}</span><b>결제하시면 나머지 78 Page를 완성해 드려요</b><small>실존 참고문헌 42편 · 전공 분야 박사 최종 검수 후 메일로 전달</small></div></div>
 </div>
 </div>
+<div class="hx-plan" id="hxPlan" aria-hidden="true"><p class="hx-plan-hd"><span>${T.icon('sparkles')}연구 설계</span><em id="hxPlanS">설계 중</em></p><p class="hx-plan-t" id="hxPlanT">${DEMO_TITLE}</p>${MODEL_SVG}<ul class="hx-plan-tags">${PLAN_TAGS.map((t, i) => `<li style="--d:${(0.78 + i * 0.07).toFixed(2)}s">${t}</li>`).join('')}</ul></div>
+<div class="hx-hud" id="hxHud" aria-hidden="true"><i class="hx-hud-dot"></i><b id="hxHudT">AI 집필 중</b><span class="num" id="hxHudN">0자</span><span id="hxHudC">인용 0곳</span></div>
 <div class="hx-more" id="hxMore"><span class="hx-more-t" id="hxMoreT">${T.icon('mail-check')}<span>석사 80 Page ${L80 ? `<s>${won(L80)}</s> ` : ''}<b>${won(Q80.total)}</b> · 전공 박사 검수 후 전달</span></span><a class="btn btn-primary btn-sm" id="hxGo" href="${go}">내 논문 의뢰하기</a></div>
 </article>
 <aside class="hx-refpane" id="hxRefs" aria-label="참고문헌 실존 확인">

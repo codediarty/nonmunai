@@ -37,6 +37,16 @@ if (win) {
   const chips = $('#hxChips', win);
   const lock = $('#hxLock', win);
   const moreBar = $('#hxMore', win);
+  const plan = $('#hxPlan', win);
+  const planT = $('#hxPlanT', win);
+  const planS = $('#hxPlanS', win);
+  const hud = $('#hxHud', win);
+  const hudT = $('#hxHudT', win);
+  const hudN = $('#hxHudN', win);
+  const hudC = $('#hxHudC', win);
+  const vLabel = $('#hxVerifyLabel', win);
+  const vNote = $('#hxVerifyNote', win);
+  const planTitle = planT ? planT.textContent : '';
   const promptText = text.value;
   let typing = null;
   let cycleTimer = null;
@@ -119,15 +129,25 @@ if (win) {
     if (state) li.classList.add(`is-${state}`);
   };
   const reveal = (els) => els.forEach((el) => el.classList.add('is-in'));
-  const countTo = (n, ms) => new Promise((res) => {
+  const countTo = (n, ms, put = (v) => { verifyN.textContent = `${v}/${n}`; }) => new Promise((res) => {
     const t0 = performance.now();
     const tick = (t) => {
       const k = Math.min(1, (t - t0) / ms);
-      verifyN.textContent = `${Math.round(n * k)}/${n}`;
+      put(Math.round(n * (1 - (1 - k) ** 2)));
       if (k < 1) requestAnimationFrame(tick); else res();
     };
     requestAnimationFrame(tick);
   });
+  // 연구 설계 카드의 제목: 몇 글자씩 빠르게 써진다
+  const typeInto = async (el, str, ms) => {
+    const n = Math.max(1, Math.ceil(str.length / (ms / 16)));
+    for (let i = n; i <= str.length + n - 1; i += n) {
+      el.textContent = str.slice(0, i);
+      await wait(16);
+      if (!alive()) return;
+    }
+    el.textContent = str;
+  };
 
   // 프롬프트 입력 연출: 두벌식으로 칠 때처럼 자모가 조합되며 글자가 써진다(칸을 누르면 바로 멈춤)
   const escT = (t) => esc(t).replace(/\n/g, '<br>');
@@ -152,15 +172,15 @@ if (win) {
       if (run.stopped) return false;
       const st = ime.key(k);
       paint(st.done, st.comp);
-      let d = 30 + Math.random() * 34;
-      if (k === ' ') d += 50 + Math.random() * 90;
-      if (k === ',' || k === '.') d += 200 + Math.random() * 120;
+      let d = 8 + Math.random() * 10;
+      if (k === ' ') d += 16 + Math.random() * 26;
+      if (k === ',' || k === '.') d += 80 + Math.random() * 60;
       await wait(d);
     }
     if (run.stopped) return false;
     paint(ime.end(), '');
     form.classList.remove('is-keying');
-    await wait(420);
+    await wait(140);
     return !run.stopped;
   };
   // 보내기 전 상태: 빈 프롬프트 칸에 깜박이는 커서, 빈 지면, 읽은 내용 칩은 비움
@@ -173,6 +193,10 @@ if (win) {
     read.classList.add('is-empty');
     paint('', '', true);
     for (const { p } of paras) p.textContent = '';
+    if (plan) { plan.classList.remove('is-on', 'is-set', 'is-out'); planT.textContent = ''; planS.textContent = '설계 중'; }
+    if (hud) { hud.classList.remove('is-on', 'is-end'); hudT.textContent = 'AI 집필 중'; hudN.textContent = '0자'; hudC.textContent = '인용 0곳'; }
+    if (vLabel) vLabel.textContent = '실존 문헌 검색';
+    if (vNote) vNote.textContent = '후보 0편 · DOI·KCI·RISS 대조';
   };
 
   // 서론 쓰기: 2~5글자씩 이어 쓰고(문장 끝에서는 잠깐 쉼), 인용이 나오면 참고문헌 목록의 같은 문헌을 밝힌다.
@@ -182,8 +206,12 @@ if (win) {
     const need = topIn(wcaret) + wcaret.offsetHeight - scroller.clientHeight * 0.7;
     if (need > lift + 1) setLift(need, 380);
   };
+  let chars = 0;
+  let cites = 0;
+  const hudSet = () => { if (hud) { hudN.textContent = `${chars.toLocaleString('ko-KR')}자`; hudC.textContent = `인용 ${cites}곳`; } };
   const stream = async () => {
     let cited = false;
+    chars = 0; cites = 0; hudSet();
     for (const { p, parts } of paras) {
       p.append(wcaret);
       p.classList.add('is-on');
@@ -193,29 +221,50 @@ if (win) {
           part.el.classList.add('is-lit', 'is-pop');
           activate(part.el.dataset.ref, true);
           if (!cited) { cited = true; setStep(4, 'run'); }
+          cites += 1; hudSet();
           follow();
-          await wait(260);
+          await wait(220);
           if (!alive()) return false;
           continue;
         }
-        const node = document.createTextNode('');
-        wcaret.before(node);
         const t = part.t;
         for (let i = 0; i < t.length;) {
-          const n = 3 + Math.floor(Math.random() * 4);
+          const n = 4 + Math.floor(Math.random() * 4);
           const chunk = t.slice(i, i + n);
-          node.data += chunk;
+          const ink = document.createElement('span');
+          ink.className = 'hx-ink';
+          ink.textContent = chunk;
+          wcaret.before(ink);
+          chars += chunk.replace(/\s/g, '').length;
+          hudSet();
           i += n;
           follow();
-          let d = 16 + Math.random() * 12;
-          if (/[.?!]\s*$/.test(chunk)) d += 110;
-          else if (/,\s*$/.test(chunk)) d += 30;
+          let d = 13 + Math.random() * 10;
+          if (/[.?!]\s*$/.test(chunk)) d += 90;
+          else if (/,\s*$/.test(chunk)) d += 24;
           await wait(d);
           if (!alive()) return false;
         }
       }
-      await wait(200);
+      await wait(160);
     }
+    return true;
+  };
+  // 실존 문헌 검색: 후보를 훑고(0→248편), 42편을 채택해 DOI를 하나씩 확인한다(연구 설계와 함께 진행)
+  const searchRefs = async (refs) => {
+    setStep(1, 'run');
+    if (vLabel) vLabel.textContent = '실존 문헌 검색';
+    await countTo(248, 620, (v) => { if (vNote) vNote.textContent = `후보 ${v}편 · DOI·KCI·RISS 대조`; });
+    if (!alive()) return false;
+    if (vNote) vNote.textContent = '후보 248편 중 42편 채택 · DOI·KCI·RISS 대조';
+    if (vLabel) vLabel.textContent = '참고문헌 실존 확인';
+    meter.style.width = '100%';
+    const counting = countTo(42, 900);
+    for (const li of refs) { reveal([li]); showRef(li.dataset.ref); await wait(95); if (!alive()) return false; li.classList.add('is-ok'); }
+    await counting;
+    if (!alive()) return false;
+    if (refs[0]) showRef(refs[0].dataset.ref);
+    setStep(1, 'done');
     return true;
   };
 
@@ -230,15 +279,15 @@ if (win) {
       return;
     }
     const blk = (sel, root = page) => $$(sel, root);
-    await wait(650);
+    await wait(250);
     if (!alive()) return;
     const typed = form.classList.contains('is-typing') ? await typePrompt() : false;
     if (!alive()) return;
     if (typed) {
       setChips(promptText);
-      await wait(520);
+      await wait(240);
       send.classList.add('is-press');
-      await wait(130);
+      await wait(100);
       send.classList.remove('is-press');
     }
     endTyping();
@@ -246,18 +295,36 @@ if (win) {
     setTimeout(() => form.classList.remove('is-sent'), 900);
     win.classList.remove('is-idle');
     send.classList.add('is-pulse');
-    setStep(0, 'run'); await wait(650); if (!alive()) return; setStep(0, 'done');
-    setStep(1, 'run');
-    const refs = blk('li[data-ref]', refList);
-    meter.style.width = '100%';
-    const counting = countTo(42, 1400);
-    for (const li of refs) { reveal([li]); showRef(li.dataset.ref); await wait(170); if (!alive()) return; li.classList.add('is-ok'); }
-    await counting;
-    if (!alive()) return;
-    if (refs[0]) showRef(refs[0].dataset.ref);
-    setStep(1, 'done');
-    setStep(2, 'run'); reveal(blk('.hx-meta, .hx-ttl')); await wait(420); if (!alive()) return; reveal(blk('.hx-ch, .hx-sec').filter((el) => !lock.contains(el))); await wait(300); if (!alive()) return; setStep(2, 'done');
+    // 0. 주제 분석: 연구 설계 카드에 제목과 연구모형이 그려진다
+    setStep(0, 'run');
+    if (plan) { plan.classList.add('is-on'); typeInto(planT, planTitle, 420); }
+    await wait(420); if (!alive()) return;
+    // 1. 실존 문헌 검색은 설계와 동시에 오른쪽에서 진행된다
+    const searching = searchRefs(blk('li[data-ref]', refList));
+    await wait(700); if (!alive()) return;
+    if (plan) { plan.classList.add('is-set'); planS.textContent = '설계 완료'; }
+    setStep(0, 'done');
+    await wait(560); if (!alive()) return;
+    // 2. 목차 설계: 설계 카드를 걷고 지면에 제목과 목차를 올린다
+    setStep(2, 'run');
+    if (plan) plan.classList.add('is-out');
+    reveal(blk('.hx-meta, .hx-ttl'));
+    await wait(240); if (!alive()) return;
+    const toc = $('.hx-tocx', page);
+    if (toc) {
+      reveal([toc]);
+      for (const li of $$('li', toc)) { reveal([li]); await wait(85); if (!alive()) return; }
+    }
+    if (!(await searching)) return;
+    await wait(160); if (!alive()) return;
+    setStep(2, 'done');
+    // 3. 본문 작성: 제1장으로 지면을 넘기고 쓰기 시작한다
+    reveal(blk('.hx-ch, .hx-sec').filter((el) => !lock.contains(el)));
+    const ch1 = $$('.hx-ch', page).find((el) => !lock.contains(el));
+    if (ch1) setLift(topIn(ch1) - 14, 620);
+    await wait(460); if (!alive()) return;
     setStep(3, 'run');
+    if (hud) hud.classList.add('is-on');
     if (!(await stream())) return;
     // 문장 중간에서 끊기고, 이어지는 원고는 모자이크로 가려진다
     await wait(380); if (!alive()) return;
@@ -271,6 +338,8 @@ if (win) {
     // 마지막 단계(전공 박사 검수)는 결제 뒤에 사람이 하는 일이라 '대기'로 둔다
     setStep(5, 'wait');
     wcaret.remove();
+    // 집필 현황은 마지막 숫자를 잠깐 보여 준 뒤 걷어서, 지면을 직접 굴려 읽을 때 글을 가리지 않게 한다
+    if (hud) { hud.classList.add('is-end'); hudT.textContent = '미리보기'; hudC.textContent = '2 / 80 Page'; setTimeout(() => hud.classList.remove('is-on'), 2600); }
     await wait(700); if (!alive()) return;
     freeScroll();
     win.classList.add('is-ready');
