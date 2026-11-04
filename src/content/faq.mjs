@@ -1,6 +1,6 @@
 // 자주 묻는 질문: 많이 찾는 검색어로 묻고, 금액·기간은 가격표(pricing.js)로 계산해 친절하게 답한다
 // 홈에는 HOME_FAQ(대표 질문), 자주 묻는 질문 페이지에는 FAQ_GROUPS 전체를 싣는다
-import { DEFAULT_CATALOG, won, computeQuote, listPriceFor } from '../js/core/pricing.js';
+import { DEFAULT_CATALOG, won, computeQuote, listPriceFor, PROMO_NAME } from '../js/core/pricing.js';
 
 const item = (code) => DEFAULT_CATALOG.items.find((i) => i.code === code);
 const price = (code) => { const it = item(code); return it ? won(it.price) : ''; };
@@ -19,8 +19,8 @@ export const FAQ_GROUPS = [
     { q: '주말이나 공휴일에도 주문할 수 있나요?', a: '그럼요. 주문과 결제는 24시간 언제든 하실 수 있어요. 전달 일정만 주말과 공휴일을 뺀 영업일로 계산해요.' },
   ]],
   ['비용과 결제', [
-    { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${L('P-MASTER-FULL')}인데, 지금은 오픈 기념 반값 ${won(Q.master.total)}에 맡기실 수 있어요. 연구 설계서, 목차, 서론부터 결론까지 장별 본문, 실존 참고문헌과 본문 인용(APA 7판), 전공 분야 박사 최종 검수, 수정 1회까지 모두 들어 있는 금액이에요.` },
-    { q: '박사논문 작성 비용은 얼마인가요?', a: `박사학위논문 130 Page는 정가 ${L('P-DOCTOR-FULL')}에서 오픈 기념 반값 ${won(Q.doctor.total)}이에요. 연구모형과 장별 집필 계획, 장별 본문, 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회가 모두 포함돼요.` },
+    { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${L('P-MASTER-FULL')}인데, 지금은 ${PROMO_NAME} ${won(Q.master.total)}에 맡기실 수 있어요. 연구 설계서, 목차, 서론부터 결론까지 장별 본문, 실존 참고문헌과 본문 인용(APA 7판), 전공 분야 박사 최종 검수, 수정 1회까지 모두 들어 있는 금액이에요.` },
+    { q: '박사논문 작성 비용은 얼마인가요?', a: `박사학위논문 130 Page는 정가 ${L('P-DOCTOR-FULL')}에서 ${PROMO_NAME} ${won(Q.doctor.total)}이에요. 연구모형과 장별 집필 계획, 장별 본문, 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회가 모두 포함돼요.` },
     { q: '학사 졸업논문 비용은 얼마인가요?', a: `학사 졸업논문 30 Page는 ${won(Q.bachelor.total)}이에요(정가 ${L('P-BACHELOR-FULL')}). 주제와 목차 구성부터 장별 본문, 실존 참고문헌과 본문 인용까지 졸업 요건에 맞춰 써 드려요.` },
     { q: '소논문 작성 비용은 얼마인가요?', a: `소논문 15 Page는 ${won(Q.short.total)}이에요(정가 ${L('P-SHORT-FULL')}). 수업 과제나 학회 발표용 소논문도 실존 참고문헌과 본문 인용을 갖춘 형식으로 깔끔하게 써 드려요.` },
     { q: '학술지 논문 작성 비용은 얼마인가요?', a: `학술지 투고논문 20 Page는 ${won(Q.journal.total)}이에요(정가 ${L('P-JOURNAL-FULL')}). 투고할 학술지 형식에 맞춘 원고와 국문·영문 초록, 실존 참고문헌이 함께 들어가요.` },

@@ -73,15 +73,15 @@ export function discountRate(list, price) {
   return Math.floor((1 - price / list) * 100);
 }
 // 할인 행사 이름과 할인 표시: 정가의 절반(50%)이면 '반값', 아니면 '43%'처럼
-export var PROMO_NAME = '오픈 기념 반값';
-export var PROMO_SHORT = '오픈 기념';
+export var PROMO_NAME = '졸업 시즌 반값';
+export var PROMO_SHORT = '졸업 시즌';
 export function offText(list, price, opts) {
   var r = discountRate(list, price);
   if (!r) return '';
   if (r === 50 || r === 51) return '반값';
   return opts && opts.short ? r + '%' : r + '% 할인';
 }
-// 행사 이름: 반값이면 '오픈 기념 반값', 아니면 '오픈 기념 43% 할인'
+// 행사 이름: 반값이면 '졸업 시즌 반값', 아니면 '졸업 시즌 43% 할인'
 export function promoText(list, price) {
   var o = offText(list, price);
   return !o ? '' : o === '반값' ? PROMO_NAME : PROMO_SHORT + ' ' + o;

@@ -2001,7 +2001,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 15000 });
       await p.waitForSelector('#nmBanner', { timeout: 8000 });
       const banner = await text(p, '#nmBanner');
-      for (const s of ['석사학위논문 80 Page', '199,000원', '오픈 기념 반값', '99,000원']) has(banner, s, '결제 화면 안내');
+      for (const s of ['석사학위논문 80 Page', '199,000원', '졸업 시즌 반값', '99,000원']) has(banner, s, '결제 화면 안내');
       await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', '최간호'); set('ordererCall', '010-3456-7890'); set('ordererEmail', 'e2e-direct@example.com'); });
       await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
       await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });

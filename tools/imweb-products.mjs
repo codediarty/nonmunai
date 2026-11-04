@@ -6,7 +6,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_CATALOG, won, listPriceFor, discountRate, includesFor, promoText } from '../src/js/core/pricing.js';
+import { DEFAULT_CATALOG, won, listPriceFor, discountRate, includesFor, promoText, PROMO_NAME, PROMO_SHORT } from '../src/js/core/pricing.js';
 import { brandMark, BRAND } from '../src/templates/brand.mjs';
 import { verifiedBadge } from '../src/templates/parts.mjs';
 
@@ -315,7 +315,7 @@ const page = await browser.newPage({ viewport: { width: 1000, height: 1000 }, de
 const loadFonts = (txt) => page.evaluate(async (t) => { await Promise.all([document.fonts.load('700 60px "Noto Serif KR"', t), document.fonts.load('700 26px "Pretendard Variable"', t), document.fonts.load('500 26px "Pretendard Variable"', t)]); await document.fonts.ready; }, txt);
 for (const p of products) {
   await page.setContent(imgHtml(p), { waitUntil: 'networkidle' });
-  { const c = cover(p); await loadFonts(c.kicker + c.title.join('') + c.tag + '논문AI NONMUN nonmunai.kr 0123456789,원%오픈 기념 반값 할인Page 참고문헌 100% 실존 검증'); }
+  { const c = cover(p); await loadFonts(c.kicker + c.title.join('') + c.tag + '논문AI NONMUN nonmunai.kr 0123456789,원%' + PROMO_NAME + PROMO_SHORT + ' 할인Page 참고문헌 100% 실존 검증'); }
   await page.waitForTimeout(120);
   await page.screenshot({ path: path.join(out, 'img', `${p.code}.jpg`), type: 'jpeg', quality: 86 });
   p.image = `img/${p.code}.jpg`;

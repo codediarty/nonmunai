@@ -98,8 +98,8 @@ t('포함 항목의 분량은 주문한 Page로 표시', () => {
   assert.ok(includesFor(ed.includes, 45).includes('원고 첨삭(45 Page)'));
 });
 
-t('정가와 런칭 특가 할인율', () => {
-  // 런칭 특가는 정가의 반값(50%)
+t('정가와 할인 행사 할인율', () => {
+  // 할인 행사 가격은 정가의 반값(50%)
   for (const [code, price, list] of [['P-SHORT-FULL', 29000, 59000], ['P-BACHELOR-FULL', 59000, 119000], ['P-JOURNAL-FULL', 99000, 199000], ['P-MASTER-FULL', 99000, 199000], ['P-DOCTOR-FULL', 199000, 399000], ['P-BACHELOR-PROP', 29000, 59000], ['P-MASTER-PROP', 69000, 139000], ['P-DOCTOR-PROP', 99000, 199000]]) {
     assert.equal(listPriceFor(code, price), list, code);
     assert.equal(discountRate(list, price), 50, code);
