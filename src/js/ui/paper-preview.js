@@ -17,7 +17,6 @@ const STEPS = ['주제 분석', '실존 문헌 검증', '목차 설계', '본문
 function citeHtml(year, i, live = false) {
   return `<cite class="pv-cite${live ? ' is-pop' : ''}" title="실존 확인된 문헌(결제 후 공개)"><span class="pv-cite-a">${esc(AUTHORS[i % AUTHORS.length])}</span>, ${year}<i>${IC.check}</i></cite>`;
 }
-const sentenceHtml = (s, base = 0) => s.map((x, j) => (x.t != null ? esc(x.t) : citeHtml(x.cite, base + j))).join('');
 
 function tocHtml(pv) {
   const p = pv.pages;
@@ -54,7 +53,6 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
     };
     requestAnimationFrame(tick);
   });
-  const follow = () => { stage.scrollTop = stage.scrollHeight; };
 
   function idle() {
     root.dataset.state = 'idle';
@@ -73,27 +71,43 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
     const remain = Math.max(1, pv.pages - 2);
     root.dataset.state = 'run';
     $('meta').textContent = [pv.typeLabel, pv.field, `${pv.pages} Page`].filter(Boolean).join(' · ');
-    const visible = pv.intro.slice(0, 2);
-    const hidden = pv.intro.slice(2);
+    // 인용 번호: 문단을 넘어 이어서 센다(저자 표시가 문장마다 달라지게)
+    let ci = 0;
+    const partsHtml = (parts) => parts.map((x) => (x.t != null ? esc(x.t) : citeHtml(x.cite, ci++))).join('');
     sheet.innerHTML = `<p class="pv-kick">${esc(pv.typeLabel)} · 본문 ${pv.pages} Page · APA 7판</p>
 <div class="pv-ttl"><span class="pv-ttl-t">${esc(pv.workTitle)}</span><em>제목은 전문가가 다듬어 확정해 드려요</em></div>
 <p class="pv-toc-h">목차</p><ol class="pv-toc">${tocHtml(pv)}</ol>
 <p class="pv-ch">${esc(pv.toc[0][0])}</p><p class="pv-sec">${pv.toc[0][1].length ? `1. ${esc(pv.toc[0][1][0])}` : '연구의 필요성'}</p>
-<p class="pv-txt"><span data-pv="typed"></span><span class="pv-caret" aria-hidden="true"></span></p>
+<div class="pv-flow" data-pv="flow"></div>
 <div class="pv-lockzone" data-pv="zone"><div class="pv-mosaic"><div class="pv-mz-in">
-<p class="pv-txt">${hidden.map((s, i) => sentenceHtml(s, 2 + i)).join('')}</p>
-<p class="pv-sec">2. ${esc(pv.toc[0][1][1] || '연구 목적')}</p><p class="pv-txt">${pv.purpose.map((s) => sentenceHtml(s)).join('')}</p>
-<p class="pv-ch">${esc((pv.toc[1] || ['제2장 이론적 배경'])[0])}</p><p class="pv-sec">1. ${esc(((pv.toc[1] || [0, []])[1] || [])[0] || '주요 개념')}</p><p class="pv-txt">${pv.theory.map((s, i) => sentenceHtml(s, 4 + i)).join('')}</p>
+<p class="pv-txt pv-cont">${partsHtml(pv.needRest)}</p>
+<p class="pv-sec">2. ${esc(pv.toc[0][1][1] || '연구 목적')}</p><p class="pv-txt">${pv.purpose.map(partsHtml).join('')}</p>
+<p class="pv-ch">${esc((pv.toc[1] || ['제2장 이론적 배경'])[0])}</p><p class="pv-sec">1. ${esc(((pv.toc[1] || [0, []])[1] || [])[0] || '주요 개념')}</p><p class="pv-txt">${pv.theory.map(partsHtml).join('')}</p>
 </div></div>
 <div class="pv-lock"><span class="pv-lock-ic">${IC.lock}</span><b>결제하시면 나머지 ${remain} Page를 완성해 드려요</b><small>실존 참고문헌 ${pv.refs}편 · 석·박사 전문가 최종 검토 · 메일로 전달</small>${cta ? `<a class="btn btn-primary btn-sm pv-lock-go" href="${esc(cta.href)}">${esc(cta.label)}</a>` : ''}</div></div>`;
-    const typed = $('typed');
+    const flow = $('flow');
     const zone = $('zone');
+    // 화면 안 위치(지면 스크롤 칸 기준)
+    const topIn = (el) => { let y = 0; for (let n = el; n && n !== stage; n = n.offsetParent) y += n.offsetTop; return y; };
+    const scrollTo = (top, smooth = true) => {
+      const y = Math.max(0, Math.round(top));
+      if (Math.abs(stage.scrollTop - y) < 2) return;
+      stage.scrollTo({ top: y, behavior: smooth && !reduce ? 'smooth' : 'auto' });
+    };
+    // 끝난 화면: 끊긴 문장 위로 몇 줄을 남기고, 자물쇠 안내 전체가 지면 안에 들어오게
+    const lockView = () => {
+      const card = zone.querySelector('.pv-lock');
+      const room = stage.clientHeight - 10 - (card ? card.offsetTop + card.offsetHeight : 220);
+      scrollTo(topIn(zone) - Math.max(56, room));
+    };
     if (reduce) {
       for (let i = 0; i < STEPS.length; i++) setStep(i, 'done');
-      typed.innerHTML = visible.map((s, i) => sentenceHtml(s, i)).join('');
+      ci = 0;
+      flow.innerHTML = pv.need.map((p) => `<p class="pv-txt">${partsHtml(p)}</p>`).join('');
       $('n').textContent = `${pv.refs}/${pv.refs}`; $('bar').style.width = '100%';
       sheet.classList.add('is-toc-in'); zone.classList.add('is-on', 'is-locked');
       root.dataset.state = 'done';
+      lockView();
       return;
     }
     for (let i = 0; i < STEPS.length; i++) setStep(i, '');
@@ -103,34 +117,54 @@ export function mountPreview(host, { label = '내 논문 작성 미리보기', c
     setStep(1, 'run'); await count(pv.refs, 900, id); if (!alive()) return; setStep(1, 'done');
     setStep(2, 'run'); sheet.classList.add('is-toc-in'); await wait(650); if (!alive()) return; setStep(2, 'done');
     setStep(3, 'run');
-    // 서론 첫 두 문장을 한 글자씩 쓰고, 인용 자리에는 실존 확인 표시가 붙는다
-    let html = '';
-    let n = 0;
-    for (const [si, s] of visible.entries()) {
-      for (const [j, part] of s.entries()) {
-        if (part.t != null) {
-          for (const ch of part.t) {
-            if (!alive()) return;
-            html += esc(ch);
-            typed.innerHTML = html;
-            if (++n % 6 === 0) follow();
-            await wait(ch === ' ' ? 22 : ch === ',' || ch === '.' ? 120 : 15 + Math.random() * 14);
-          }
-        } else {
-          html += citeHtml(part.cite, si * 2 + j, true);
-          typed.innerHTML = html;
+    // 서론을 2~5글자씩 이어 쓴다. 인용 자리에는 실존 확인 표시가 붙고, 쓰는 줄이 아래에 닿으면 지면을 올린다
+    const caret = document.createElement('span');
+    caret.className = 'pv-caret';
+    caret.setAttribute('aria-hidden', 'true');
+    const follow = () => {
+      const need = topIn(caret) + caret.offsetHeight - stage.clientHeight * 0.72;
+      if (need > stage.scrollTop + 2) scrollTo(need);
+    };
+    let k = 0;
+    for (const para of pv.need) {
+      const p = document.createElement('p');
+      p.className = 'pv-txt';
+      p.append(caret);
+      flow.append(p);
+      for (const part of para) {
+        if (!alive()) return;
+        if (part.t == null) {
+          caret.insertAdjacentHTML('beforebegin', citeHtml(part.cite, k++, true));
+          follow();
           await wait(260);
+          continue;
+        }
+        const node = document.createTextNode('');
+        caret.before(node);
+        for (let i = 0; i < part.t.length;) {
+          if (!alive()) return;
+          const n = 3 + Math.floor(Math.random() * 4);
+          const chunk = part.t.slice(i, i + n);
+          node.data += chunk;
+          i += n;
+          follow();
+          let d = 16 + Math.random() * 12;
+          if (/[.?!]\s*$/.test(chunk)) d += 110;
+          else if (/,\s*$/.test(chunk)) d += 30;
+          await wait(d);
         }
       }
+      await wait(180);
     }
     if (!alive()) return;
-    // 이어지는 문단은 써지는 듯 나타났다가 모자이크로 가려진다
+    // 문장 중간에서 끊기고, 이어지는 원고는 모자이크로 가려진다
+    await wait(320); if (!alive()) return;
     zone.classList.add('is-on');
-    follow();
-    await wait(700); if (!alive()) return;
+    await wait(140); if (!alive()) return;
     zone.classList.add('is-locked');
-    await wait(500); if (!alive()) return;
-    stage.scrollTo({ top: Math.max(0, zone.offsetTop - 140), behavior: 'smooth' });
+    caret.remove();
+    lockView();
+    await wait(600); if (!alive()) return;
     setStep(3, 'done');
     root.dataset.state = 'done';
   }

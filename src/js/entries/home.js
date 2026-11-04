@@ -26,7 +26,9 @@ if (win) {
   const send = $('.hx-send', win);
   const stepsEl = $('#hxSteps', win);
   const doc = $('#hxDoc', win);
+  const scroller = $('#hxScroll', win);
   const page = $('#hxPage', win);
+  const flow = $('#hxFlow', win);
   const refList = $('#hxRefList', win);
   const verifyN = $('#hxVerifyN', win);
   const meter = $('.hx-meter i', win);
@@ -35,8 +37,6 @@ if (win) {
   const chips = $('#hxChips', win);
   const lock = $('#hxLock', win);
   const moreBar = $('#hxMore', win);
-  // 모자이크와 자물쇠 안내가 아래쪽 결제 막대에 가리지 않도록 지면을 올릴 거리
-  const liftBy = () => Math.max(0, lock.offsetTop - Math.max(36, doc.clientHeight - (moreBar ? moreBar.offsetHeight : 80) - 196));
   const promptText = text.value;
   let typing = null;
   let cycleTimer = null;
@@ -44,37 +44,73 @@ if (win) {
   let paused = false;
   let demo = true;
 
+  // 서론 문단: 글자 조각과 인용 요소로 나눠 두었다가 화면에서 한 덩어리씩 다시 써 내려간다
+  const paras = $$('.hx-p', flow).map((p) => ({ p, parts: [...p.childNodes].map((n) => (n.nodeType === 3 ? { t: n.textContent } : { el: n })) }));
+  const wcaret = document.createElement('span');
+  wcaret.className = 'hx-wcaret';
+  wcaret.setAttribute('aria-hidden', 'true');
+
+  // 지면 이동: 쓰는 동안은 지면을 위로 밀어 올리고(transform), 다 쓰면 실제 스크롤로 바꿔 직접 읽어 볼 수 있게 한다
+  const topIn = (el) => { let y = 0; for (let n = el; n && n !== scroller; n = n.offsetParent) y += n.offsetTop; return y; };
+  let lift = 0;
+  const setLift = (y, ms = 0) => {
+    lift = Math.max(0, Math.round(y));
+    page.style.transition = ms ? `transform ${ms}ms cubic-bezier(.3, .6, .3, 1)` : 'none';
+    page.style.transform = lift ? `translateY(-${lift}px)` : '';
+  };
+  // 마지막: 모자이크와 자물쇠 안내가 아래쪽 결제 막대에 가리지 않는 높이
+  const finalLift = () => Math.max(lift, topIn(lock) - Math.max(36, scroller.clientHeight - (moreBar ? moreBar.offsetHeight : 80) - 176));
+  const freeScroll = () => {
+    const y = lift;
+    setLift(0);
+    scroller.scrollTop = y;
+    scroller.classList.add('is-free');
+  };
+
   const setChips = (t) => {
     const h = chipsHtml(t);
     chips.innerHTML = h;
     read.classList.toggle('is-empty', !h);
   };
 
+  // 참고문헌 목록에서 해당 문헌이 보이도록 목록만 굴린다(페이지는 움직이지 않음)
+  const showRef = (id, smooth = true) => {
+    const li = $(`li[data-ref="${id}"]`, refList);
+    if (!li || refList.scrollHeight <= refList.clientHeight + 2) return;
+    const max = refList.scrollHeight - refList.clientHeight;
+    const top = Math.max(0, Math.min(max, li.offsetTop - 6));
+    if (Math.abs(refList.scrollTop - top) > 2) refList.scrollTo({ top, behavior: smooth && !reduce ? 'smooth' : 'auto' });
+  };
   // 본문 인용과 참고문헌을 함께 밝힌다
-  const activate = (id) => {
+  const activate = (id, scrollList = false) => {
     for (const c of $$('.hx-cite', page)) c.classList.toggle('is-active', c.dataset.ref === id);
     for (const li of $$('li[data-ref]', refList)) li.classList.toggle('is-active', li.dataset.ref === id);
+    if (scrollList) showRef(id);
   };
+  const citeOrder = () => [...new Set($$('.hx-cite', flow).map((c) => c.dataset.ref))];
   const stopCycle = () => { clearInterval(cycleTimer); cycleTimer = null; };
   const startCycle = () => {
     stopCycle();
     if (reduce) return;
-    const order = ['r1', 'r2', 'r4', 'r3'];
-    const step = () => { if (!paused) activate(order[cycleIdx++ % order.length]); };
+    const order = citeOrder();
+    if (!order.length) return;
+    const step = () => { if (!paused) activate(order[cycleIdx++ % order.length], true); };
     step();
     cycleTimer = setInterval(step, 2600);
   };
-  const pick = (e) => {
+  const pickIn = (scrollList) => (e) => {
     const el = e.target.closest('[data-ref]');
-    if (el) activate(el.dataset.ref);
+    if (el) activate(el.dataset.ref, scrollList);
   };
-  for (const box of [doc, refList]) {
+  for (const [box, scrollList] of [[doc, true], [refList, false]]) {
+    const pick = pickIn(scrollList);
     box.addEventListener('mouseenter', () => { paused = true; });
     box.addEventListener('mouseleave', () => { paused = false; });
     box.addEventListener('mouseover', pick);
     box.addEventListener('focusin', pick);
     box.addEventListener('click', pick);
   }
+  scroller.addEventListener('touchstart', () => { paused = true; }, { passive: true });
 
   const setStep = (i, state) => {
     const li = $(`li[data-step="${i}"]`, stepsEl);
@@ -136,15 +172,60 @@ if (win) {
     chips.innerHTML = '';
     read.classList.add('is-empty');
     paint('', '', true);
+    for (const { p } of paras) p.textContent = '';
   };
 
-  // 첫 화면 연출: 프롬프트를 치면 AI가 내용을 읽고, 문헌을 검증하고, 서론이 써진 뒤 나머지는 모자이크로 가려진다
+  // 서론 쓰기: 2~5글자씩 이어 쓰고(문장 끝에서는 잠깐 쉼), 인용이 나오면 참고문헌 목록의 같은 문헌을 밝힌다.
+  // 쓰는 줄이 지면 아래쪽에 닿으면 지면을 그만큼 밀어 올린다.
   const alive = () => demo;
+  const follow = () => {
+    const need = topIn(wcaret) + wcaret.offsetHeight - scroller.clientHeight * 0.7;
+    if (need > lift + 1) setLift(need, 380);
+  };
+  const stream = async () => {
+    let cited = false;
+    for (const { p, parts } of paras) {
+      p.append(wcaret);
+      p.classList.add('is-on');
+      for (const part of parts) {
+        if (part.el) {
+          wcaret.before(part.el);
+          part.el.classList.add('is-lit', 'is-pop');
+          activate(part.el.dataset.ref, true);
+          if (!cited) { cited = true; setStep(4, 'run'); }
+          follow();
+          await wait(260);
+          if (!alive()) return false;
+          continue;
+        }
+        const node = document.createTextNode('');
+        wcaret.before(node);
+        const t = part.t;
+        for (let i = 0; i < t.length;) {
+          const n = 3 + Math.floor(Math.random() * 4);
+          const chunk = t.slice(i, i + n);
+          node.data += chunk;
+          i += n;
+          follow();
+          let d = 16 + Math.random() * 12;
+          if (/[.?!]\s*$/.test(chunk)) d += 110;
+          else if (/,\s*$/.test(chunk)) d += 30;
+          await wait(d);
+          if (!alive()) return false;
+        }
+      }
+      await wait(200);
+    }
+    return true;
+  };
+
+  // 첫 화면 연출: 프롬프트를 치면 AI가 내용을 읽고, 문헌을 검증하고, 서론을 길게 써 내려가다가
+  // 마지막 문단 중간에서 끊기며 나머지는 모자이크로 가려진다
   const playDemo = async () => {
     if (reduce) {
       lock.classList.add('is-on', 'is-locked');
-      page.style.transform = `translateY(-${liftBy()}px)`;
-      startCycle();
+      setLift(finalLift());
+      freeScroll();
       return;
     }
     const blk = (sel, root = page) => $$(sel, root);
@@ -168,26 +249,27 @@ if (win) {
     setStep(1, 'run');
     const refs = blk('li[data-ref]', refList);
     meter.style.width = '100%';
-    const counting = countTo(42, 1300);
-    for (const li of refs) { reveal([li]); await wait(220); if (!alive()) return; li.classList.add('is-ok'); }
+    const counting = countTo(42, 1400);
+    for (const li of refs) { reveal([li]); showRef(li.dataset.ref); await wait(170); if (!alive()) return; li.classList.add('is-ok'); }
     await counting;
     if (!alive()) return;
+    if (refs[0]) showRef(refs[0].dataset.ref);
     setStep(1, 'done');
     setStep(2, 'run'); reveal(blk('.hx-meta, .hx-ttl')); await wait(420); if (!alive()) return; reveal(blk('.hx-ch, .hx-sec').filter((el) => !lock.contains(el))); await wait(300); if (!alive()) return; setStep(2, 'done');
-    setStep(3, 'run'); reveal(blk('.hx-p')); await wait(1700); if (!alive()) return; setStep(3, 'done');
-    setStep(4, 'run');
-    for (const c of $$('.hx-cite', page)) { c.classList.add('is-lit'); activate(c.dataset.ref); await wait(330); if (!alive()) return; }
-    setStep(4, 'done');
-    // 이어지는 문단이 나타났다가 모자이크로 가려지고, 결제 후 완성 안내가 뜬다
+    setStep(3, 'run');
+    if (!(await stream())) return;
+    // 문장 중간에서 끊기고, 이어지는 원고는 모자이크로 가려진다
+    await wait(380); if (!alive()) return;
+    setStep(3, 'done');
     lock.classList.add('is-on');
-    await wait(500); if (!alive()) return;
-    // 지면을 위로 밀어 올린다(아래쪽 결제 안내 막대는 그대로 두기 위해 스크롤 대신 이동)
-    const lift = liftBy();
-    page.style.transition = 'transform .9s cubic-bezier(.3, .7, .2, 1)';
-    page.style.transform = `translateY(-${lift}px)`;
-    await wait(800); if (!alive()) return;
+    await wait(140); if (!alive()) return;
     lock.classList.add('is-locked');
+    setLift(finalLift(), 900);
+    await wait(500); if (!alive()) return;
+    setStep(4, 'done');
+    wcaret.remove();
     await wait(700); if (!alive()) return;
+    freeScroll();
     win.classList.add('is-ready');
     startCycle();
   };

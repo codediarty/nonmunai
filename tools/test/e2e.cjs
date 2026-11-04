@@ -1899,7 +1899,24 @@ async function tests() {
   };
   const decodeNm = (u) => JSON.parse(Buffer.from(new URL(u).searchParams.get('nm').replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
   const prompt = '간호학과 석사인데, 신규 간호사 번아웃이랑 이직 관련해서 논문 써 주세요';
-  const DEMO = '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해 주세요'; // 홈 예시 문장(src/js/core/preview.js DEMO_PROMPT)
+  const DEMO = '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해줘'; // 홈 예시 문장(src/js/core/preview.js DEMO_PROMPT)
+  await check(41, '홈 작성 화면: 예시 문장(논문 완성해줘)을 친 뒤 서론 연구의 필요성 4문단을 실존 인용과 함께 써 내려가다 문장 중간에서 끊기고 모자이크로 가려짐', async () => withCtx({}, async (p) => {
+    await p.goto(`${BASE}/`);
+    await p.locator('#hxWin').scrollIntoViewIfNeeded();
+    await p.waitForSelector('#hxWin.is-ready', { timeout: 45000 });
+    eq(await p.inputValue('#hxText'), DEMO, '예시 문장');
+    const paras = await p.$$eval('#hxFlow .hx-p', (ps) => ps.map((x) => x.textContent.trim()));
+    eq(paras.length, 4, '연구의 필요성 문단 수');
+    ok(paras.every((x) => x.length > 150), `짧은 문단이 있음: ${paras.map((x) => x.length).join(',')}`);
+    ok(paras[3].endsWith('일-성장 균형 가운데'), `끊긴 자리: ${paras[3].slice(-20)}`);
+    const cites = await p.$$eval('#hxFlow .hx-cite', (cs) => cs.map((c) => c.dataset.ref));
+    eq(cites.length, 8, '본문 인용 수');
+    const listed = await p.$$eval('#hxRefList li[data-ref]', (ls) => ls.map((l) => l.dataset.ref));
+    ok(cites.every((id) => listed.includes(id)), '인용한 문헌이 실존 확인 목록에 없음');
+    ok(await p.$('#hxLock.is-on.is-locked'), '모자이크가 걸리지 않음');
+    has(await text(p, '#hxLock .pv-lock'), '결제하시면 나머지 78 Page를 완성해 드려요', '결제 후 완성 안내');
+    ok(await p.$eval('#hxScroll', (x) => x.classList.contains('is-free') && x.scrollTop > 0), '다 쓴 뒤 지면을 굴려 읽을 수 없음');
+  }));
   await check(41, '홈 프롬프트로 연 주문서는 주제·전공·석사 80 Page가 채워지고 미리보기가 써진 뒤 모자이크로 가려짐(홈 예시 문장은 채우지 않음)', async () => withCtx({}, async (p) => {
     await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
     await p.waitForSelector('#qoForm #qoTopic');

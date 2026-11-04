@@ -19,16 +19,37 @@ export const HOME_FAQ = FAQ_TOP;
 export const SUPPORT_FAQ = ALL_FAQ.filter((f) => /수정은 몇 번|자료와 개인정보/.test(f.q));
 export { DEMO_PROMPT, DEMO_TITLE };
 
-// 히어로 예시 논문의 참고문헌: 모두 실존 문헌(Crossref에서 저자·연도·권호·쪽·DOI 확인), APA 7판 목록 순서
+// 히어로 예시 논문의 참고문헌: 모두 실존 문헌(Crossref에서 저자·연도·제목·학술지·권호·쪽·DOI 확인), APA 7판 목록 순서
+// 본문 문장은 각 문헌이 실제로 다룬 내용(초록·결론)과 맞게 썼다. 예시를 바꿀 때도 확인한 문헌만 넣는다.
 const REFS = [
   { id: 'r1', cite: 'Bakker et al., 2023', html: 'Bakker, A. B., Demerouti, E., &amp; Sanz-Vergel, A. (2023). Job demands–resources theory: Ten years later. <i>Annual Review of Organizational Psychology and Organizational Behavior, 10</i>(1), 25–53.', doi: '10.1146/annurev-orgpsych-120920-053933', n: 3 },
+  { id: 'r8', cite: 'Greenhaus et al., 2003', html: 'Greenhaus, J. H., Collins, K. M., &amp; Shaw, J. D. (2003). The relation between work–family balance and quality of life. <i>Journal of Vocational Behavior, 63</i>(3), 510–531.', doi: '10.1016/S0001-8791(02)00042-8', n: 2 },
+  { id: 'r5', cite: 'Griffeth et al., 2000', html: 'Griffeth, R. W., Hom, P. W., &amp; Gaertner, S. (2000). A meta-analysis of antecedents and correlates of employee turnover: Update, moderator tests, and research implications for the next millennium. <i>Journal of Management, 26</i>(3), 463–488.', doi: '10.1177/014920630002600305', n: 2 },
+  { id: 'r6', cite: 'Haar et al., 2014', html: 'Haar, J. M., Russo, M., Suñe, A., &amp; Ollier-Malaterre, A. (2014). Outcomes of work–life balance on job satisfaction, life satisfaction and mental health: A study across seven cultures. <i>Journal of Vocational Behavior, 85</i>(3), 361–373.', doi: '10.1016/j.jvb.2014.08.010', n: 2 },
   { id: 'r2', cite: 'Hom et al., 2017', html: 'Hom, P. W., Lee, T. W., Shaw, J. D., &amp; Hausknecht, J. P. (2017). One hundred years of employee turnover theory and research. <i>Journal of Applied Psychology, 102</i>(3), 530–545.', doi: '10.1037/apl0000103', n: 4 },
   { id: 'r3', cite: 'Kelliher et al., 2019', html: 'Kelliher, C., Richardson, J., &amp; Boiarintseva, G. (2019). All of work? All of life? Reconceptualising work-life balance for the 21st century. <i>Human Resource Management Journal, 29</i>(2), 97–112.', doi: '10.1111/1748-8583.12215', n: 3 },
   { id: 'r4', cite: 'Rudolph et al., 2021', html: 'Rudolph, C. W., Rauvola, R. S., Costanza, D. P., &amp; Zacher, H. (2021). Generations and generational differences: Debunking myths in organizational science and practice and paving new paths forward. <i>Journal of Business and Psychology, 36</i>(6), 945–967.', doi: '10.1007/s10869-020-09715-2', n: 2 },
+  { id: 'r7', cite: 'Twenge et al., 2010', html: 'Twenge, J. M., Campbell, S. M., Hoffman, B. J., &amp; Lance, C. E. (2010). Generational differences in work values: Leisure and extrinsic values increasing, social and intrinsic values decreasing. <i>Journal of Management, 36</i>(5), 1117–1142.', doi: '10.1177/0149206309352246', n: 2 },
 ];
 const DEMO_READ = readPrompt(DEMO_PROMPT);
 const ref = (id) => REFS.find((r) => r.id === id);
 const cite = (id) => `<cite class="hx-cite" data-ref="${id}" tabindex="0">(${ref(id).cite})</cite>`;
+
+// 히어로 작성 화면의 서론 '연구의 필요성': 화면에서 한 덩어리씩 써 내려가다가 마지막 문단 중간에서 끊기고,
+// 나머지(CUT 뒤)는 모자이크로 가려진다. 인용은 [r번호]로 적는다.
+const NEED = [
+  '최근 기업에서는 1980년대 초반부터 2000년대 초반 사이에 태어난 이른바 MZ세대가 조직의 핵심 구성원으로 자리 잡으면서, 일하는 방식과 조직문화에도 적지 않은 변화가 나타나고 있다. 1976년, 1991년, 2006년의 미국 고등학교 졸업반을 비교한 연구에 따르면, 젊은 세대로 갈수록 여가를 중시하는 가치는 꾸준히 높아진 반면 삶에서 일이 차지하는 비중은 줄어들었다[r7]. 이처럼 일 못지않게 개인의 삶을 중시하는 흐름 속에서 일과 삶의 균형, 이른바 워라밸은 MZ세대 직장인이 직장을 고르고 머무는 중요한 기준이 되었다.',
+  '워라밸은 개인이 일과 가정의 역할에 고르게 참여하고 두 역할 모두에서 고르게 만족하는 정도로 정의되어 왔다[r8]. 다만 기존 연구는 삶을 주로 자녀 돌봄으로, 일을 한 직장에서의 전일제 근무로 좁게 이해해 왔다는 한계가 있어, 최근에는 다양한 삶의 영역과 근무 형태를 아우르는 개념으로 넓혀 보아야 한다는 주장이 힘을 얻고 있다[r3]. 실제로 일곱 개 문화권의 근로자를 분석한 연구에서 워라밸은 직무만족과 삶의 만족을 높이고 불안과 우울은 낮추는 것으로 나타나[r6], 개인의 안녕과 조직의 성과를 함께 좌우하는 요인으로 주목받고 있다.',
+  '한편 직원의 자발적 이직은 숙련 인력의 손실과 대체 인력의 채용·교육 비용으로 이어져 조직의 경쟁력을 떨어뜨리기 때문에, 지난 한 세기 동안 조직 연구의 핵심 주제로 다루어져 왔다[r2]. 특히 이직의도는 실제 이직을 예측하는 가장 강력한 선행 변인 가운데 하나로 확인되어[r5], 이직의도를 높이는 요인을 미리 파악하는 일은 인적자원관리의 중요한 과제가 되었다. 직무요구-자원 이론은 과도한 직무요구가 소진을, 충분한 직무자원이 직무열의를 이끈다고 설명하며, 최근에는 일과 가정의 자원이 서로 이어진다는 일-가정 자원 모델로 그 범위를 넓혔다[r1].',
+  '그러나 워라밸과 이직의도의 관계를 다룬 연구가 꾸준히 이루어져 왔음에도, MZ세대 직장인을 대상으로 그 영향을 직접 검증한 연구는 아직 충분하지 않다. 더욱이 세대 차이에 관한 주장 가운데 상당수는 방법론적 한계를 지닌 통념에 기대고 있어, 세대의 특성을 미리 전제하기보다 실증 자료로 확인해야 한다는 비판이 제기되어 왔다[r4]. 이에 본 연구는 MZ세대 직장인을 대상으로 워라밸이 이직의도에 미치는 영향을 실증적으로 분석하고, 일-여가, 일-가족, 일-성장 균형 가운데 CUT어떤 요인이 이직의도를 가장 크게 낮추는지 확인하고자 한다. 아울러 성별과 직급에 따른 차이를 함께 살펴봄으로써, MZ세대 인재의 이탈을 줄이기 위한 인적자원관리 방안을 제시하고자 한다.',
+];
+const withCites = (s) => s.replace(/\[(r\d)\]/g, (_, id) => cite(id));
+const NEED_SHOWN = NEED.map((p) => p.split('CUT')[0].trimEnd());
+const NEED_REST = NEED[NEED.length - 1].split('CUT')[1];
+// 작성 화면의 실존 확인 목록은 본문에 처음 인용되는 순서로
+const CITE_ORDER = [...NEED.join('').matchAll(/\[(r\d)\]/g)].map((m) => m[1]);
+const PANE_REFS = [...CITE_ORDER, ...REFS.map((r) => r.id).filter((id) => !CITE_ORDER.includes(id))].map(ref);
+export { CITE_ORDER };
 
 // 프롬프트에서 읽어 낸 내용(종류·전공·키워드) 칩
 export function readChips(r) {
@@ -66,21 +87,27 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 </ol>
 <div class="hx-body">
 <article class="hx-doc" id="hxDoc" aria-label="작성 중인 논문 예시">
+<div class="hx-scroll" id="hxScroll">
 <div class="hx-page" id="hxPage">
 <p class="hx-meta" data-blk>석사학위논문 · 본문 80 Page · APA 7판</p>
 <p class="hx-ttl" data-blk>${DEMO_TITLE}</p>
 <p class="hx-ch" data-blk>제1장 서론</p>
 <p class="hx-sec" data-blk>1. 연구의 필요성</p>
-<p class="hx-p" data-blk>일과 삶의 균형, 이른바 워라밸은 MZ세대 직장인이 일터를 고르고 머무는 핵심 기준이 되었다${cite('r3')}. 직원의 이직은 숙련 인력의 손실과 채용·교육 비용으로 이어져 조직의 지속가능성을 위협한다${cite('r2')}. 직무요구-자원 이론에 따르면 과도한 업무 요구는 소진을 거쳐 이탈로 이어지지만, 일과 삶을 스스로 조율할 수 있는 자원은 이를 완화한다${cite('r1')}. 다만 세대 차이는 고정관념이 아니라 실증 자료로 확인해야 한다는 지적이 있어${cite('r4')}, MZ세대 직장인을 대상으로 워라밸이 이직의도에 미치는 영향을 살펴볼 필요가 있다.</p>
+<div class="hx-flow" id="hxFlow">${NEED_SHOWN.map((p) => `<p class="hx-p">${withCites(p)}</p>`).join('')}</div>
 <div class="pv-lockzone hx-lock" id="hxLock" aria-hidden="true"><div class="pv-mosaic"><div class="pv-mz-in">
+<p class="hx-p2 hx-cont">${NEED_REST}</p>
 <p class="hx-sec">2. 연구의 목적</p>
-<p class="hx-p2">본 연구의 목적은 MZ세대 직장인이 인식하는 워라밸이 이직의도에 미치는 영향을 확인하고, 성별과 직급에 따른 차이를 살펴보는 데 있다. 이를 위한 구체적인 연구 문제는 다음과 같다.</p>
+<p class="hx-p2">본 연구의 목적은 MZ세대 직장인이 인식하는 워라밸이 이직의도에 미치는 영향을 확인하고, 그 결과를 바탕으로 조직이 MZ세대 인재를 붙잡기 위해 무엇을 지원해야 하는지 제시하는 데 있다. 이를 위한 구체적인 연구 문제는 다음과 같다.</p>
+<p class="hx-p2 hx-q">연구 문제 1. MZ세대 직장인이 인식하는 워라밸은 이직의도에 어떠한 영향을 미치는가?</p>
+<p class="hx-p2 hx-q">연구 문제 2. 워라밸의 하위 요인인 일-여가, 일-가족, 일-성장 균형은 이직의도에 각각 어떠한 영향을 미치는가?</p>
+<p class="hx-p2 hx-q">연구 문제 3. 성별과 직급에 따라 워라밸 인식과 이직의도에 차이가 있는가?</p>
 <p class="hx-ch">제2장 이론적 배경</p>
 <p class="hx-sec">1. 워라밸의 개념과 선행연구</p>
-<p class="hx-p2">워라밸은 일과 개인 생활에 쓰는 시간과 에너지를 스스로 조율하며 두 영역에서 만족을 느끼는 상태를 말한다. 국내에서는 주 52시간 근무제 시행 이후 직장 선택의 주요 기준으로 자리 잡았다.</p>
+<p class="hx-p2">국내에서는 근로시간 단축과 유연근무 확산을 계기로 워라밸이 직장 선택의 주요 기준으로 자리 잡았으며, 이를 일-여가, 일-가족, 일-성장의 균형으로 나누어 측정하는 연구가 이어져 왔다.</p>
 <p class="hx-p2">선행연구는 워라밸 인식이 높을수록 직무만족이 높아지고 이직의도는 낮아진다고 보고하며, 이 관계가 세대에 따라 어떻게 다른지에 주목한다.</p>
 </div></div>
 <div class="pv-lock"><span class="pv-lock-ic">${T.icon('lock')}</span><b>결제하시면 나머지 78 Page를 완성해 드려요</b><small>실존 참고문헌 42편 · 석·박사 전문가 최종 검토 · 메일로 전달</small></div></div>
+</div>
 </div>
 <div class="hx-more" id="hxMore"><span class="hx-more-t" id="hxMoreT">${T.icon('mail-check')}<span>석사 80 Page ${L80 ? `<s>${won(L80)}</s> ` : ''}<b>${won(Q80.total)}</b> · AI 집필 하루 완성</span></span><a class="btn btn-primary btn-sm" id="hxGo" href="${go}">내 논문 의뢰하기</a></div>
 </article>
@@ -88,7 +115,7 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 <div class="hx-rp-hd"><span id="hxVerifyLabel">참고문헌 실존 확인</span><b class="num" id="hxVerifyN">42/42</b></div>
 <div class="hx-meter" aria-hidden="true"><i></i></div>
 <p class="hx-rp-note" id="hxVerifyNote">후보 248편 중 42편 채택 · DOI·KCI·RISS 대조</p>
-<ol class="hx-refs" id="hxRefList">${REFS.map((r) => `<li id="hx-${r.id}" data-ref="${r.id}" data-blk><b class="hx-ra">${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><span class="hx-rt">${r.html.replace(/^[^)]*\)\. /, '').replace(/<i>([^,<]+)[^<]*<\/i>.*$/, '<i>$1</i>')}</span><span class="hx-doi">doi.org/${r.doi}</span><span class="hx-badges"><span class="hx-ok">${T.icon('check')}DOI 확인</span><span class="hx-n">본문 인용 ${r.n}곳</span></span></li>`).join('')}</ol>
+<ol class="hx-refs" id="hxRefList">${PANE_REFS.map((r) => `<li id="hx-${r.id}" data-ref="${r.id}" data-blk><b class="hx-ra">${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><span class="hx-rt">${r.html.replace(/^[^)]*\)\. /, '').replace(/<i>([^,<]+)[^<]*<\/i>.*$/, '<i>$1</i>')}</span><span class="hx-doi">doi.org/${r.doi}</span><span class="hx-badges"><span class="hx-ok">${T.icon('check')}DOI 확인</span><span class="hx-n">본문 인용 ${r.n}곳</span></span></li>`).join('')}</ol>
 </aside>
 </div>
 </div>
@@ -143,7 +170,7 @@ export default function home({ T }) {
 <thead><tr><th scope="col">문헌</th><th scope="col">확인 경로</th><th scope="col">상태</th><th scope="col" class="r">본문 인용</th></tr></thead>
 <tbody>
 ${REFS.map((r) => `<tr><td><b>${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><small>${r.html.match(/<i>([^,<]+)/)[1]}</small></td><td><span class="rv-src">DOI</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">${r.n}곳</td></tr>`).join('')}
-<tr><td><b>국내 학술지 논문 24편</b><small class="ko">KCI 등재·등재후보 학술지</small></td><td><span class="rv-src">KCI</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">80곳</td></tr>
+<tr><td><b>국내 학술지 논문 20편</b><small class="ko">KCI 등재·등재후보 학술지</small></td><td><span class="rv-src">KCI</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">72곳</td></tr>
 <tr><td><b>학위논문·단행본 14편</b><small class="ko">국내외 학위논문과 전문 서적</small></td><td><span class="rv-src">RISS</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">34곳</td></tr>
 </tbody>
 </table>
@@ -231,8 +258,8 @@ ${[
 <div class="tab-panel" role="tabpanel" id="out-2" aria-labelledby="tab-2" hidden>
 <div class="art sheet art-page"><div class="art-in">
 <p class="pg-ch">제1장 서론</p><p class="pg-sec">1. 연구의 필요성</p>
-<p class="pg-body">일과 삶의 균형은 MZ세대 직장인이 직장을 고르고 머무는 핵심 기준이 되었다<span class="pg-cite">(Kelliher et al., 2019)</span>. 직원의 이직은 숙련 인력의 손실과 채용·교육 비용으로 이어져 조직의 지속가능성을 위협한다<span class="pg-cite">(Hom et al., 2017)</span>. 직무요구-자원 이론은 과도한 업무 요구가 소진을 거쳐 이탈로 이어진다고 설명한다<span class="pg-cite">(Bakker et al., 2023)</span>.</p>
-<p class="pg-body pg-fade">특히 워라밸을 중시하는 MZ세대는 일과 삶의 균형이 무너질 때 이직을 고려하는 경향이 크다고 알려져 있으나, 세대 차이를 실증 자료로 확인한 연구<span class="pg-cite">(Rudolph et al., 2021)</span>는 아직 충분하지 않다.</p>
+<p class="pg-body">직원의 자발적 이직은 숙련 인력의 손실과 대체 인력의 채용·교육 비용으로 이어져 조직의 경쟁력을 떨어뜨리기 때문에, 지난 한 세기 동안 조직 연구의 핵심 주제로 다루어져 왔다<span class="pg-cite">(Hom et al., 2017)</span>. 특히 이직의도는 실제 이직을 예측하는 가장 강력한 선행 변인 가운데 하나로 확인되었다<span class="pg-cite">(Griffeth et al., 2000)</span>.</p>
+<p class="pg-body pg-fade">직무요구-자원 이론은 과도한 직무요구가 소진을, 충분한 직무자원이 직무열의를 이끈다고 설명한다<span class="pg-cite">(Bakker et al., 2023)</span>.</p>
 <p class="art-cap">예시 문단이에요. 실제 원고는 주문하신 주제와 자료를 바탕으로 쓰고, 인용 문헌은 모두 실제로 확인되는 문헌만 사용해요.</p>
 </div></div></div>
 <div class="tab-panel" role="tabpanel" id="out-3" aria-labelledby="tab-3" hidden>

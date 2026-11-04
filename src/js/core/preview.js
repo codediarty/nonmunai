@@ -5,9 +5,11 @@ import { POPULATIONS, FIELDS, guessField } from './kb.js';
 import { josa } from './engine.js';
 
 // 홈 첫 화면 예시 문장과 제목(주문서에는 그대로 옮기지 않는다)
-export const DEMO_PROMPT = '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해 주세요';
+export const DEMO_PROMPT = '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해줘';
 export const DEMO_TITLE = 'MZ세대 직장인의 워라밸이 이직의도에 미치는 영향';
-export const DEMO_PROMPTS = [DEMO_PROMPT, '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해 주세요'];
+// 예전 예시 문장(브라우저에 남은 옛 화면에서 넘어와도 빈 주문서가 열리도록 함께 둔다)
+export const DEMO_PROMPTS = [DEMO_PROMPT, '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해줘',
+  '경영학 석사인데, MZ세대 직장인 워라밸이랑 이직 관련해서 논문 완성해 주세요', '간호학과 석사인데, 간호사 이직이랑 번아웃 관련해서 논문 완성해 주세요'];
 export const TYPE_LABEL = { short: '소논문', bachelor: '학사 졸업논문', journal: '학술지 투고논문', master: '석사학위논문', doctor: '박사학위논문', youth: '청소년 탐구논문', personal: '개인 관심연구', report: '연구보고서' };
 
 const TYPE_RULES = [
@@ -194,14 +196,34 @@ export function buildPreview({ typeId = 'master', task = 'full', major = '', fie
   const y = (i) => ({ cite: years[i % years.length] });
   const T = (t) => ({ t });
 
-  const intro = [
-    [T(`최근 ${where} ${josa(k1, '은/는')} 현장의 변화와 맞물려 꾸준히 논의되어 온 핵심 주제이다`), y(0), T('. ')],
-    [T(`특히 ${josa(k1core, '은/는')} 개인과 조직, 사회 전반에 걸쳐 영향을 미치는 만큼 체계적인 연구가 필요하다는 지적이 이어지고 있다`), y(1), T('. ')],
-    k2
-      ? [T(`한편 ${josa(k2, '은/는')} ${josa(k1core, '과/와')} 밀접하게 관련된 요인으로 보고되어 왔으나`), y(2), T(', 두 요인을 함께 살펴본 국내 연구는 아직 많지 않다. ')]
-      : [T(`그러나 ${k1core}에 영향을 주는 요인을 ${pop ? `${pop}의 관점에서` : '현장의 관점에서'} 함께 살펴본 국내 연구는 아직 많지 않다`), y(2), T('. ')],
-    [T(`이에 본 연구는 ${pop ? `${josa(pop, '을/를')} 대상으로 ` : ''}${k2 ? `${josa(k1core, '과/와')} ${k2}의 관계를` : `${k1core}의 실태와 관련 요인을`} 실증적으로 분석하고, ${field || '관련'} 현장에 필요한 시사점을 제시하고자 한다.`)],
+  // 서론 '연구의 필요성': 실제 논문처럼 여러 문단으로 쓰고, 마지막 문단은 문장 중간에서 끊어 나머지(needRest)는 가린다
+  const view = pop ? `${pop}의 관점에서` : '현장의 관점에서';
+  const need = [
+    [
+      T(`최근 ${where} ${josa(k1, '은/는')} 현장의 변화와 맞물려 꾸준히 논의되어 온 핵심 주제이다`), y(0), T('. '),
+      T(pop
+        ? `사회와 산업 환경이 빠르게 바뀌면서 ${josa(pop, '이/가')} 마주하는 일상과 요구도 함께 달라지고 있으며, 이에 따라 ${josa(k1core, '을/를')} 바라보는 관점 역시 넓어지고 있다`
+        : `사회와 산업 환경이 빠르게 바뀌면서 현장에서 요구되는 역량과 경험도 함께 달라지고 있으며, 이에 따라 ${josa(k1core, '을/를')} 바라보는 관점 역시 넓어지고 있다`), y(1), T('. '),
+      T(`특히 ${josa(k1core, '은/는')} 개인의 삶의 질은 물론 가족과 조직, 지역사회에까지 영향을 미치는 만큼 체계적인 연구가 필요하다는 지적이 이어지고 있다`), y(2), T('.'),
+    ],
+    [
+      T(`${k1core}에 관한 선행연구는 주로 그 개념과 수준을 확인하거나 관련 요인을 탐색하는 데 초점을 맞추어 왔다`), y(3), T('. '),
+      T(`국내외 연구들은 ${josa(k1core, '이/가')} 개인의 심리적 특성, 주변 환경, 사회적 지지 등 여러 요인과 관련된다고 보고하였다`), y(4), T('. '),
+      ...(k2
+        ? [T(`그 가운데 ${josa(k2, '은/는')} ${josa(k1core, '과/와')} 밀접하게 관련된 요인으로 거듭 보고되어 왔다`), y(0), T('.')]
+        : [T(`다만 이러한 요인들이 어떤 경로로 ${k1core}에 영향을 미치는지는 연구마다 결과가 엇갈린다`), y(0), T('.')]),
+    ],
+    [
+      T(k2
+        ? `그러나 ${josa(k1core, '과/와')} ${k2}의 관계를 ${view} 함께 살펴본 국내 연구는 아직 많지 않다`
+        : `그러나 ${k1core}의 실태와 관련 요인을 ${view} 함께 살펴본 국내 연구는 아직 많지 않다`), y(1), T('. '),
+      T('또한 기존 연구의 상당수는 일부 집단이나 특정 시기의 자료에 기대고 있어, 달라진 현장을 반영한 실증 자료가 필요하다는 지적이 있다'), y(2), T('.'),
+    ],
+    [
+      T(`이에 본 연구는 ${pop ? `${josa(pop, '을/를')} 대상으로 ` : ''}${k2 ? `${josa(k1core, '과/와')} ${k2}의 관계를` : `${k1core}의 실태와 관련 요인을`} 실증적으로 분석하고,`),
+    ],
   ];
+  const needRest = [T(`그 결과를 바탕으로 ${field || '관련'} 현장에 필요한 실천적 시사점을 제시하고자 한다.`)];
   const purpose = [
     [T(`본 연구의 목적은 ${k2 ? `${josa(k1core, '과/와')} ${k2}의 관계를 밝히고` : `${k1core}의 수준과 관련 요인을 확인하고`}, 그 결과를 바탕으로 실천적 개입 방안을 제시하는 데 있다. 구체적인 연구 문제는 다음과 같다.`)],
   ];
@@ -220,14 +242,15 @@ export function buildPreview({ typeId = 'master', task = 'full', major = '', fie
     refs: refsFor(p),
     workTitle,
     toc: tocFor(tocKey, task, k1core, k2),
-    intro,
+    need,
+    needRest,
     purpose,
     theory,
     keywords: ks,
   };
 }
 
-// 조각 배열을 글자로(테스트·접근성용)
-export const plainText = (sentences) => sentences.map((s) => s.map((x) => (x.t != null ? x.t : `(○○, ${x.cite})`)).join('')).join('');
+// 조각 배열(문단 또는 문장 목록)을 글자로(테스트·접근성용)
+export const plainText = (blocks) => blocks.map((s) => s.map((x) => (x.t != null ? x.t : `(○○, ${x.cite})`)).join('')).join('\n');
 
 export { FIELDS };
