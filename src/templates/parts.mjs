@@ -91,7 +91,7 @@ export const readLine = readLineHtml;
 
 export { tocToText };
 
-// 논문 완성 가격 카드(소논문 15 Page·학사 30 Page·석사 80 Page·박사 130 Page): 정가와 할인 행사 이름(졸업 시즌 반값)을 함께 보여 준다(동작은 js/app/tiers.js)
+// 논문 완성 가격 카드(소논문 15 Page·학사 30 Page·석사 80 Page·박사 130 Page): 정가와 할인 이름(온라인 단독 반값)을 함께 보여 준다(동작은 js/app/tiers.js)
 export const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
 const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
 export const TIERS = [

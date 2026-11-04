@@ -180,6 +180,14 @@ const WHY = [
 ];
 const whyTable = (WHY) => `<table style="width:100%;border-collapse:separate;border-spacing:10px"><tr>${WHY.slice(0, 2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr><tr>${WHY.slice(2).map(([h, t]) => `<td style="width:50%;vertical-align:top;padding:22px;border:1px solid ${LINE};border-radius:14px"><p style="margin:0 0 8px;font-size:17px;font-weight:800;color:${NAVY}">${esc(h)}</p><p style="margin:0;font-size:15px;line-height:1.7;color:${MUTED}">${esc(t)}</p></td>`).join('')}</tr></table>`;
 const TRUST = `<div style="margin:0;padding:24px 26px;border-radius:16px;background:#F5F7FB;border:1px solid ${LINE}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#2346E8">논문AI 결제 안내</p><p style="margin:0;font-size:17px;line-height:1.75;color:${NAVY};font-weight:600">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영하는 논문 전문 서비스예요. 주문은 논문AI에서, 결제와 영수증은 운영사인 <b>성균관컨설팅</b> 이름으로 안전하게 처리돼요.</p><table style="margin:16px 0 0;border-collapse:separate;border-spacing:0 0"><tr>${['성균관대학교 RISE사업 지원 기업', '전공 분야 박사 최종 검수', '통신판매업 신고 사업자'].map((t) => `<td style="padding:0 8px 0 0"><span style="display:inline-block;padding:7px 12px;border-radius:999px;background:#fff;border:1px solid #C9D3FB;font-size:13px;font-weight:700;color:#2346E8;white-space:nowrap">${t}</span></td>`).join('')}</tr></table></div>`;
+// 보안과 연구 자료 보호(결제 안내 바로 아래)
+const SECRET_ITEMS = [
+  '주문 내용과 결과물은 의뢰하신 분만 볼 수 있고, 동의 없이 공개하거나 다른 곳에 쓰지 않아요.',
+  '집필과 검수는 이름 대신 주문번호로 진행하고, 모든 담당자는 비밀유지 의무를 지켜요.',
+  '완성본 전달 후 90일이 지나면 올리신 파일과 완성본을 모두 자동으로 영구 삭제해요. 요청하시면 그 전에 바로 지워 드려요.',
+  '모든 전송은 HTTPS로 암호화하고, 카드 번호는 결제대행사가 처리해 논문AI에 남지 않아요.',
+];
+const SECRET = `<div style="margin:16px 0 0;padding:26px 26px 16px;border-radius:16px;background:${NAVY}"><p style="margin:0 0 6px;font-size:14px;font-weight:700;color:#9DB0FF">보안 · 연구 자료 보호</p><p style="margin:0 0 12px;font-size:20px;line-height:1.5;font-weight:800;color:#FFFFFF;letter-spacing:-.02em">철저한 보안 관리로 연구 자료를 지켜요</p><ul style="list-style:none;margin:0;padding:0">${SECRET_ITEMS.map((t) => `<li style="position:relative;padding:11px 0 11px 28px;border-top:1px solid rgba(255,255,255,.12);font-size:15.5px;line-height:1.65;color:#D5DBEC"><span style="position:absolute;left:0;top:11px;color:#8EA2FF;font-weight:800">✓</span>${esc(t)}</li>`).join('')}</ul></div>`;
 const FOOT = `<p style="margin:56px 0 0;padding-top:20px;border-top:1px solid ${LINE};font-size:13px;line-height:1.7;color:#8A93A6">논문AI(<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>)는 성균관컨설팅이 운영합니다 · 성균관대학교 RISE사업 지원 기업 · 사업자등록번호 272-32-01885 · contact@skkc.co.kr</p>`;
 const SAMPLE = { paper: ['sample-paper.png', '논문AI 연구 설계서와 목차 결과물 예시'], survey: ['sample-survey.png', '논문AI 설문지와 응답 분석 결과물 예시'], statistics: ['sample-stats.png', '논문AI 통계표와 해석 결과물 예시'] };
 // 상세 맨 위: 표지와 같은 남색 머리(구분, 한 줄 소개, 상품 기본 정보)
@@ -189,7 +197,7 @@ const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCa
 for (const p of products) {
   let body = '';
   if (p.kind === 'extra') {
-    body = hero(KICK(p), '안내된 단위 수만큼,<br>본 상품과 함께 담아 주세요', `추가 분량 1단위 ${won(p.price)}`) + TRUST
+    body = hero(KICK(p), '안내된 단위 수만큼,<br>본 상품과 함께 담아 주세요', `추가 분량 1단위 ${won(p.price)}`) + TRUST + SECRET
       + sec('이렇게 담아 주세요', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">논문AI 주문서의 금액 안내에 <b>추가 분량 N단위</b>가 있으면, 이 상품을 <b>N개</b> 담아 본 상품과 함께 한 번에 결제해 주세요. 1단위는 <b>${won(p.price)}</b>이에요.</p>`)
       + sec(p.users.length ? '이 단가를 쓰는 상품' : '이럴 때 씁니다', checks(p.includes));
   } else if (p.kind === 'addon') {
@@ -199,14 +207,14 @@ for (const p of products) {
     const howTo = isEn
       ? `${esc(p.applies)}에 더할 수 있어요. 논문AI 주문서에서 영문 논문 작성을 고르면 원고 분량에 맞춰 단위 수가 계산돼요. 결제 화면에 나온 단위 수만큼 이 상품을 담아 본 상품과 함께 한 번에 결제해 주세요.`
       : `${esc(p.applies)}에 더할 수 있어요. 논문AI 주문서에서 이 옵션을 고르면 결제 화면에 본 상품과 함께 안내되니, 장바구니에 함께 담아 한 번에 결제해 주세요.`;
-    body = hero(KICK(p), pt.who.length ? esc(pt.head).replace(/, /, ',<br>') : esc(p.lines.join(' ')), `${p.name.replace('[논문AI] ', '')} · ${priceText}`) + TRUST
+    body = hero(KICK(p), pt.who.length ? esc(pt.head).replace(/, /, ',<br>') : esc(p.lines.join(' ')), `${p.name.replace('[논문AI] ', '')} · ${priceText}`) + TRUST + SECRET
       + (pt.who.length ? sec('이런 분께 맞습니다', checks(pt.who)) : '')
       + sec(pt.who.length ? '받는 결과물' : '무엇이 달라지나요', checks(p.includes))
       + sec('함께 결제하는 법', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">${howTo}</p>`);
   } else {
     const pt = pitch(p);
     const inc = p.includes.filter((x) => !/수정 \d+회/.test(x)).map((x) => x.replace(/\s*\(.*?\)\s*/g, ' ').trim());
-    body = hero(KICK(p), esc(pt.head).replace(/, /, ',<br>'), `${p.name.replace('[논문AI] ', '')} · ${p.meta}`) + priceBox(p) + TRUST
+    body = hero(KICK(p), esc(pt.head).replace(/, /, ',<br>'), `${p.name.replace('[논문AI] ', '')} · ${p.meta}`) + priceBox(p) + TRUST + SECRET
       + (pt.who.length ? sec('이런 분께 맞습니다', checks(pt.who)) : '')
       + sec('받는 결과물', checks(inc)) + (SAMPLE[p.service] ? img(SAMPLE[p.service][0], SAMPLE[p.service][1]) : '')
       + (p.code === 'T-SIM' ? `<p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">교육과 연습을 위한 가상 데이터로 진행해요.</p>` : '')
@@ -258,6 +266,9 @@ function cover(p) {
   const kicker = p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '통계분석';
   return { kicker, title: STITLE[p.code], tag: TAG[p.code] };
 }
+// 표지 아래 둘째 줄: 보안 표시(참고문헌 실존 검증 배지와 같은 크기의 파란 원 안에 자물쇠)
+const COVER_SECURE = '철저한 보안 관리로 연구 자료 보호';
+const lockBadge = (size = 34) => `<svg width="${size}" height="${size}" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="17" fill="${BRAND.blue}"/><g transform="translate(7 7) scale(.8333)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></g></svg>`;
 // 제목 글자 폭(em): 한글 1, 영문·숫자 0.62, 띄어쓰기 0.3, 자간 -0.05em
 const emWidth = (t) => [...t].reduce((a, ch) => a + (/\s/.test(ch) ? 0.3 : /[\x21-\x7e]/.test(ch) ? 0.62 : 0.95), 0);
 const imgHtml = (p) => {
@@ -281,10 +292,11 @@ h1 span+span{color:#C9D3FF}
 .g{margin:30px 0 0;font-size:33px;font-weight:600;letter-spacing:-.03em;color:#C6CEE6;word-break:keep-all}
 .foot{display:flex;align-items:center;justify-content:space-between;padding-top:30px;border-top:1.5px solid rgba(255,255,255,.14);font-size:25px;font-weight:600;color:#AEB8D2}
 .v{display:flex;align-items:center;gap:10px;color:#E3E8F5}
+.vs{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 </style></head><body><div class="c">
 <div class="top"><div class="brand">${brandMark({ size: 54, bright: true })}<b>논문AI</b><small>NONMUN AI</small></div>${p.list ? `<span class="deal">${promoText(p.list, p.price)}</span>` : ''}</div>
 <div class="mid"><p class="k">${esc(c.kicker)}</p><h1>${c.title.map((l) => `<span>${esc(l)}</span>`).join('')}</h1><div class="rule"></div><p class="g">${esc(c.tag)}</p></div>
-<div class="foot"><span>nonmunai.kr</span><span class="v">${verifiedBadge({ size: 34, color: BRAND.blue })}참고문헌 100% 실존 검증</span></div>
+<div class="foot"><span>nonmunai.kr</span><div class="vs"><span class="v">${verifiedBadge({ size: 34, color: BRAND.blue })}참고문헌 100% 실존 검증</span><span class="v">${lockBadge(34)}${COVER_SECURE}</span></div></div>
 </div></body></html>`;
 };
 
@@ -315,7 +327,7 @@ const page = await browser.newPage({ viewport: { width: 1000, height: 1000 }, de
 const loadFonts = (txt) => page.evaluate(async (t) => { await Promise.all([document.fonts.load('700 60px "Noto Serif KR"', t), document.fonts.load('700 26px "Pretendard Variable"', t), document.fonts.load('500 26px "Pretendard Variable"', t)]); await document.fonts.ready; }, txt);
 for (const p of products) {
   await page.setContent(imgHtml(p), { waitUntil: 'networkidle' });
-  { const c = cover(p); await loadFonts(c.kicker + c.title.join('') + c.tag + '논문AI NONMUN nonmunai.kr 0123456789,원%' + PROMO_NAME + PROMO_SHORT + ' 할인Page 참고문헌 100% 실존 검증'); }
+  { const c = cover(p); await loadFonts(c.kicker + c.title.join('') + c.tag + '논문AI NONMUN nonmunai.kr 0123456789,원%' + PROMO_NAME + PROMO_SHORT + ' 할인Page 참고문헌 100% 실존 검증' + COVER_SECURE); }
   await page.waitForTimeout(120);
   await page.screenshot({ path: path.join(out, 'img', `${p.code}.jpg`), type: 'jpeg', quality: 86 });
   p.image = `img/${p.code}.jpg`;

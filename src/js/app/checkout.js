@@ -185,7 +185,7 @@ ${what}
 <div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(directUrl(o, link) || link.url)}"${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
 <ol class="pay-steps"><li>결제 화면에서 결제를 마칩니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.</li><li>결제가 확인되면 작업이 시작되고 메일로 알려 드립니다. 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 더 빨리 시작합니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
-<ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>전공 분야 박사 검수</li></ul></div>`);
+<ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>전공 분야 박사 검수</li><li>철저한 보안 관리</li><li>전달 후 자료 삭제</li></ul></div>`);
     }
     if (methods.includes('bank')) blocks.push(`<div class="pay-m"><h3>무통장입금</h3><dl class="bank-box"><dt>은행</dt><dd>${esc(s.bankName)}</dd><dt>계좌</dt><dd>${esc(s.bankAccount)}</dd><dt>예금주</dt><dd>${esc(s.bankHolder)}</dd><dt>금액</dt><dd>${won(o.amountDue)}</dd></dl><div class="field"><label class="label" for="payer">입금자명</label><input class="input" id="payer" placeholder="입금하신 분 이름" autocomplete="name"></div><button type="button" class="btn btn-ghost" id="bankDone">입금했어요</button></div>`);
     payBox = `<div class="card"><div class="card-h"><h2 class="serif">결제</h2><span class="num" style="font-family:var(--serif);font-size:24px;font-weight:700">${won(o.amountDue)}</span></div>

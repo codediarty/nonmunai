@@ -181,6 +181,8 @@ em.st, .st { font-family: var(--stat); font-style: italic; letter-spacing: 0; }
 .ft a { color: #E3E8F5; }
 .ft-top { display: grid; grid-template-columns: 1.1fr 2fr; gap: 48px; padding-bottom: 44px; border-bottom: 1px solid rgba(255, 255, 255, .09); }
 .ft-brand p { margin-top: 16px; max-width: 34ch; color: #A3ADC5; line-height: 1.7; }
+.ft-brand .ft-secure { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; font-weight: 700; color: #D3DBF2; }
+.ft-secure .i { flex: none; width: 18px; height: 18px; color: #8EA2FF; }
 .logo-ft { color: #fff; }
 .ft-cols { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
 .ft-h { font-family: var(--sans); font-size: 13.5px; color: #fff; font-weight: 700; margin-bottom: 14px; letter-spacing: 0; }

@@ -522,6 +522,8 @@
 .qo-safe { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); text-align: center; }
 .qo-safe .i { flex: none; width: 15px; height: 15px; color: var(--green); }
 .qo-safe b { color: var(--ink-2); }
+.qo-secret { margin-top: 6px; }
+.qo-secret .i { color: var(--blue); }
 .qo-err { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--pen); }
 .qo-err:empty { display: none; }
 .qo .is-invalid { border-color: var(--pen) !important; box-shadow: 0 0 0 3px rgba(211, 38, 58, .14) !important; }

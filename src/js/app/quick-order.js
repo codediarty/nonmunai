@@ -115,7 +115,7 @@ function shell(root) {
 <p class="qo-eyebrow"><span>논문 의뢰</span></p>
 <h1 class="qo-h1">주제만 알려 주세요.<br>완성본으로 보내 드려요.</h1>
 <p class="qo-lead">관심 주제와 전공, 논문 종류만 골라 주세요. 제목과 목차, 연구 방법은 논문AI와 같은 전공 박사가 정하고, 최종 검수까지 마쳐서 보내 드려요.</p>
-<ul class="qo-proof"><li>${ICON.check}<span>참고문헌 100% 실존 검증</span></li><li>${ICON.check}<span>같은 전공 박사 검수</span></li><li>${ICON.check}<span>검수 완료본만 메일 전달</span></li></ul>
+<ul class="qo-proof"><li>${ICON.check}<span>참고문헌 100% 실존 검증</span></li><li>${ICON.check}<span>같은 전공 박사 검수</span></li><li>${ICON.check}<span>검수 완료본만 메일 전달</span></li><li>${ICON.check}<span>철저한 보안 관리 · 연구 자료 보호</span></li></ul>
 </div></div>
 <div class="wrap qo-grid">
 <form class="qo-form" id="qoForm" novalidate autocomplete="off">
@@ -129,7 +129,8 @@ function shell(root) {
 <input type="text" name="hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" data-k="hp">
 <div class="qo-go"><p class="qo-err" id="qoErr" role="alert"></p>
 <button class="btn btn-primary btn-lg btn-block qo-submit" type="submit" id="qoSubmit">결제하고 의뢰하기</button>
-<p class="qo-safe">${ICON.check}<span>결제가 확인되면 바로 집필을 시작해요 · 카드·간편결제·계좌이체</span></p></div>
+<p class="qo-safe">${ICON.check}<span>결제가 확인되면 바로 집필을 시작해요 · 카드·간편결제·계좌이체</span></p>
+<p class="qo-safe qo-secret">${ICON.shield}<span>연구 자료는 철저한 보안 속에 관리해요. 작업은 이름 대신 주문번호로 하고, 전달 후 90일이 지나면 자료를 모두 지워요.</span></p></div>
 </form>
 <aside class="qo-side" aria-label="내 논문 미리보기와 결제 금액"><div class="qo-side-in"><div id="qoPv"></div><div class="qo-sum" id="qoSum"></div></div></aside>
 </div>

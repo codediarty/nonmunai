@@ -85,7 +85,7 @@ export function createTemplates({ site, root, assetVersion }) {
     if (page.chrome === 'admin') return '';
     const col = (title, links) => `<div class="ft-col"><h2 class="ft-h">${esc(title)}</h2><ul>${links.map(([l, h]) => `<li><a href="${u(h)}">${esc(l)}</a></li>`).join('')}</ul></div>`;
     return `<footer class="ft"><div class="wrap">
-<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>관심 주제 한 줄로 논문을 완성하고, 같은 전공 분야의 박사가 최종 검수까지 마친 뒤 보내 드리는 AI 논문 서비스예요. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있어요.</p></div>
+<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>관심 주제 한 줄로 논문을 완성하고, 같은 전공 분야의 박사가 최종 검수까지 마친 뒤 보내 드리는 AI 논문 서비스예요. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있어요.</p><p class="ft-secure">${icon('shield-check')}<span>철저한 보안 관리 · 전달 후 자료 자동 삭제</span></p></div>
 <div class="ft-cols">${col('서비스', [['논문 자동작성', '/ai-thesis/'], ['논문 작성 지원', '/thesis-writing/'], ['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['연구계획서', '/research-proposal/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/']])}
 ${col('무료 도구', [['무료 논문 설계', '/free/'], ['논문 목차 생성기', '/tools/toc/'], ['표본 수 계산기', '/tools/sample-size/'], ['참고문헌 생성기', '/tools/references/'], ['논문 작성 가이드', '/guide/']])}
 ${col('고객 지원', [['주문 조회', '/orders/'], ['가격 안내', '/pricing/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/']])}

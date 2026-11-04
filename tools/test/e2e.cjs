@@ -1918,6 +1918,21 @@ async function tests() {
     has(await text(p, '#hxLock .pv-lock'), '결제하시면 나머지 78 Page를 완성해 드려요', '결제 후 완성 안내');
     ok(await p.$eval('#hxScroll', (x) => x.classList.contains('is-free') && x.scrollTop > 0), '다 쓴 뒤 지면을 굴려 읽을 수 없음');
   }));
+  await check(39, '홈 보안 섹션: 철저한 보안 관리와 연구 자료 보호, 주문번호로 작업, 전달 후 90일 모든 자료 삭제, 암호화 약속과 삭제 일정, 약관·FAQ에도 같은 약속', async () => withCtx({}, async (p) => {
+    await p.goto(`${BASE}/`);
+    const sec = await text(p, '#secure');
+    for (const s of ['철저한 보안 관리로', '연구 자료를 지켜요', '주문 내용 비밀 유지', '주문번호로 진행', '비밀유지 의무', '90일이 지나면 모두 자동으로 영구 삭제', 'HTTPS로 암호화', '자동 영구 삭제', '복구할 수 없어요']) has(sec, s, '비밀 보장 섹션');
+    eq(await p.$$eval('#secure .sc-grid li', (ls) => ls.length), 6, '비밀 보장 약속 수');
+    eq(await p.$$eval('#secure .sc-steps li', (ls) => ls.length), 3, '삭제 일정 단계 수');
+    ok(await p.$('#secure a[href$="/privacy/"]'), '개인정보처리방침 링크 없음');
+    has(await text(p, '.hx-proof2'), '철저한 보안 관리', '첫 화면 신뢰 표시');
+    has(await text(p, '.ft'), '철저한 보안 관리', '바닥글');
+    await p.goto(`${BASE}/terms/`);
+    has(await text(p, 'main'), '운영자와 검수자에게도 같은 비밀유지 의무', '약관 비밀유지 조항');
+    await p.goto(`${BASE}/faq/`);
+    const faq = await text(p, 'main');
+    for (const q of ['제 주문 내용이 다른 사람에게 알려질 수 있나요?', '검수하는 박사님도 제 이름을 아나요?', '올린 자료와 완성본은 언제 삭제되나요?']) has(faq, q, 'FAQ 비밀 보장');
+  }));
   await check(41, '홈 프롬프트로 연 주문서는 주제·전공·석사 80 Page가 채워지고 미리보기가 써진 뒤 모자이크로 가려짐(홈 예시 문장은 채우지 않음)', async () => withCtx({}, async (p) => {
     await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
     await p.waitForSelector('#qoForm #qoTopic');
@@ -2001,7 +2016,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 15000 });
       await p.waitForSelector('#nmBanner', { timeout: 8000 });
       const banner = await text(p, '#nmBanner');
-      for (const s of ['석사학위논문 80 Page', '199,000원', '졸업 시즌 반값', '99,000원']) has(banner, s, '결제 화면 안내');
+      for (const s of ['석사학위논문 80 Page', '199,000원', '온라인 단독 반값', '99,000원']) has(banner, s, '결제 화면 안내');
       await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', '최간호'); set('ordererCall', '010-3456-7890'); set('ordererEmail', 'e2e-direct@example.com'); });
       await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
       await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });

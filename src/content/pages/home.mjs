@@ -134,7 +134,7 @@ export default function home({ T }) {
 <ul class="hx-oneday" aria-label="논문 종류별 의뢰">${kinds.map(([t, n, pg]) => `<li><a href="${T.u('/paper/new/')}?type=${t}&amp;task=full">${T.icon('file-text')}<span><b>${n}</b> ${pg} Page</span></a></li>`).join('')}</ul>
 <p class="hx-deal"><span class="hx-deal-k">석사학위논문 80 Page</span><span class="hx-deal-v">${wasPrice(L80, Q80.total)}<b class="num">${won(Q80.total)}</b></span><small>${PROMO_SHORT}</small></p>
 <div class="hx-cta"><a class="btn btn-primary btn-lg" href="${T.u('/paper/new/')}">논문 의뢰하기</a><a class="btn btn-ghost btn-lg" href="#pricing">가격표 보기</a></div>
-<ul class="hx-proof2"><li>${T.icon('book-check')}참고문헌 100% 실존 검증</li><li>${T.icon('user-check')}전공 분야 박사 최종 검수</li><li>${T.icon('credit-card')}회원가입 없이 바로 결제</li></ul>
+<ul class="hx-proof2"><li>${T.icon('book-check')}참고문헌 100% 실존 검증</li><li>${T.icon('user-check')}전공 분야 박사 최종 검수</li><li>${T.icon('shield-check')}철저한 보안 관리 · 연구 자료 보호</li></ul>
 <p class="hx-trust">${T.icon('building-2')}<span>운영 <b>성균관컨설팅</b> · 성균관대학교 RISE사업 지원 기업</span></p>
 </div>
 <div class="hx-visual">${heroWindow(T)}</div>
@@ -182,7 +182,7 @@ ${REFS.map((r) => `<tr><td><b>${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><small
 
 <section class="sec" id="pricing" aria-labelledby="tier-h">
 <div class="wrap">
-<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME} 이벤트</p><h2 class="h-2 price-h" id="tier-h">석사논문 <span class="nowrap">80 Page</span>, <span class="num nowrap" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원</h2><p>정가 ${won(L80)}인 석사학위논문을 지금은 반값에 맡겨 보세요. 박사학위논문 130 Page는 정가 ${won(L130)}에서 <span data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요. 실존 참고문헌과 본문 인용, <span class="nowrap">전공 분야 박사</span>의 최종 검수까지 모두 들어 있어요.</p></div>
+<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME}</p><h2 class="h-2 price-h" id="tier-h">석사논문 <span class="nowrap">80 Page</span>, <span class="num nowrap" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원</h2><p>정가 ${won(L80)}인 석사학위논문을 논문AI에서는 반값에 맡기실 수 있어요. 박사학위논문 130 Page는 정가 ${won(L130)}에서 <span data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요. 실존 참고문헌과 본문 인용, <span class="nowrap">전공 분야 박사</span>의 최종 검수까지 모두 들어 있어요.</p></div>
 ${pageTiers(T)}
 <p class="tiers-foot">학술지 투고논문 20 Page는 ${won(Q20.total)}이에요. 논문 첨삭, 교수님 피드백 반영, 통계분석 가격은 <a href="${T.u('/pricing/')}">전체 가격표</a>에서 확인해 보세요.</p>
 </div>
@@ -207,6 +207,29 @@ ${pageTiers(T)}
 <li>${T.icon('file-check')}<b>양식과 형식</b><span>학교·학술지 양식과 APA 7판, 표·그림 번호와 목차</span></li>
 </ul>
 <p class="qc-foot">검수까지 마친 완성본 기준 전달 <a href="${T.u('/paper/new/')}?type=master&amp;task=full">석사학위논문 영업일 ${Q80.days}일</a><a href="${T.u('/paper/new/')}?type=doctor&amp;task=full">박사학위논문 ${Q130.days}일</a><a href="${T.u('/paper/new/')}?type=journal&amp;task=full">학술지 투고논문 ${Q20.days}일</a><a href="${T.u('/paper/new/')}?type=bachelor&amp;task=full">학사 졸업논문 ${Q30.days}일</a></p>
+</div>
+</div>
+</section>
+
+<section class="sec sec-ink sc" id="secure" aria-labelledby="sc-h">
+<div class="wrap">
+<div class="sec-head sc-head"><div class="sc-hd"><span class="sc-seal">${T.icon('shield-check')}</span><p class="eyebrow">보안 · 연구 자료 보호</p></div><h2 class="h-2" id="sc-h">철저한 보안 관리로<br>연구 자료를 지켜요</h2><p>연구 자료와 원고는 의뢰하신 분의 소중한 자산이에요. 주문 내용은 의뢰하신 분만 볼 수 있게 관리하고, 완성본을 보내 드린 뒤에는 올리신 자료까지 모두 삭제해요. 이용약관과 개인정보처리방침에 적어 둔 약속이에요.</p></div>
+<ul class="sc-grid">
+<li>${T.icon('shield-check')}<b>주문 내용 비밀 유지</b><span>주문 내용과 결과물은 의뢰하신 분만 볼 수 있어요. 동의 없이 공개하거나 다른 분께 다시 팔지 않고, 후기나 홍보에도 쓰지 않아요.</span></li>
+<li>${T.icon('user-lock')}<b>이름 대신 주문번호로 작업</b><span>집필과 검수는 주문번호로 진행해요. 담당 박사에게도 이름과 연락처는 전달되지 않고, 모든 담당자는 비밀유지 의무를 지켜요.</span></li>
+<li>${T.icon('trash-2')}<b>전달 후 모든 자료 삭제</b><span>올리신 파일과 완성본은 전달 후 90일이 지나면 모두 자동으로 영구 삭제돼요. 그 전이라도 삭제를 요청하시면 바로 지워 드려요.</span></li>
+<li>${T.icon('lock-keyhole')}<b>암호화 전송, 비공개 보관</b><span>모든 전송은 HTTPS로 암호화하고, 자료는 주문별 비공개 공간에 보관해요. 주문번호와 조회 비밀번호가 있어야만 열려요.</span></li>
+<li>${T.icon('key-round')}<b>비밀번호·카드 번호 미보관</b><span>조회 비밀번호는 복원할 수 없는 암호화 값으로만 저장해요. 카드 번호는 결제대행사가 처리하고 논문AI에는 남지 않아요.</span></li>
+<li>${T.icon('id-card')}<b>가입 없이, 최소한의 정보만</b><span>회원가입 없이 이름, 이메일, 휴대전화만 적으면 돼요. AI 집필에도 이름과 연락처 같은 개인정보는 넣지 않아요.</span></li>
+</ul>
+<div class="sc-del">
+<p class="sc-del-t">${T.icon('timer-reset')}<b>자료 삭제 일정</b></p>
+<ol class="sc-steps">
+<li><span class="sc-dot">1</span><b>완성본 전달</b><p>메일과 주문 페이지로 보내 드려요. 완성본은 꼭 내려받아 두세요.</p></li>
+<li><span class="sc-dot">2</span><b>90일 보관</b><p>다시 내려받으실 수 있게 보관해요. 그사이 언제든 삭제를 요청할 수 있어요.</p></li>
+<li><span class="sc-dot sc-dot-end">${T.icon('trash-2')}</span><b>자동 영구 삭제</b><p>올리신 파일과 완성본을 모두 지워요. 지운 자료는 복구할 수 없어요.</p></li>
+</ol>
+<p class="sc-note">결제하지 않은 주문은 30일, 제출하지 않은 주문서는 3일 뒤 자동으로 지워져요. 전자상거래법에 따라 주문·결제 기록만 정해진 기간 따로 보관하고, 원고와 파일은 남기지 않아요. <a href="${T.u('/privacy/')}">보관과 삭제 기준 자세히 보기</a></p>
 </div>
 </div>
 </section>
