@@ -37,16 +37,12 @@ if (win) {
   const chips = $('#hxChips', win);
   const lock = $('#hxLock', win);
   const moreBar = $('#hxMore', win);
-  const plan = $('#hxPlan', win);
-  const planT = $('#hxPlanT', win);
-  const planS = $('#hxPlanS', win);
   const hud = $('#hxHud', win);
   const hudT = $('#hxHudT', win);
   const hudN = $('#hxHudN', win);
   const hudC = $('#hxHudC', win);
   const vLabel = $('#hxVerifyLabel', win);
   const vNote = $('#hxVerifyNote', win);
-  const planTitle = planT ? planT.textContent : '';
   const promptText = text.value;
   let typing = null;
   let cycleTimer = null;
@@ -138,16 +134,6 @@ if (win) {
     };
     requestAnimationFrame(tick);
   });
-  // 연구 설계 카드의 제목: 몇 글자씩 빠르게 써진다
-  const typeInto = async (el, str, ms) => {
-    const n = Math.max(1, Math.ceil(str.length / (ms / 16)));
-    for (let i = n; i <= str.length + n - 1; i += n) {
-      el.textContent = str.slice(0, i);
-      await wait(16);
-      if (!alive()) return;
-    }
-    el.textContent = str;
-  };
 
   // 프롬프트 입력 연출: 두벌식으로 칠 때처럼 자모가 조합되며 글자가 써진다(칸을 누르면 바로 멈춤)
   const escT = (t) => esc(t).replace(/\n/g, '<br>');
@@ -193,7 +179,6 @@ if (win) {
     read.classList.add('is-empty');
     paint('', '', true);
     for (const { p } of paras) p.textContent = '';
-    if (plan) { plan.classList.remove('is-on', 'is-set', 'is-out'); planT.textContent = ''; planS.textContent = '설계 중'; }
     if (hud) { hud.classList.remove('is-on', 'is-end'); hudT.textContent = 'AI 집필 중'; hudN.textContent = '0자'; hudC.textContent = '인용 0곳'; }
     if (vLabel) vLabel.textContent = '실존 문헌 검색';
     if (vNote) vNote.textContent = '후보 0편 · DOI·KCI·RISS 대조';
@@ -250,7 +235,7 @@ if (win) {
     }
     return true;
   };
-  // 실존 문헌 검색: 후보를 훑고(0→248편), 42편을 채택해 DOI를 하나씩 확인한다(연구 설계와 함께 진행)
+  // 실존 문헌 검색: 후보를 훑고(0→248편), 42편을 채택해 DOI를 하나씩 확인한다(지면의 제목·목차와 함께 진행)
   const searchRefs = async (refs) => {
     setStep(1, 'run');
     if (vLabel) vLabel.textContent = '실존 문헌 검색';
@@ -295,25 +280,20 @@ if (win) {
     setTimeout(() => form.classList.remove('is-sent'), 900);
     win.classList.remove('is-idle');
     send.classList.add('is-pulse');
-    // 0. 주제 분석: 연구 설계 카드에 제목과 연구모형이 그려진다
+    // 0. 주제 분석
     setStep(0, 'run');
-    if (plan) { plan.classList.add('is-on'); typeInto(planT, planTitle, 420); }
-    await wait(420); if (!alive()) return;
-    // 1. 실존 문헌 검색은 설계와 동시에 오른쪽에서 진행된다
-    const searching = searchRefs(blk('li[data-ref]', refList));
-    await wait(700); if (!alive()) return;
-    if (plan) { plan.classList.add('is-set'); planS.textContent = '설계 완료'; }
+    await wait(450); if (!alive()) return;
     setStep(0, 'done');
-    await wait(560); if (!alive()) return;
-    // 2. 목차 설계: 설계 카드를 걷고 지면에 제목과 목차를 올린다
+    // 1. 실존 문헌 검색(오른쪽)과 2. 목차 설계(지면)가 함께 진행된다
+    const searching = searchRefs(blk('li[data-ref]', refList));
+    await wait(160); if (!alive()) return;
     setStep(2, 'run');
-    if (plan) plan.classList.add('is-out');
     reveal(blk('.hx-meta, .hx-ttl'));
-    await wait(240); if (!alive()) return;
+    await wait(320); if (!alive()) return;
     const toc = $('.hx-tocx', page);
     if (toc) {
       reveal([toc]);
-      for (const li of $$('li', toc)) { reveal([li]); await wait(85); if (!alive()) return; }
+      for (const li of $$('li', toc)) { reveal([li]); await wait(110); if (!alive()) return; }
     }
     if (!(await searching)) return;
     await wait(160); if (!alive()) return;
