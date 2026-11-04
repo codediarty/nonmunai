@@ -29,15 +29,15 @@ const T = createTemplates({ site, root, assetVersion: 'og' });
 const ctx = { site, T, root, assetVersion: 'og', guides: loadGuides(root) };
 const pageDir = path.join(root, 'src/content/pages');
 const targets = new Map();
-targets.set('/assets/img/og/default.png', { kicker: '전공 전문가가 검수하는 AI 논문', title: '관심 주제 한 줄로\n논문을 완성합니다', sub: '전공 분야 전문가 최종 검수 · 참고문헌 100% 실존 검증' });
+targets.set('/assets/img/og/default.png', { kicker: '전공 박사가 검수하는 AI 논문', title: '관심 주제 한 줄로\n논문을 완성합니다', sub: '전공 분야 박사 최종 검수 · 참고문헌 100% 실존 검증' });
 for (const f of fs.readdirSync(pageDir).filter((x) => x.endsWith('.mjs'))) {
   const mod = await import(pathToFileURL(path.join(pageDir, f)).href);
   for (const p of await mod.default(ctx)) {
     if (!p.ogImage || targets.has(p.ogImage)) continue;
     const isGuide = p.ogImage.includes('/og/guide-');
     const title = p.path === '/' ? '관심 주제 한 줄로\n논문을 완성합니다' : (p.ogTitle || p.h1 || p.title.replace(/\s*\|\s*논문AI$/, ''));
-    const kicker = p.path === '/' ? '전공 전문가가 검수하는 AI 논문' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
-    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '전공 분야 전문가 최종 검수 · 참고문헌 100% 실존 검증' : p.path === '/ai-thesis/' ? '실존 참고문헌과 본문 인용, 15 Page부터 130 Page까지' : '' });
+    const kicker = p.path === '/' ? '전공 박사가 검수하는 AI 논문' : isGuide ? `논문AI 가이드${p.category ? ' · ' + p.category : ''}` : (p.crumbs && p.crumbs[1] ? p.crumbs[1][0] : '논문AI');
+    targets.set(p.ogImage, { kicker, title, sub: p.path === '/' ? '전공 분야 박사 최종 검수 · 참고문헌 100% 실존 검증' : p.path === '/ai-thesis/' ? '실존 참고문헌과 본문 인용, 15 Page부터 130 Page까지' : '' });
   }
 }
 

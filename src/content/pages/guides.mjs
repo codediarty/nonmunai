@@ -19,7 +19,7 @@ ${CATS.map((c) => { const list = sorted.filter((g) => g.category === c); return 
 ${sorted.filter((g) => !CATS.includes(g.category)).length ? `<div class="page-sec"><h2 class="h-2" style="margin-bottom:18px">기타</h2><div class="g-list">${sorted.filter((g) => !CATS.includes(g.category)).map(card).join('')}</div></div>` : ''}
 ${sorted.length ? '' : '<p class="muted">가이드를 준비하고 있어요.</p>'}
 </div></section>
-${ctaBand(T, { title: '읽는 것보다 빠른 방법', text: '관심 주제 한 줄만 적어 주세요. 논문AI가 본문과 참고문헌까지 집필하고, 같은 전공 분야 전문가가 최종 검수까지 마친 뒤 메일로 보내 드려요.', topic: true })}`,
+${ctaBand(T, { title: '읽는 것보다 빠른 방법', text: '관심 주제 한 줄만 적어 주세요. 논문AI가 본문과 참고문헌까지 집필하고, 같은 전공 분야 박사가 최종 검수까지 마친 뒤 메일로 보내 드려요.', topic: true })}`,
   }];
   for (const g of sorted) {
     const related = sorted.filter((x) => x.slug !== g.slug && x.category === g.category).slice(0, 3);

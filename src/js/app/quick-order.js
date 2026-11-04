@@ -3,7 +3,7 @@
 // 원고 첨삭·피드백 반영은 원고 파일이 필요해 기존처럼 주문서를 먼저 접수한다.
 import { submitOrder, uploader, ICON } from './wizard.js';
 import { loadConfig, peekConfig } from './api.js';
-import { computeQuote, findItem, paperItemCode, etaDate, includesFor, listPriceFor, discountRate, pageLabel } from '../core/pricing.js';
+import { computeQuote, findItem, paperItemCode, etaDate, includesFor, listPriceFor, offText, PROMO_NAME, pageLabel } from '../core/pricing.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPTS } from '../core/preview.js';
 import { PAPER_TYPES, FIELDS, guessField } from '../core/kb.js';
 import { classifyFeedback } from '../core/feedback.js';
@@ -114,8 +114,8 @@ function shell(root) {
 <div class="qo-hero"><div class="wrap qo-hero-in">
 <p class="qo-eyebrow"><span>논문 의뢰</span></p>
 <h1 class="qo-h1">주제만 알려 주세요.<br>완성본으로 보내 드려요.</h1>
-<p class="qo-lead">관심 주제와 전공, 논문 종류만 골라 주세요. 제목과 목차, 연구 방법은 논문AI와 같은 전공의 석·박사 전문가가 정하고, 최종 검수까지 마쳐서 보내 드려요.</p>
-<ul class="qo-proof"><li>${ICON.check}<span>참고문헌 100% 실존 검증</span></li><li>${ICON.check}<span>같은 전공 석·박사 전문가 검수</span></li><li>${ICON.check}<span>검수 완료본만 메일 전달</span></li></ul>
+<p class="qo-lead">관심 주제와 전공, 논문 종류만 골라 주세요. 제목과 목차, 연구 방법은 논문AI와 같은 전공 박사가 정하고, 최종 검수까지 마쳐서 보내 드려요.</p>
+<ul class="qo-proof"><li>${ICON.check}<span>참고문헌 100% 실존 검증</span></li><li>${ICON.check}<span>같은 전공 박사 검수</span></li><li>${ICON.check}<span>검수 완료본만 메일 전달</span></li></ul>
 </div></div>
 <div class="wrap qo-grid">
 <form class="qo-form" id="qoForm" novalidate autocomplete="off">
@@ -178,7 +178,7 @@ ${uploader(S, 'feedback', { label: '의견이 담긴 파일', hint: '메모가 �
 
 function priceTag(code, total) {
   const list = listPriceFor(code, total);
-  return list ? `<s class="num">${won(list)}</s><em class="num">${discountRate(list, total)}%</em>` : '';
+  return list ? `<s class="num">${won(list)}</s><em class="num">${offText(list, total, { short: true })}</em>` : '';
 }
 
 function pkgCard(p) {
@@ -199,7 +199,7 @@ function s2Html() {
 <p class="hint">${esc(unit)}</p>
 ${S.task === 'edit' ? `<div class="field qo-pages"><label class="label" for="qoEpages">원고 분량(Page)</label><input class="input" id="qoEpages" type="number" inputmode="numeric" min="1" max="999" data-k="epages" value="${S.epages ?? ''}" placeholder="원고를 올리면 자동으로 채워집니다"></div>` : ''}`;
   }
-  return `<h2 class="qo-h"><span class="qo-n">2</span>${S.task === 'proposal' ? '어떤 계획서가 필요하세요?' : '어떤 논문이 필요하세요?'}<span class="qo-h-tag">런칭 특가</span></h2>
+  return `<h2 class="qo-h"><span class="qo-n">2</span>${S.task === 'proposal' ? '어떤 계획서가 필요하세요?' : '어떤 논문이 필요하세요?'}<span class="qo-h-tag">${PROMO_NAME}</span></h2>
 <div class="qo-pkgs">${pkgList().map(pkgCard).join('')}</div>
 <p class="hint qo-pkg-note">학교 기준 분량이 다르면 요청 사항에 적어 주세요. 확인하고 맞춰 드려요.</p>`;
 }
@@ -289,11 +289,11 @@ function summaryHtml(q) {
   const extras = q.lines.filter((l) => /^A-/.test(l.code));
   const eta = q.days ? etaDate(new Date(), q.days, String((CONFIG.settings || {}).holidays || '').split(/[,\s]+/).filter(Boolean)) : null;
   const inc = includesFor(q.includes, pages);
-  return `<div class="qo-sum-hd"><span>결제 금액</span><span class="qo-sum-price">${list ? `<s class="num">${won(list)}</s><em>${discountRate(list, q.total)}% 할인</em>` : ''}<b class="num">${won(q.total)}</b></span></div>
-<p class="qo-sum-name"><b>${esc(orderLabel())}</b><span>${list ? '런칭 특가 · ' : ''}${esc(task)}</span></p>
+  return `<div class="qo-sum-hd"><span>결제 금액</span><span class="qo-sum-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, q.total)}</em>` : ''}<b class="num">${won(q.total)}</b></span></div>
+<p class="qo-sum-name"><b>${esc(orderLabel())}</b><span>${list ? `${PROMO_NAME} · ` : ''}${esc(task)}</span></p>
 ${extras.length ? `<ul class="qo-sum-x">${extras.map((l) => `<li><span>${esc(l.name)}</span><b class="num">+${won(l.amount)}</b></li>`).join('')}</ul>` : ''}
-${writeLike() ? '<ol class="qo-sum-flow"><li><b>AI 집필</b><span>실존 문헌 인용</span></li><li><b>전공 전문가 검수</b><span>설계·문헌·수치·형식</span></li><li><b>메일 전달</b><span>검수 완료본</span></li></ol>' : ''}
-${eta ? `<p class="qo-sum-eta">${ICON.check}<span>전문가 검수까지 영업일 ${q.days}일 이내 · 오늘 결제하면 <b>${eta.getMonth() + 1}월 ${eta.getDate()}일(${'일월화수목금토'[eta.getDay()]})</b>까지 전달</span></p>` : ''}
+${writeLike() ? '<ol class="qo-sum-flow"><li><b>AI 집필</b><span>실존 문헌 인용</span></li><li><b>전공 박사 검수</b><span>설계·문헌·수치·형식</span></li><li><b>메일 전달</b><span>검수 완료본</span></li></ol>' : ''}
+${eta ? `<p class="qo-sum-eta">${ICON.check}<span>박사 검수까지 영업일 ${q.days}일 이내 · 오늘 결제하면 <b>${eta.getMonth() + 1}월 ${eta.getDate()}일(${'일월화수목금토'[eta.getDay()]})</b>까지 전달</span></p>` : ''}
 ${inc.length ? `<p class="qo-sum-inc"><b>포함</b>${inc.map((x) => esc(x)).join(' · ')}</p>` : ''}
 <button class="btn btn-primary btn-lg btn-block" type="submit" form="qoForm">${won(q.total)} 결제하고 ${verb()}</button>
 <p class="qo-sum-pay"><span>카드</span><span>간편결제</span><span>계좌이체</span></p>`;
@@ -458,11 +458,11 @@ function goPay(href, q) {
   const host = document.createElement('div');
   host.className = 'modal-back';
   host.innerHTML = `<div class="modal go-modal" role="dialog" aria-modal="true" aria-label="논문 의뢰 접수">
-<div class="go-hd"><p class="go-kick">논문 의뢰 접수</p><h2>${esc(orderLabel())}</h2><p class="go-price">${list ? `<s class="num">${won(list)}</s><em>${discountRate(list, q.total)}%</em>` : ''}<b class="num">${won(q.total)}</b></p></div>
+<div class="go-hd"><p class="go-kick">논문 의뢰 접수</p><h2>${esc(orderLabel())}</h2><p class="go-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, q.total, { short: true })}</em>` : ''}<b class="num">${won(q.total)}</b></p></div>
 <ol class="go-steps">
 <li><b>주제 분석과 연구 설계</b><span>결제가 확인되면 바로 시작해요</span></li>
 <li><b>실존 문헌 검증과 AI 집필</b><span>장별 본문을 쓰고 인용을 하나하나 연결해요</span></li>
-<li><b>전공 분야 전문가 최종 검수</b><span>설계, 문헌, 수치, 형식을 한 줄씩 확인해요</span></li>
+<li><b>전공 분야 박사 최종 검수</b><span>설계, 문헌, 수치, 형식을 한 줄씩 확인해요</span></li>
 <li><b>검수 완료본 메일 전달</b><span>결제할 때 적으신 이메일로 보내 드려요</span></li>
 </ol>
 <p class="go-foot" role="status"><span class="spin" aria-hidden="true"></span><span>결제 화면을 여는 중이에요</span></p>

@@ -94,7 +94,8 @@
       var pr = el('p', 'margin:8px 0 0;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px');
       if (o.list && o.list > o.price) {
         pr.appendChild(el('s', 'color:#8C95AA;font-size:13.5px', '정가 ' + won(o.list)));
-        pr.appendChild(el('em', 'font-style:normal;font-weight:800;color:#C8102E;font-size:13.5px', '런칭 특가 ' + Math.floor((1 - o.price / o.list) * 100) + '% 할인'));
+        var off = Math.floor((1 - o.price / o.list) * 100);
+        pr.appendChild(el('em', 'font-style:normal;font-weight:800;color:#C8102E;font-size:13.5px', off === 50 || off === 51 ? '오픈 기념 반값' : '오픈 기념 ' + off + '% 할인'));
       }
       pr.appendChild(el('b', 'font-size:18px;font-weight:800', won(o.price)));
       b.appendChild(pr);

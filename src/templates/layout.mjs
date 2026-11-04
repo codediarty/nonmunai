@@ -12,9 +12,9 @@ export const NAV = [
     label: '논문 자동작성', href: '/ai-thesis/', children: [
       { label: '논문 자동작성', href: '/ai-thesis/', desc: '관심 주제 한 줄로 논문 완성' },
       { label: '논문 작성 지원', href: '/thesis-writing/', desc: '주제부터 장별 원고까지' },
-      { label: '석사학위논문', href: '/master-thesis/', desc: '80 Page · 전공 전문가 최종 검수' },
-      { label: '박사학위논문', href: '/dissertation/', desc: '130 Page · 전공 전문가 최종 검수' },
-      { label: '학술지 논문', href: '/journal-paper/', desc: '20 Page · 투고 규정 맞춤과 전문가 검수' },
+      { label: '석사학위논문', href: '/master-thesis/', desc: '80 Page · 전공 박사 최종 검수' },
+      { label: '박사학위논문', href: '/dissertation/', desc: '130 Page · 전공 박사 최종 검수' },
+      { label: '학술지 논문', href: '/journal-paper/', desc: '20 Page · 투고 규정 맞춤과 박사 검수' },
       { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
       { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '문장·논리·형식 점검' },
       { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정표와 파란색 반영 표시' },
@@ -85,7 +85,7 @@ export function createTemplates({ site, root, assetVersion }) {
     if (page.chrome === 'admin') return '';
     const col = (title, links) => `<div class="ft-col"><h2 class="ft-h">${esc(title)}</h2><ul>${links.map(([l, h]) => `<li><a href="${u(h)}">${esc(l)}</a></li>`).join('')}</ul></div>`;
     return `<footer class="ft"><div class="wrap">
-<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>관심 주제 한 줄로 논문을 완성하고, 같은 전공 분야의 석·박사 전문가가 최종 검수까지 마친 뒤 보내 드리는 AI 논문 서비스예요. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있어요.</p></div>
+<div class="ft-top"><div class="ft-brand">${logo('logo logo-ft')}<p>관심 주제 한 줄로 논문을 완성하고, 같은 전공 분야의 박사가 최종 검수까지 마친 뒤 보내 드리는 AI 논문 서비스예요. 첨삭, 설문조사, 통계분석도 한 번에 맡길 수 있어요.</p></div>
 <div class="ft-cols">${col('서비스', [['논문 자동작성', '/ai-thesis/'], ['논문 작성 지원', '/thesis-writing/'], ['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['연구계획서', '/research-proposal/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/']])}
 ${col('무료 도구', [['무료 논문 설계', '/free/'], ['논문 목차 생성기', '/tools/toc/'], ['표본 수 계산기', '/tools/sample-size/'], ['참고문헌 생성기', '/tools/references/'], ['논문 작성 가이드', '/guide/']])}
 ${col('고객 지원', [['주문 조회', '/orders/'], ['가격 안내', '/pricing/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/']])}

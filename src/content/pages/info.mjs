@@ -17,8 +17,8 @@ export default function info({ T }) {
   const LP = (code, t, pg) => won(listPriceFor(code, fullQuote(t, pg).total));
   const B = (code) => item(code).baseUnits;
   const pricingFaq = [
-    { q: '논문 작성 비용은 얼마인가요?', a: `지금은 런칭 특가로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 전문가 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
-    { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 지금은 런칭 특가 ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 석·박사 전문가의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
+    { q: '논문 작성 비용은 얼마인가요?', a: `지금은 오픈 기념 반값으로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
+    { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 지금은 오픈 기념 반값 ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 박사의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
     { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 박사학위논문 ${B('P-DOCTOR-EDIT')} Page 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 ${B('P-JOURNAL-EDIT')} Page 기준 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이에요. 교수님 피드백 반영은 석사학위논문 ${B('P-MASTER-FB')}개 항목 기준 ${price('P-MASTER-FB')}이에요.` },
     { q: '논문 컨설팅 비용은 얼마인가요?', a: `연구 설계(연구모형, 가설, 목차, 표본 수)는 무료 논문 설계에서 먼저 받아 보실 수 있어요. 연구계획서 작성은 석사 ${price('P-MASTER-PROP')}, 박사 ${price('P-DOCTOR-PROP')}이고, 필요한 단계만 골라 맡기실 수 있어서 막힌 단계의 비용만 내시면 돼요.` },
     { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 기본형 ${price('T-BASIC')}, 표준형 ${price('T-INTERP')}이고, 연구결과(4장) 작성까지 맡기시면 ${price('T-CHAPTER')}이에요. 매개·조절효과 같은 심화 분석은 ${price('T-ADV')}이 더해지고, 설문지 작성부터 통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요.` },
@@ -41,12 +41,12 @@ export default function info({ T }) {
   pages.push({
     path: '/pricing/', kind: 'info', navTitle: '가격 안내', h1: '논문AI 가격 안내',
     title: '논문AI 가격 | 논문 작성 비용, 논문 첨삭·컨설팅·통계분석 비용',
-    description: `논문 작성 비용(런칭 특가): 석사논문 80 Page ${W('master', 80)}, 박사논문 130 Page ${W('doctor', 130)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 소논문 15 Page ${W('short', 15)}. 실존 참고문헌과 본문 인용, 전공 분야 전문가 최종 검수 포함. 논문 첨삭, 컨설팅, 통계분석·설문조사 가격까지 한눈에 보세요.`,
+    description: `논문 작성 비용(오픈 기념 반값): 석사논문 80 Page ${W('master', 80)}, 박사논문 130 Page ${W('doctor', 130)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 소논문 15 Page ${W('short', 15)}. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수 포함. 논문 첨삭, 컨설팅, 통계분석·설문조사 가격까지 한눈에 보세요.`,
     keywords: ['논문 작성 비용', '논문 첨삭 비용', '논문 컨설팅 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 자동작성 가격', '논문 교정 비용', '논문 통계분석 비용', '설문조사 비용'],
     crumbs: [['홈', '/'], ['가격 안내', '/pricing/']], faq: pricingFaq, priority: '0.9', styles: ['site', 'home'], scripts: ['pricing'],
-    body: `${pageHead(T, '논문 한 편, 런칭 특가로 가볍게', `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}에서 런칭 특가 ${qn('master', 80)}, 박사학위논문 130 Page는 정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)}에서 ${qn('doctor', 130)}이에요. 실존 참고문헌과 본문 인용, 전공 분야 전문가 최종 검수까지 모두 기본으로 들어 있어요.`, '/pricing/', '가격 안내')}
+    body: `${pageHead(T, '논문 한 편, 오픈 기념 반값으로', `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}에서 오픈 기념 반값 ${qn('master', 80)}, 박사학위논문 130 Page는 정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)}에서 ${qn('doctor', 130)}이에요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수까지 모두 기본으로 들어 있어요.`, '/pricing/', '가격 안내')}
 <section class="sec sec-tight" id="tiers" aria-labelledby="tiers-h"><div class="wrap">
-<div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 완성</h2><p>관심 주제와 전공을 적고 논문 종류만 고르시면 바로 시작해요. AI가 집필하고 같은 전공 분야 석·박사 전문가가 최종 검수를 마친 완성본을 상품별 기본 납기 안에 메일로 보내 드려요.</p></div>
+<div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 완성</h2><p>관심 주제와 전공을 적고 논문 종류만 고르시면 바로 시작해요. AI가 집필하고 같은 전공 분야 박사가 최종 검수를 마친 완성본을 상품별 기본 납기 안에 메일로 보내 드려요.</p></div>
 ${pageTiers(T)}
 </div></section>
 <section class="sec sec-alt"><div class="wrap">
@@ -54,7 +54,7 @@ ${pageTiers(T)}
 ${groups.map(([g, codes]) => `<div class="page-sec">${priceTable(T, codes, { caption: g })}</div>`).join('')}
 </div></section>
 ${faqBlock(T, pricingFaq, { title: '가격 관련 자주 묻는 질문' })}
-${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 있어요', text: '관심 주제와 전공만 적고 결제하시면 돼요. 같은 전공 분야 전문가의 최종 검수를 마친 완성본을 메일로 보내 드려요.', primary: ['논문 의뢰하기', '/paper/new/'], secondary: ['통계분석 의뢰하기', '/statistics/new/'] })}`,
+${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 있어요', text: '관심 주제와 전공만 적고 결제하시면 돼요. 같은 전공 분야 박사의 최종 검수를 마친 완성본을 메일로 보내 드려요.', primary: ['논문 의뢰하기', '/paper/new/'], secondary: ['통계분석 의뢰하기', '/statistics/new/'] })}`,
   });
   pages[pages.length - 1].geo = groups.map(([g, codes]) => `${g}: ${codes.map((c) => `${c} ${price(c) || '별도 견적'}`).join(', ')}`).join('\n');
 
@@ -62,7 +62,7 @@ ${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 �
   pages.push({
     path: '/process/', kind: 'info', navTitle: '진행 방식', h1: '논문AI 진행 방식',
     title: '진행 방식 | 신청부터 결과물 전달까지 논문AI',
-    description: '논문AI는 주문서 작성(약 1분), 바로 결제, AI 집필, 같은 전공 분야 석·박사 전문가의 최종 검수, 검수 완료본 메일 전달 순서로 진행됩니다. 진행 단계는 담당 연구진이 실제로 처리한 시점에만 바뀝니다.',
+    description: '논문AI는 주문서 작성(약 1분), 바로 결제, AI 집필, 같은 전공 분야 박사의 최종 검수, 검수 완료본 메일 전달 순서로 진행됩니다. 진행 단계는 담당 연구진이 실제로 처리한 시점에만 바뀝니다.',
     crumbs: [['홈', '/'], ['진행 방식', '/process/']],
     geo: `진행 단계: ${STATUS_STEPS.map((s) => `${s[0]}(${s[1]})`).join(' → ')}`,
     body: `${pageHead(T, '신청부터 전달까지, 실제 단계 그대로', '논문AI는 진행률을 그럴듯하게 꾸며 보여 드리지 않아요. 담당 연구진이 실제로 처리한 단계와 예상 전달일만 주문 페이지에 표시해요.', '/process/', '진행 방식')}
@@ -73,7 +73,7 @@ ${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 �
 <li><b>주문서 작성(약 1분)</b><span>관심 주제나 키워드와 전공을 적고 논문 종류를 골라 주세요. 제목은 정하지 않아도 괜찮고, 학교 양식과 참고 자료는 결제한 뒤에 보내 주셔도 돼요.</span></li>
 <li><b>바로 결제</b><span>주문서를 내시면 결제 화면이 바로 열려요. 회원가입 없이 카드, 간편결제, 계좌이체로 결제하실 수 있어요.</span></li>
 <li><b>AI 집필</b><span>결제가 확인되면 연구진이 주제를 다듬어 제목을 정하고, AI가 실존 문헌을 바탕으로 장별 본문을 집필해요.</span></li>
-<li><b>전공 전문가 최종 검수와 전달</b><span>같은 전공 분야의 석·박사 전문가가 연구 설계와 논리, 문헌, 수치, 형식을 한 줄씩 검수한 완성본을 메일로 보내 드려요. 석사학위논문 80 Page는 영업일 ${fullQuote('master', 80).days}일 이내에 받아 보실 수 있고, 고치고 싶은 부분은 바로 수정을 요청하실 수 있어요.</span></li>
+<li><b>전공 박사 최종 검수와 전달</b><span>같은 전공 분야의 박사가 연구 설계와 논리, 문헌, 수치, 형식을 한 줄씩 검수한 완성본을 메일로 보내 드려요. 석사학위논문 80 Page는 영업일 ${fullQuote('master', 80).days}일 이내에 받아 보실 수 있고, 고치고 싶은 부분은 바로 수정을 요청하실 수 있어요.</span></li>
 </ol></div>
 <div class="flow-panel sheet"><div class="sheet-label"><strong>주문 페이지 진행 단계</strong><span>예시</span></div><div class="flow-panel-in">${statusTimeline(T, 4)}</div></div>
 </div></section>
@@ -101,7 +101,7 @@ ${ctaBand(T, { title: '지금 주문서를 열어 보세요', text: '관심 주�
   const allFaq = ALL_FAQ;
   pages.push({
     path: '/faq/', kind: 'info', navTitle: '자주 묻는 질문', h1: '자주 묻는 질문',
-    title: '자주 묻는 질문 | 전문가 검수, 석사논문 비용 | 논문AI', description: '전공 분야 전문가 검수, 석사·박사논문 작성 비용, 실존 참고문헌, 논문 첨삭·교정, 통계분석, 설문조사, 결제와 환불, 수정까지 논문AI에 자주 묻는 질문을 모두 모았습니다.',
+    title: '자주 묻는 질문 | 박사 검수, 석사논문 비용 | 논문AI', description: '전공 분야 박사 검수, 석사·박사논문 작성 비용, 실존 참고문헌, 논문 첨삭·교정, 통계분석, 설문조사, 결제와 환불, 수정까지 논문AI에 자주 묻는 질문을 모두 모았습니다.',
     crumbs: [['홈', '/'], ['자주 묻는 질문', '/faq/']], faq: allFaq,
     body: `${pageHead(T, '자주 묻는 질문', '찾으시는 답이 없다면 주문서의 요청 사항이나 주문 페이지 메시지로 편하게 남겨 주세요.', '/faq/', '자주 묻는 질문')}
 ${FAQ_GROUPS.map(([g, list], i) => faqBlock(T, list, { title: g, id: `faq-${i + 1}` })).join('\n')}
@@ -111,14 +111,14 @@ ${ctaBand(T, { title: '궁금한 점이 풀리셨다면 바로 시작해 보세�
   // 소개
   pages.push({
     path: '/about/', kind: 'info', navTitle: '서비스 소개', h1: '논문AI 소개',
-    title: '논문AI 소개 | 원스톱 논문 지원 서비스', description: '논문AI는 논문, 설문, 통계를 잘 몰라도 시작할 수 있는 원스톱 논문 지원 서비스입니다. 연구 설계를 자동으로 산출하고, AI가 실존 문헌으로 집필한 원고를 같은 전공 분야의 석·박사 전문가가 최종 검수해 전달합니다.',
+    title: '논문AI 소개 | 원스톱 논문 지원 서비스', description: '논문AI는 논문, 설문, 통계를 잘 몰라도 시작할 수 있는 원스톱 논문 지원 서비스입니다. 연구 설계를 자동으로 산출하고, AI가 실존 문헌으로 집필한 원고를 같은 전공 분야의 박사가 최종 검수해 전달합니다.',
     crumbs: [['홈', '/'], ['서비스 소개', '/about/']],
-    geo: '논문AI는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)이 운영한다. 연구 설계 엔진은 규칙 기반으로 같은 입력에 같은 결과를 내며, 원고는 AI가 실존 문헌으로 집필하고 같은 전공 분야의 석·박사 전문가가 최종 검수한다. 통계분석은 실제 데이터로만 진행한다.',
+    geo: '논문AI는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)이 운영한다. 연구 설계 엔진은 규칙 기반으로 같은 입력에 같은 결과를 내며, 원고는 AI가 실존 문헌으로 집필하고 같은 전공 분야의 박사가 최종 검수한다. 통계분석은 실제 데이터로만 진행한다.',
     body: `${pageHead(T, '논문을 처음 쓰는 사람의 첫 번째 동료', '논문AI는 "어디서부터 시작해야 하나요?"라는 질문에 답하려고 만들었어요. 막막함은 대부분 연구 절차를 몰라서 생기고, 절차는 얼마든지 설계할 수 있기 때문이에요.', '/about/', '서비스 소개')}
 <section class="sec"><div class="wrap split"><article class="prose">
 <h2 style="margin-top:0">우리가 만든 것</h2>
 <p>논문AI의 중심에는 <strong>연구 설계 엔진</strong>이 있어요. 주제 문장에서 연구 대상과 변인, 관계를 읽어 연구모형을 그리고, 그에 맞는 가설, 목차, 분석 방법, 필요한 표본 수, 일정을 산출해요. 방법론 규칙을 그대로 적용하는 엔진이라 같은 주제를 넣으면 늘 같은 설계가 나오고, 왜 그런 설계인지도 설명할 수 있어요.</p>
-<p>설계가 끝나면 AI가 실존 문헌을 바탕으로 원고를 집필하고, 같은 전공 분야의 석·박사 전문가가 연구 설계와 문헌 출처, 수치, 형식을 최종 검수해요. 설문과 통계분석은 석·박사 연구진이 직접 맡고, 통계는 실제 데이터로만 분석해요. 어떤 결과물이든 사람이 직접 확인한 뒤에만 보내 드려요.</p>
+<p>설계가 끝나면 AI가 실존 문헌을 바탕으로 원고를 집필하고, 같은 전공 분야의 박사가 연구 설계와 문헌 출처, 수치, 형식을 최종 검수해요. 설문과 통계분석은 석·박사 연구진이 직접 맡고, 통계는 실제 데이터로만 분석해요. 어떤 결과물이든 사람이 직접 확인한 뒤에만 보내 드려요.</p>
 <h2>우리가 지키는 것</h2>
 <ul><li>꾸며 낸 진행률이 아니라 실제 처리 단계를 보여 드려요.</li><li>확인할 수 없는 문헌과 데이터는 쓰지 않아요.</li><li>합격, 게재, 유의한 결과는 약속하지 않아요.</li><li>가격과 포함 사항은 결제 전에 모두 보여 드려요.</li><li>자료는 주문별 비공개 폴더에 보관하고, 결과물을 전달한 뒤 90일이 지나면 자동으로 삭제해요.</li></ul>
 <h2>운영사</h2>

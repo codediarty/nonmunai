@@ -324,18 +324,18 @@ var DEFAULT_CATALOG = {
   currency: 'KRW',
   items: [
     // 논문: 유형별 4개 작업. unit = 추가 분량 과금 단위
-    { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 80 Page 완성', price: 99000, baseUnits: 80, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 전문가 최종 검수', '수정 1회'] },
+    { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 80 Page 완성', price: 99000, baseUnits: 80, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 첨삭·교정', price: 49000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['요청 범위 문장·논리 첨삭(기준 30쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
     { code: 'P-MASTER-FB', service: 'paper', type: 'master', task: 'feedback', name: '석사학위논문 교수님 피드백 반영', price: 59000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 19000, days: 2, includes: ['피드백 항목별 수정(기준 10개 항목)', '수정 대조표 작성(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-MASTER-PROP', service: 'paper', type: 'master', task: 'proposal', name: '석사학위논문 연구계획서 작성', price: 69000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 주제·제목 확정안', '연구 목적과 필요성', '이론적 배경 요약과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
-    { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 130 Page 완성', price: 199000, baseUnits: 130, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 전문가 최종 검수', '수정 1회'] },
+    { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 130 Page 완성', price: 199000, baseUnits: 130, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 첨삭·교정', price: 69000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['요청 범위 문장·논리 첨삭(기준 40쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
     { code: 'P-DOCTOR-FB', service: 'paper', type: 'doctor', task: 'feedback', name: '박사학위논문 교수님 피드백 반영', price: 89000, baseUnits: 15, unitLabel: '항목', unitSize: 5, unitPrice: 19000, days: 3, includes: ['피드백 항목별 수정(기준 15개 항목)', '수정 대조표 작성(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-DOCTOR-PROP', service: 'paper', type: 'doctor', task: 'proposal', name: '박사학위논문 연구계획서 작성', price: 99000, baseUnits: 25, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['연구 주제·제목 확정안', '연구 목적과 독창성', '이론적 배경과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
-    { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 20 Page 완성', price: 99000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['투고 학술지 형식 원고 20 Page', '국문·영문 초록', '실존 참고문헌과 본문 인용', '전공 분야 전문가 최종 검수', '수정 1회'] },
+    { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 20 Page 완성', price: 99000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['투고 학술지 형식 원고 20 Page', '국문·영문 초록', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 첨삭·교정', price: 39000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '투고 규정 형식 점검', '수정 내역 표시본'] },
     { code: 'P-JOURNAL-FB', service: 'paper', type: 'journal', task: 'feedback', name: '학술지 심사 의견 반영(수정 보완)', price: 49000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 19000, days: 2, includes: ['심사 의견별 수정', '심사 의견 답변서(Response letter) 작성', '반영 부분 파란색 표시본', '최종 정리본'] },
-    { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사 졸업논문 30 Page 완성', price: 59000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 전문가 최종 검수', '수정 1회'] },
+    { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사 졸업논문 30 Page 완성', price: 59000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
     { code: 'P-BACHELOR-FB', service: 'paper', type: 'bachelor', task: 'feedback', name: '학사·졸업논문 교수님 피드백 반영', price: 39000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 2, includes: ['피드백 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
     { code: 'P-BACHELOR-PROP', service: 'paper', type: 'bachelor', task: 'proposal', name: '학사·졸업논문 연구계획서 작성', price: 29000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 9000, days: 2, includes: ['주제·제목 확정안', '연구 목적과 방법', '목차안', '참고문헌'] },
@@ -347,7 +347,7 @@ var DEFAULT_CATALOG = {
     { code: 'P-YOUTH-FB', service: 'paper', type: 'youth', task: 'feedback', name: '청소년 탐구논문 선생님 피드백 반영', price: 19000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 1, includes: ['피드백 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
     { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초고 완성', price: 49000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 3, includes: ['연구 질문 정리', '연구 원고 초고(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
     { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
-    { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 15 Page 완성', price: 29000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 전문가 최종 검수', '수정 1회'] },
+    { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 15 Page 완성', price: 29000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 19000, baseUnits: 10, unitLabel: '항목', unitSize: 5, unitPrice: 9000, days: 2, includes: ['의견 항목별 수정', '수정 대조표 작성', '반영 부분 파란색 표시본'] },
     // 설문조사
     { code: 'S-FULL', service: 'survey', task: 'full', name: '설문조사 원스톱: 설문지 작성부터 통계 해석까지', price: 129000, days: 4, includes: ['연구 목적에 맞는 설문지 작성(검증된 척도)', '온라인 설문 제작과 설문조사 진행 관리', '응답 데이터 정리·익명화', '논문 맞춤 통계 분석과 결과 해석', '연구결과 정리'], excludes: ['응답자 모집·사례비(모집 의뢰 시 별도 견적)'] },
@@ -377,7 +377,7 @@ var DEFAULT_CATALOG = {
   },
 };
 
-// 정가: 런칭 특가와 함께 보여 주는 기준 가격(표시용, 결제 금액 계산에는 쓰지 않음)
+// 정가: 할인 행사 가격과 함께 보여 주는 기준 가격(표시용, 결제 금액 계산에는 쓰지 않음)
 var LIST_PRICE = {
   'P-SHORT-FULL': 59000, 'P-BACHELOR-FULL': 119000, 'P-JOURNAL-FULL': 199000, 'P-MASTER-FULL': 199000, 'P-DOCTOR-FULL': 399000,
   'P-BACHELOR-PROP': 59000, 'P-MASTER-PROP': 139000, 'P-DOCTOR-PROP': 199000,
@@ -389,6 +389,20 @@ function listPriceFor(code, price) {
 function discountRate(list, price) {
   if (!list || !price || list <= price) return 0;
   return Math.floor((1 - price / list) * 100);
+}
+// 할인 행사 이름과 할인 표시: 정가의 절반(50%)이면 '반값', 아니면 '43%'처럼
+var PROMO_NAME = '오픈 기념 반값';
+var PROMO_SHORT = '오픈 기념';
+function offText(list, price, opts) {
+  var r = discountRate(list, price);
+  if (!r) return '';
+  if (r === 50 || r === 51) return '반값';
+  return opts && opts.short ? r + '%' : r + '% 할인';
+}
+// 행사 이름: 반값이면 '오픈 기념 반값', 아니면 '오픈 기념 43% 할인'
+function promoText(list, price) {
+  var o = offText(list, price);
+  return !o ? '' : o === '반값' ? PROMO_NAME : PROMO_SHORT + ' ' + o;
 }
 // 분량 표기: 80 Page
 function pageLabel(n) { return n ? n + ' Page' : ''; }
@@ -414,8 +428,8 @@ function includesFor(list, pages) {
   return (list || []).map((x) => {
     let t = String(x);
     if (n > 0) t = t.replace(/\(기준\s*\d+\s*쪽(\s*내외)?\)/, `(${n} Page)`).replace(/(본문|원고)\s+\d+\s*Page/, `$1 ${n} Page`);
-    // 운영 가격표에 예전 문구가 남아 있어도 화면에는 새 표현으로(전공 분야 전문가 최종 검수)
-    return t.replace(/(\d+)\s*쪽/g, '$1 Page').replace(/(?:석·박사\s*)?전문가\s*최종\s*검토/, '전공 분야 전문가 최종 검수');
+    // 운영 가격표에 예전 문구(전문가 최종 검토·전공 분야 전문가 최종 검수)가 남아 있어도 화면에는 새 표현으로(전공 분야 박사 최종 검수)
+    return t.replace(/(\d+)\s*쪽/g, '$1 Page').replace(/(?:석·박사\s*)?전문가\s*최종\s*검토|전공\s*분야\s*전문가\s*최종\s*검수/, '전공 분야 박사 최종 검수');
   });
 }
 

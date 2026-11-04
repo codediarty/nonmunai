@@ -7,7 +7,7 @@ import { designReportHtml } from '../ui/report.js';
 import { esc, won } from '../core/render.js';
 import { $, toast, url, modal, cfg } from '../ui/dom.js';
 import { cartPlan, productLinks } from './pay-plan.js';
-import { includesFor, listPriceFor, discountRate } from '../core/pricing.js';
+import { includesFor, listPriceFor, offText } from '../core/pricing.js';
 import { shopUrl } from './shop-link.js';
 
 function tokenFor(no) {
@@ -120,7 +120,7 @@ function renderHandoff(root, o, link, go) {
   root.innerHTML = `<div class="wrap handoff"><div class="handoff-card">
 <p class="handoff-ok">${ICON.check}<span>의뢰 접수 완료 · 주문번호 ${esc(o.orderNo)}</span></p>
 <h1 class="handoff-h">결제 화면을 여는 중이에요</h1>
-<div class="handoff-item"><span>${esc(item)}</span><span class="handoff-price">${list ? `<s class="num">${won(list)}</s><em>${discountRate(list, o.amountDue)}%</em>` : ''}<b class="num">${won(o.amountDue)}</b></span></div>
+<div class="handoff-item"><span>${esc(item)}</span><span class="handoff-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, o.amountDue, { short: true })}</em>` : ''}<b class="num">${won(o.amountDue)}</b></span></div>
 <div class="handoff-bar" aria-hidden="true"><i></i></div>
 <ul class="handoff-list"><li>${ICON.check}<span>결제가 확인되면 바로 작업을 시작해요.</span></li><li>${ICON.check}<span>진행 안내와 결과물은 ${mail ? `<b>${esc(mail)}</b>로` : '메일로'} 보내 드려요.</span></li><li>${ICON.check}<span>결제할 때 주문자 이름과 연락처를 주문서와 같게 적어 주세요.</span></li></ul>
 <a class="btn btn-primary btn-lg btn-block" id="handoffGo" href="${esc(go)}">결제 화면 바로 열기</a>
@@ -140,7 +140,7 @@ function afterPayHtml(o) {
     .concat([
       ['작업 순서 배정', '결제가 확인되는 즉시 작업 순서와 예상 전달일이 정해집니다.'],
       ['진행 상황 공유', '단계가 바뀔 때마다 주문 페이지와 메일로 알려 드립니다. 자료가 더 필요하면 바로 요청드립니다.'],
-      ['완성본 메일 전달', '같은 전공 분야 전문가의 최종 검수를 마친 완성본을 메일로 보내 드려요. 주문 페이지에서도 내려받고, 포함된 범위 안에서 수정을 요청할 수 있어요.'],
+      ['완성본 메일 전달', '같은 전공 분야 박사의 최종 검수를 마친 완성본을 메일로 보내 드려요. 주문 페이지에서도 내려받고, 포함된 범위 안에서 수정을 요청할 수 있어요.'],
     ]);
   return `<div class="card"><div class="card-h"><h2>${quote ? '견적 확정 후 진행' : '결제 후 진행'}</h2></div><ol class="flow-steps">${steps.map(([b, t]) => `<li><b>${esc(b)}</b><span>${esc(t)}</span></li>`).join('')}</ol></div>`;
 }
@@ -185,7 +185,7 @@ ${what}
 <div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(directUrl(o, link) || link.url)}"${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
 <ol class="pay-steps"><li>결제 화면에서 결제를 마칩니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.</li><li>결제가 확인되면 작업이 시작되고 메일로 알려 드립니다. 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 더 빨리 시작합니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
-<ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>석·박사 연구진 검수</li></ul></div>`);
+<ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>전공 분야 박사 검수</li></ul></div>`);
     }
     if (methods.includes('bank')) blocks.push(`<div class="pay-m"><h3>무통장입금</h3><dl class="bank-box"><dt>은행</dt><dd>${esc(s.bankName)}</dd><dt>계좌</dt><dd>${esc(s.bankAccount)}</dd><dt>예금주</dt><dd>${esc(s.bankHolder)}</dd><dt>금액</dt><dd>${won(o.amountDue)}</dd></dl><div class="field"><label class="label" for="payer">입금자명</label><input class="input" id="payer" placeholder="입금하신 분 이름" autocomplete="name"></div><button type="button" class="btn btn-ghost" id="bankDone">입금했어요</button></div>`);
     payBox = `<div class="card"><div class="card-h"><h2 class="serif">결제</h2><span class="num" style="font-family:var(--serif);font-size:24px;font-weight:700">${won(o.amountDue)}</span></div>

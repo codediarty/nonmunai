@@ -6,11 +6,11 @@ import { base64ToBlob, saveBlob, fmtSize } from './files.js';
 import { toast } from '../ui/dom.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 
-export const STEP_LABEL = { received: '접수 완료', checking: '자료 확인', preparing: '작업 준비', in_progress: '작성·분석 진행', review: '전문가 검수', delivered: '전달 완료' };
+export const STEP_LABEL = { received: '접수 완료', checking: '자료 확인', preparing: '작업 준비', in_progress: '작성·분석 진행', review: '박사 검수', delivered: '전달 완료' };
 export const STEP_ORDER = ['received', 'checking', 'preparing', 'in_progress', 'review', 'delivered'];
 export const STEP_DESC = {
   received: '결제가 확인되어 주문이 접수되었습니다.', checking: '올려 주신 자료를 확인합니다.', preparing: '연구 설계와 작업 범위를 확정합니다.',
-  in_progress: '원고 작성과 분석을 진행합니다.', review: '같은 전공 분야 전문가가 설계·문헌·수치·형식을 검수합니다.', delivered: '결과물을 내려받을 수 있습니다.',
+  in_progress: '원고 작성과 분석을 진행합니다.', review: '같은 전공 분야 박사가 설계·문헌·수치·형식을 검수합니다.', delivered: '결과물을 내려받을 수 있습니다.',
 };
 
 export function pillClass(status) {
@@ -21,8 +21,8 @@ export function pillClass(status) {
   return '';
 }
 
-// 서버의 상태 이름 가운데 화면에서는 다르게 부르는 것(review: 품질 검토 → 전문가 검수)
-export const statusName = (o) => (o.status === 'pending_payment' ? '결제 전' : o.status === 'review' ? '전문가 검수' : o.statusLabel);
+// 서버의 상태 이름 가운데 화면에서는 다르게 부르는 것(review: 품질 검토 → 박사 검수)
+export const statusName = (o) => (o.status === 'pending_payment' ? '결제 전' : o.status === 'review' ? '박사 검수' : o.statusLabel);
 export function statusPill(o) { return `<span class="status-pill ${pillClass(o.status)}"><i></i>${esc(statusName(o))}</span>`; }
 
 function fmtAt(iso) {
@@ -34,7 +34,7 @@ function fmtAt(iso) {
 export { fmtAt };
 
 // 사람이 따로 기록하지 않아도 시스템이 이미 끝낸 단계(주문서 제출 때 자동 검사·설계)
-// 전문가 검수처럼 사람이 해야 하는 단계는 기록이 없으면 완료했다고 적지 않고 단계 설명만 보여 준다
+// 박사 검수처럼 사람이 해야 하는 단계는 기록이 없으면 완료했다고 적지 않고 단계 설명만 보여 준다
 function autoDone(o, s) {
   if (s === 'checking') return '필수 자료 자동 확인 완료';
   if (s === 'preparing') return o.service === 'paper' ? '연구 설계안 자동 생성 완료' : '작업 범위 자동 확정';

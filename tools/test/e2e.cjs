@@ -1397,12 +1397,12 @@ async function tests() {
         await toast(ap, '예정일을 바꿨습니다.');
       });
       await cp.clock.runFor(61000);
-      await waitText(cp, '.ord-card .status-pill', '전문가 검수');
+      await waitText(cp, '.ord-card .status-pill', '박사 검수');
       has(await text(cp, '#progress'), 'E2E 안내: 검토를 시작했습니다.', '고객 진행 상황 안내');
       const label = `${eta.getMonth() + 1}월 ${eta.getDate()}일`;
       has(await text(cp, '.eta-box'), label, '예상 전달일');
       await cp.reload();
-      await waitText(cp, '.ord-card .status-pill', '전문가 검수');
+      await waitText(cp, '.ord-card .status-pill', '박사 검수');
     } finally { await cust.close(); }
   });
   await check(30, '운영자 자료 보완 요청이 고객 화면의 보완 카드와 메시지로 나타남', async () => {
@@ -1467,8 +1467,8 @@ async function tests() {
     await withCtx({}, async (p) => {
       await p.goto(ordersUrl(x));
       await p.waitForSelector('#progress .timeline');
-      const review = await p.$$eval('#progress .timeline li', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()).find((t) => t.startsWith('전문가 검수')) || '');
-      ok(review, '진행 단계에 전문가 검수가 없음');
+      const review = await p.$$eval('#progress .timeline li', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()).find((t) => t.startsWith('박사 검수')) || '');
+      ok(review, '진행 단계에 박사 검수가 없음');
       hasNot(review, '검수 완료', '기록 없는 검수 단계');
     });
   });
@@ -1927,7 +1927,7 @@ async function tests() {
     const sum = await text(p, '#qoSum');
     has(sum, '99,000원', '결제 금액');
     has(sum, '199,000원', '정가');
-    has(sum, '50% 할인', '할인율');
+    has(sum, '반값', '할인 표시');
     has(await text(p, '#qoRead'), '번아웃', 'AI가 읽은 키워드');
     await p.waitForFunction(() => document.querySelector('#qoPv .pv') && document.querySelector('#qoPv .pv').dataset.state === 'done', null, { timeout: 20000 });
     ok(await p.$('#qoPv .pv-lockzone.is-locked'), '미리보기 모자이크가 걸리지 않음');
@@ -1996,12 +1996,12 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       await p.click('#qoSubmit');
       await p.waitForSelector('.go-modal');
       const modal = await text(p, '.go-modal');
-      has(modal, '전공 분야 전문가 최종 검수', '작업 순서 안내');
+      has(modal, '전공 분야 박사 최종 검수', '작업 순서 안내');
       ok(!/성균관컨설팅/.test(modal), '안내 창에 결제 대행 이름이 보임');
       await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 15000 });
       await p.waitForSelector('#nmBanner', { timeout: 8000 });
       const banner = await text(p, '#nmBanner');
-      for (const s of ['석사학위논문 80 Page', '199,000원', '50%', '99,000원']) has(banner, s, '결제 화면 안내');
+      for (const s of ['석사학위논문 80 Page', '199,000원', '오픈 기념 반값', '99,000원']) has(banner, s, '결제 화면 안내');
       await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', '최간호'); set('ordererCall', '010-3456-7890'); set('ordererEmail', 'e2e-direct@example.com'); });
       await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
       await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });

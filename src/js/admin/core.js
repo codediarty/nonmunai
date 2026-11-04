@@ -64,7 +64,7 @@ export function etaChip(ymd) {
 
 export const STATUS_LABEL = {
   draft: '작성 중', quote_requested: '견적 확인 중', pending_payment: '결제 대기', payment_review: '결제 확인 중', received: '접수 완료', checking: '자료 확인',
-  needs_materials: '자료 보완 필요', preparing: '작업 준비', in_progress: '작성·분석 진행', review: '전문가 검수', delivered: '전달 완료', revision: '수정 진행', completed: '완료', cancelled: '취소',
+  needs_materials: '자료 보완 필요', preparing: '작업 준비', in_progress: '작성·분석 진행', review: '박사 검수', delivered: '전달 완료', revision: '수정 진행', completed: '완료', cancelled: '취소',
 };
 export const METHOD_LABEL = { skkc: '성균관컨설팅', bank: '무통장입금', toss: '카드·간편결제', '': '-' };
 export const SERVICE_LABEL = { paper: '논문', survey: '설문', statistics: '통계' };
