@@ -159,4 +159,6 @@
 - Google 색인 40개, 미색인 11개였습니다. 그중 3개(/paper/new/, /survey/new/, 주문서 주소)는 주문 화면이라 일부러 noindex로 둔 것이라 정상입니다.
 - '발견됨, 현재 색인 생성 안 됨'(구글이 주소만 알고 아직 가져가지 않음): /guide/cronbach-alpha/, /guide/how-to-make-questionnaire/, /guide/literature-review-prisma/, /professor-feedback/, /tools/. 내부 링크를 늘리고 Search Console에서 색인 생성을 요청했습니다.
 - '크롤링됨, 현재 색인 생성 안 됨'(가져갔지만 아직 넣지 않음): /guide/journal-submission/, /guide/professor-feedback-revision/. 내용을 보강하고(답변서 예시, 회신 메일 예시) 수정일을 표시한 뒤 색인 생성을 요청했습니다.
+- 같은 날 URL 검사로 다시 보니 /professor-feedback/, /tools/, /guide/journal-submission/, /guide/professor-feedback-revision/는 이미 색인되어 있었습니다. '페이지' 보고서는 며칠 늦게 갱신되므로 최신 상태는 URL 검사로 확인합니다. '크롤링됨' 목록에 함께 있는 /rss.xml은 피드 파일이라 색인되지 않는 것이 정상입니다.
+- 2026-11-09 색인 생성 요청 11건: 미색인 가이드 3편(cronbach-alpha, how-to-make-questionnaire, literature-review-prisma), 새 가이드 3편(thesis-introduction, thesis-discussion-conclusion, thesis-abstract), 내용을 고친 색인 페이지 5개(홈, /tools/, /professor-feedback/, /guide/journal-submission/, /guide/professor-feedback-revision/). 12번째(/master-thesis/)에서 하루 할당량이 찼습니다.
 - 새 사이트는 보통 몇 주에 걸쳐 색인이 늘어납니다. Search Console의 URL 검사에서 색인 생성 요청은 하루 10개 안팎만 되므로, 중요한 페이지부터 나눠서 요청합니다.
