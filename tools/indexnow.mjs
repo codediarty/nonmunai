@@ -1,5 +1,5 @@
-// 검색엔진 색인 알림(IndexNow: 네이버·빙 등): node tools/indexnow.mjs https://nonmunai.kr
-// 배포된 사이트의 sitemap.xml을 읽어 주소 목록을 보낸다.
+// 검색엔진 색인 알림(IndexNow: 네이버·빙 등): node tools/indexnow.mjs https://nonmunai.kr [--all]
+// 배포된 사이트의 sitemap.xml을 읽어, 최근에 내용이 바뀐 주소(lastmod가 어제 이후)만 보낸다. --all이면 전체를 보낸다.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,8 +17,14 @@ let xml = '';
 for (const u of [`${base}/sitemap.xml`, `${base.replace(/^https:/, 'http:')}/sitemap.xml`]) {
   try { const r = await fetch(u, { headers: { 'Cache-Control': 'no-cache' } }); if (r.ok) { xml = await r.text(); break; } } catch (e) { console.log(`${u} 읽기 실패: ${e.message}`); }
 }
-const urlList = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).filter((u) => u.startsWith(base));
-if (!urlList.length) { console.log('sitemap에 주소가 없습니다'); process.exit(0); }
+const entries = [...xml.matchAll(/<url>\s*<loc>([^<]+)<\/loc>(?:\s*<lastmod>([^<]+)<\/lastmod>)?/g)].map((m) => ({ loc: m[1], lastmod: m[2] || '' })).filter((e) => e.loc.startsWith(base));
+if (!entries.length) { console.log('sitemap에 주소가 없습니다'); process.exit(0); }
+// 한국 날짜 기준 어제 이후에 바뀐 주소만(배포 직후 실행되므로 이번 배포에서 바뀐 주소가 들어간다)
+const since = new Date(Date.now() + 9 * 3600e3 - 24 * 3600e3).toISOString().slice(0, 10);
+const sendAll = process.argv.includes('--all') || process.env.INDEXNOW_ALL === '1';
+const urlList = (sendAll ? entries : entries.filter((e) => !e.lastmod || e.lastmod >= since)).map((e) => e.loc);
+if (!urlList.length) { console.log(`바뀐 주소 없음(기준 ${since} 이후): 건너뜀`); process.exit(0); }
+console.log(`${sendAll ? '전체' : `${since} 이후 바뀐`} 주소 ${urlList.length}개 / sitemap ${entries.length}개`);
 const body = JSON.stringify({ host, key, keyLocation: `${base}/${key}.txt`, urlList });
 for (const ep of ['https://api.indexnow.org/indexnow', 'https://searchadvisor.naver.com/indexnow']) {
   try {

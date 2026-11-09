@@ -128,7 +128,26 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 </div>`;
 }
 
-export default function home({ T }) {
+// 홈 가이드 묶음: 논문을 쓰는 단계별로 많이 찾는 가이드(제목의 쌍점 앞은 링크 글, 뒤는 보조 설명)
+const GUIDE_GROUPS = [
+  ['주제와 설계', ['choosing-thesis-topic', 'research-proposal-guide', 'how-to-write-thesis', 'thesis-table-of-contents']],
+  ['설문과 통계', ['how-to-make-questionnaire', 'survey-sample-size', 'cronbach-alpha', 'spss-analysis-guide']],
+  ['문헌, 심사, 투고', ['literature-review-prisma', 'apa7-references', 'professor-feedback-revision', 'journal-submission']],
+];
+function guideBlock(T, guides) {
+  const bySlug = new Map((guides || []).map((g) => [g.slug, g]));
+  const cols = GUIDE_GROUPS.map(([label, slugs]) => {
+    const items = slugs.map((s) => bySlug.get(s)).filter(Boolean).map((g) => {
+      const [head, ...rest] = g.title.split(':');
+      return `<li><a href="${T.u(`/guide/${g.slug}/`)}"><b>${esc(head.trim())}</b>${rest.length ? `<span>${esc(rest.join(':').trim())}</span>` : ''}</a></li>`;
+    }).join('');
+    return items ? `<div class="gd3-col"><p class="gd3-t">${esc(label)}</p><ul>${items}</ul></div>` : '';
+  }).join('');
+  if (!cols) return '';
+  return `<div class="gd3"><div class="gd3-hd"><h3 class="h-3" id="gd-h">많이 찾는 논문 작성 가이드</h3><a href="${T.u('/guide/')}">가이드 전체 보기</a></div><div class="gd3-cols">${cols}</div></div>`;
+}
+
+export default function home({ T, guides }) {
   const kinds = [['master', '석사논문', 80], ['doctor', '박사논문', 130], ['journal', '학술지 논문', 20]];
   const body = `
 <section class="hx" aria-labelledby="hx-h">
@@ -258,7 +277,7 @@ ${pageTiers(T)}
 
 <section class="sec sec-alt" aria-labelledby="svc-h">
 <div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="svc-h">논문 완성 말고도, 필요한 것만 맡기세요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 따로 맡길 수 있어요.</p></div>
+<div class="sec-head"><h2 class="h-2" id="svc-h">논문 완성 말고도, 필요한 것만 맡기세요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 따로 맡길 수 있어요. 어디서부터 맡길지 모르겠다면 <a href="${T.u('/consulting/')}">논문 컨설팅</a>으로 막힌 단계부터 함께 정리해 드려요.</p></div>
 <div class="svc2">
 ${[
     ['file-pen-line', '논문 첨삭·교정', '문장과 논리, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
@@ -316,13 +335,14 @@ ${[
 
 <section class="sec sec-alt" aria-labelledby="tools-h">
 <div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="tools-h">가입 없이 써 보는 무료 도구</h2><p>로그인 없이 바로 쓰는 연구 도구예요. 결과는 브라우저 안에서 계산되고 저장되지 않아요.</p></div>
+<div class="sec-head"><h2 class="h-2" id="tools-h">가입 없이 써 보는 무료 도구와 가이드</h2><p>로그인 없이 바로 쓰는 <a href="${T.u('/tools/')}">논문 무료 도구</a>예요. 결과는 브라우저 안에서 계산되고 저장되지 않아요. 막히는 단계가 있다면 논문 작성 가이드로 먼저 확인해 보세요.</p></div>
 <div class="tools">
 <a class="tool" href="${T.u('/free/')}"><span class="tool-ic">${T.icon('workflow')}</span><b>무료 논문 설계</b><span>주제 한 줄로 연구모형과 가설, 분석 계획을 받아 보세요.</span></a>
 <a class="tool" href="${T.u('/tools/toc/')}"><span class="tool-ic">${T.icon('list-tree')}</span><b>논문 목차 생성기</b><span>제목과 연구방법을 넣으면 장·절·항 목차를 만들어 드려요.</span></a>
 <a class="tool" href="${T.u('/tools/references/')}"><span class="tool-ic">${T.icon('book-open-text')}</span><b>참고문헌 생성기</b><span>학술지, 단행본, 학위논문을 APA 7판 형식으로 바꿔 드려요.</span></a>
 <a class="tool" href="${T.u('/tools/sample-size/')}"><span class="tool-ic">${T.icon('calculator')}</span><b>표본 수 계산기</b><span>회귀, t검정, 분산분석, 상관, 카이제곱 표본 수를 계산해 보세요.</span></a>
 </div>
+${guideBlock(T, guides)}
 </div>
 </section>
 
@@ -335,7 +355,7 @@ ${[
 <li>${T.icon('lock-keyhole')}<b>주문별 비공개 보관</b><span>주문번호와 조회 비밀번호가 있어야 열람할 수 있어요.</span></li>
 <li>${T.icon('timer-reset')}<b>90일 뒤 자동 삭제</b><span>전달 후 보관 기간이 지나면 파일을 자동으로 지워요.</span></li>
 </ul>
-<p class="trust-more"><a href="${T.u('/ethics/')}">연구윤리 원칙 자세히 보기</a></p>
+<p class="trust-more"><a href="${T.u('/ethics/')}">연구윤리 원칙 자세히 보기</a><a href="${T.u('/process/')}">신청부터 전달까지 진행 방식</a><a href="${T.u('/about/')}">논문AI 소개</a></p>
 </div>
 </section>
 
@@ -347,10 +367,10 @@ ${ctaBand(T, { title: '관심 주제 한 줄이면 시작돼요', text: '주제�
     path: '/',
     body,
     kind: 'home',
-    title: '논문AI | 전공 박사 검수 석사·박사논문, AI 논문 작성',
+    title: '논문AI | AI 논문 작성, 전공 박사가 검수하는 석사논문·박사논문',
     h1: '논문AI',
     description: `관심 주제 한 줄로 석사·박사논문을 완성하는 AI 논문 작성 서비스. AI가 집필하고 같은 전공 분야 박사가 최종 검수까지 마친 뒤 보내 드려요. 참고문헌 100% 실존 검증. 석사 80 Page ${won(Q80.total)}(정가 ${won(L80)}), 박사 130 Page ${won(Q130.total)}, 학사 ${won(Q30.total)}, 소논문 ${won(Q15.total)}.`,
-    keywords: ['논문AI', '논문 AI', '논문 박사 검수', '논문 검수', '논문 박사 검수', '논문 자동작성', '논문 작성 AI', 'AI 논문 작성', '석사논문 작성', '박사논문 작성', '학위논문 작성', '학술지 논문 작성', '졸업논문 작성', '소논문 작성', '논문 작성 사이트', '논문 작성 비용', '석사논문 비용', '논문 첨삭', '논문 컨설팅', '논문 통계분석', '논문 참고문헌'],
+    keywords: ['논문AI', '논문 AI', 'AI 논문', 'AI 논문 작성', '논문 작성 AI', '논문 자동작성', '논문 박사 검수', '논문 검수', '석사논문', '석사논문 작성', '박사논문 작성', '학위논문 작성', '학술지 논문 작성', '졸업논문 작성', '소논문 작성', '논문 작성 사이트', '논문 작성 비용', '석사논문 비용', '논문 첨삭', '논문 컨설팅', '논문 통계분석', '논문 참고문헌'],
     ogImage: '/assets/img/og/home.png',
     faq: HOME_FAQ,
     styles: ['site', 'home'],

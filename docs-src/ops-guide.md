@@ -123,6 +123,40 @@
 - **Google**: Search Console(skkc.office@gmail.com으로 로그인)에서 nonmunai.kr 속성을 엽니다. 사이트맵(https://nonmunai.kr/sitemap.xml)이 제출되어 있고, '페이지' 보고서에서 색인된 페이지 수를, '실적'에서 검색어별 노출·클릭을 봅니다.
 - **네이버**: 서치어드바이저(searchadvisor.naver.com)에 nonmunai.kr을 등록했습니다. 소유 확인은 두 방식을 함께 걸어 두었습니다. site.config.json의 verification.naver(HTML 태그, 모든 페이지 head에 들어감)와 verification.naverFile(확인 파일, 사이트 맨 위 naver….html로 만들어짐)입니다. 둘 다 지우면 인증이 풀립니다. 사이트맵(https://nonmunai.kr/sitemap.xml)과 RSS(https://nonmunai.kr/rss.xml)는 요청 메뉴의 사이트맵 제출, RSS 제출에서 넣습니다.
 - **다음**: 웹마스터도구(webmaster.daum.net)에 nonmunai.kr이 등록되어 있습니다. 로그인은 사이트 주소와 직접 정한 PIN으로 합니다. 소유 확인 코드는 site.config.json의 verification.daum에 있고 robots.txt 맨 아래에 자동으로 붙습니다(지우면 인증이 풀립니다). 사이트맵, RSS, 주요 페이지 수집 요청을 해 두었습니다.
-- **빙·네이버 자동 알림**: 배포할 때마다 IndexNow로 바뀐 주소를 빙(api.indexnow.org)과 네이버(searchadvisor.naver.com/indexnow)에 보냅니다. GitHub Actions 배포 기록의 '검색엔진 색인 알림' 단계에서 결과(200)를 볼 수 있습니다.
+- **빙·네이버 자동 알림**: 배포할 때마다 IndexNow로 이번 배포에서 내용이 바뀐 주소만 빙(api.indexnow.org)과 네이버(searchadvisor.naver.com/indexnow)에 보냅니다. 바뀐 주소는 sitemap.xml의 lastmod(어제 이후)로 고릅니다. GitHub Actions 배포 기록의 '검색엔진 색인 알림' 단계에서 보낸 주소 수와 결과(200 또는 202)를 볼 수 있습니다. 전체 주소를 다시 보내려면 `node tools/indexnow.mjs https://nonmunai.kr --all`을 실행합니다.
+- **사이트맵 lastmod**: 가이드는 머리말의 date(작성일)와 updated(수정일)를 쓰고, 나머지 페이지는 tools/lastmod.json에 남긴 내용 지문이 바뀐 날만 갱신됩니다. 배포용 로컬 빌드(node tools/build.mjs)가 이 파일을 고쳐 쓰므로, 소스를 올릴 때 tools/lastmod.json도 함께 올립니다. 가이드 내용을 크게 고치면 머리말에 updated: "YYYY-MM-DD"를 넣어 주세요(글 위쪽에 수정일도 함께 보입니다).
 - **AI 검색(ChatGPT, Claude, Perplexity 등)**: robots.txt에서 AI 검색 봇을 허용하고, 사이트 소개와 서비스·가격 요약을 /llms.txt, /llms-full.txt로 제공합니다.
-- 새 가이드 글은 content/guides에 추가하면 사이트맵, RSS, llms.txt에 자동으로 들어가고 배포 때 IndexNow로 알려집니다.
+- 새 가이드 글은 content/guides에 추가하면 사이트맵, RSS, llms.txt에 자동으로 들어가고 배포 때 IndexNow로 알려집니다. 대표 이미지는 `node tools/og.mjs`로 만듭니다(바뀐 이미지만 올리면 됩니다).
+- **내부 링크 구조**: 홈의 '많이 찾는 논문 작성 가이드'(단계별 12편), 무료 도구 모음(/tools/)의 상황별 도구·가이드 표, 서비스 페이지의 '함께 읽으면 좋은 가이드', 가이드의 '함께 읽으면 좋은 글'(같은 분류 안에서 다음 글 3편을 돌아가며 연결)이 가이드로 이어집니다. 가격표 카드 아래에는 석사·박사·졸업논문·소논문 안내 페이지 링크가, 바닥글에는 논문 작성·논문 지원·무료 도구·고객 지원 묶음이 있습니다.
+
+### 검색어별 대표 페이지(2026-11-09 정리)
+
+같은 검색어를 두 페이지가 나눠 갖지 않도록 대표 페이지를 정해 두었습니다. 제목과 설명, 키워드를 고칠 때 이 표를 기준으로 합니다. '대필'처럼 연구윤리 문제가 될 수 있는 검색어는 쓰지 않습니다.
+
+| 검색어 | 대표 페이지 |
+|---|---|
+| 논문AI, AI 논문, AI 논문 작성, 논문 자동작성 | 홈(/), AI 논문 자동작성(/ai-thesis/) |
+| 석사논문, 석사논문 작성, 석사논문 비용 | /master-thesis/ |
+| 박사논문, 박사논문 작성, 박사논문 비용 | /dissertation/ |
+| 학사 졸업논문, 졸업논문 작성 비용 | /thesis-writing/ |
+| 학술지 논문 작성, 투고논문, KCI 투고 | /journal-paper/ (투고 절차 설명은 /guide/journal-submission/) |
+| 논문 작성 비용, 논문 가격, 비용 비교 | /pricing/ |
+| 논문 첨삭, 논문 첨삭 비용, 논문 교정 | /thesis-editing/ |
+| 교수님 피드백 반영, 논문 수정 보완 | /professor-feedback/ (수정 대조표 작성법은 /guide/professor-feedback-revision/) |
+| 연구계획서 작성(서비스) | /research-proposal/ (작성법은 /guide/research-proposal-guide/) |
+| 논문 컨설팅, 논문 컨설팅 비용 | /consulting/ |
+| 논문 설문조사 대행, 설문조사 대행 비용 | /survey/ |
+| 논문 통계분석, SPSS 분석 의뢰, 논문 통계 비용 | /statistics/ |
+| 논문 무료 도구, 논문 작성 AI 무료 | /tools/, /free/ |
+| 논문 작성법, 논문 쓰는 법 | /guide/how-to-write-thesis/ |
+| 논문 서론 쓰는 법, 논의·결론, 초록 쓰는 법 | /guide/thesis-introduction/, /guide/thesis-discussion-conclusion/, /guide/thesis-abstract/ |
+| SPSS, 크론바흐 알파, 회귀·매개·조절 | 통계분석 분류 가이드 |
+| APA 7판, 참고문헌 작성법 | /guide/apa7-references/, /tools/references/ |
+| 문헌연구, 체계적 문헌고찰, 문헌연구 양적·질적 | /guide/literature-review-prisma/ |
+
+### 색인 현황 점검(2026-11-09)
+
+- Google 색인 40개, 미색인 11개였습니다. 그중 3개(/paper/new/, /survey/new/, 주문서 주소)는 주문 화면이라 일부러 noindex로 둔 것이라 정상입니다.
+- '발견됨, 현재 색인 생성 안 됨'(구글이 주소만 알고 아직 가져가지 않음): /guide/cronbach-alpha/, /guide/how-to-make-questionnaire/, /guide/literature-review-prisma/, /professor-feedback/, /tools/. 내부 링크를 늘리고 Search Console에서 색인 생성을 요청했습니다.
+- '크롤링됨, 현재 색인 생성 안 됨'(가져갔지만 아직 넣지 않음): /guide/journal-submission/, /guide/professor-feedback-revision/. 내용을 보강하고(답변서 예시, 회신 메일 예시) 수정일을 표시한 뒤 색인 생성을 요청했습니다.
+- 새 사이트는 보통 몇 주에 걸쳐 색인이 늘어납니다. Search Console의 URL 검사에서 색인 생성 요청은 하루 10개 안팎만 되므로, 중요한 페이지부터 나눠서 요청합니다.

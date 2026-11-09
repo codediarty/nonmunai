@@ -290,6 +290,9 @@
 .tier-inc { list-style: none; display: grid; align-content: start; gap: 9px; margin: 20px 0 0; padding-top: 18px; border-top: 1px solid var(--rule-2); }
 .tier-inc li { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
 .tier-inc .i { width: 17px; height: 17px; margin-top: 2px; flex: none; color: var(--green); stroke-width: 2.6; }
+.tier-inc { flex: 1; }
+.tier-more { align-self: flex-start; margin-top: 16px; font-size: 13.5px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.tier-more:hover { color: var(--blue); text-decoration-color: currentColor; }
 .tier-trust { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; margin: 24px 0 0; font-size: 13.5px; font-weight: 600; color: var(--muted); }
 .tier-trust li { display: inline-flex; align-items: center; gap: 7px; }
 .tier-trust .i { width: 17px; height: 17px; color: var(--ink-2); stroke-width: 2; }
@@ -430,6 +433,21 @@
 .out2-panels .art { max-width: none; }
 .pg-cite { color: var(--blue-2); background: rgba(35, 70, 232, .07); border-radius: 4px; padding: 0 2px; white-space: nowrap; }
 
+/* ---------------------------------------------------------------- 가이드 묶음(무료 도구 아래) */
+.gd3 { margin-top: 44px; padding: 30px 32px 32px; background: #fff; border: 1px solid var(--rule); border-radius: 18px; }
+.gd3-hd { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; margin-bottom: 22px; }
+.gd3-hd .h-3 { margin: 0; }
+.gd3-hd a { font-size: 14.5px; font-weight: 700; }
+.gd3-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
+.gd3-col { min-width: 0; }
+.gd3-t { margin: 0 0 8px; padding-bottom: 10px; border-bottom: 1px solid var(--rule-2); font-size: 13.5px; font-weight: 750; color: var(--blue-2); }
+.gd3-col ul { list-style: none; margin: 0; padding: 0; }
+.gd3-col li + li { border-top: 1px solid var(--rule-2); }
+.gd3-col a { display: grid; gap: 3px; padding: 12px 0; color: var(--ink); text-decoration: none !important; }
+.gd3-col a b { font-size: 16px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.45; }
+.gd3-col a span { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.gd3-col a:hover b { color: var(--blue); }
+
 /* ---------------------------------------------------------------- 원칙 */
 .trust4 { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .trust4 li { display: grid; align-content: start; gap: 6px; padding: 4px 26px; border-left: 1px solid var(--rule); }
@@ -469,6 +487,7 @@
   .out2-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .trust4 { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 28px; }
   .trust4 li:nth-child(3) { padding-left: 0; border-left: 0; }
+  .gd3-cols { gap: 20px; }
 }
 @media (max-width: 720px) {
   .hx-body { grid-template-columns: minmax(0, 1fr); }
@@ -485,6 +504,7 @@
   .flow4 li { display: grid; grid-template-columns: 38px minmax(0, 1fr); column-gap: 16px; }
   .flow4-n { grid-row: 1 / span 2; margin: 0; }
   .svc2 { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .gd3-cols { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .svc2-item { display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; row-gap: 2px; padding: 18px; }
   .svc2-ic { grid-row: 1 / span 3; width: 44px; height: 44px; margin: 0; }
   .svc2-p { margin-top: 8px; padding-top: 8px; }
@@ -539,6 +559,7 @@
   .calc-seg button { flex: 1; padding: 8px 6px; }
   .trust4 { grid-template-columns: minmax(0, 1fr); }
   .trust4 li { padding: 0; border-left: 0; }
+  .gd3 { margin-top: 32px; padding: 22px 18px 18px; }
   .rv-card { padding: 16px; }
   .rv-table td, .rv-table th { padding: 8px 6px; }
 }

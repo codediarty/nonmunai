@@ -54,6 +54,13 @@ const server = http.createServer((req, res) => {
 }).listen(0);
 const base = `http://localhost:${server.address().port}`;
 
+// 제목 줄바꿈: 쌍점 뒤에 쉼표가 있으면 쌍점에서 끊고(부제를 한 덩어리로), 아니면 첫 쉼표에서 끊는다
+const ogBreak = (t) => {
+  if (t.includes('\n') || t.length < 17) return t;
+  const c = t.indexOf(': ');
+  if (c > 0 && t.indexOf(', ', c) > c) return t.slice(0, c + 1) + '\n' + t.slice(c + 2);
+  return t.replace(/, /, ',\n');
+};
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ogHtml = ({ kicker, title, sub }) => `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/site.css"><style>
 html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#F5F7FB}
@@ -73,7 +80,7 @@ h1{position:relative;font-family:var(--serif);font-weight:700;font-size:${title.
 <path d="M60 95L170 58" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M222 58L330 95" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/><path d="M106 118H282" stroke="#41506B" stroke-width="2.2" marker-end="url(#a)"/></svg>
 ${[350, 382, 414, 446, 478].map((y, i) => `<span class="ln" style="top:${y}px;width:${[330, 280, 340, 300, 220][i]}px"></span>`).join('')}</div>
 <div class="top">${MARK(40)}<span>논문AI</span></div>
-<div><p class="k">${esc(kicker)}</p><h1>${esc(title.includes('\n') || title.length < 17 ? title : title.replace(/, /, ',\n')).replace(/\n/g, '<br>')}</h1>${sub ? `<p class="s">${esc(sub)}</p>` : ''}</div>
+<div><p class="k">${esc(kicker)}</p><h1>${esc(ogBreak(title)).replace(/\n/g, '<br>')}</h1>${sub ? `<p class="s">${esc(sub)}</p>` : ''}</div>
 <div class="foot">운영 성균관컨설팅 · 성균관대학교 RISE사업 지원 기업</div></div></body></html>`;
 
 const browser = await playwright.chromium.launch();

@@ -101,9 +101,24 @@ for (const p of pages) {
 }
 
 // 6) 사이트맵·robots·RSS·llms.txt·매니페스트
-const today = new Date().toISOString().slice(0, 10);
+// lastmod는 실제로 내용이 바뀐 날만 갱신한다: 가이드는 머리말(updated·date), 나머지는 tools/lastmod.json에 남긴 내용 지문으로 판단
+const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // 한국 날짜
 const indexable = pages.filter((p) => !p.noindex && p.path !== '/404.html');
-write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${T.abs(p.path)}</loc><lastmod>${p.modified || p.published || today}</lastmod><changefreq>${p.changefreq || 'weekly'}</changefreq><priority>${p.priority || (p.path === '/' ? '1.0' : '0.7')}</priority></url>`).join('\n')}\n</urlset>\n`);
+const lmFile = path.join(root, 'tools/lastmod.json');
+let lastmods = {};
+try { lastmods = JSON.parse(fs.readFileSync(lmFile, 'utf8')); } catch { lastmods = {}; }
+const fingerprint = (p) => crypto.createHash('sha1').update(JSON.stringify([p.title, p.description, p.h1, p.body, p.faq || null, p.schema || null, p.geo || ''])).digest('hex').slice(0, 16);
+const nextLastmods = {};
+for (const p of indexable) {
+  if (p.modified || p.published) continue;
+  const h = fingerprint(p);
+  const prev = lastmods[p.path];
+  nextLastmods[p.path] = prev && prev.h === h ? prev : { h, d: today };
+}
+// 배포용 로컬 빌드(docs/, 설정 주소 그대로)에서만 기록한다. CI·개발 서버 빌드는 읽기만 한다
+if (!process.env.CI && !process.env.OUT_DIR && !process.env.SITE_URL && !process.env.BASE_PATH) fs.writeFileSync(lmFile, JSON.stringify(nextLastmods, null, 1) + '\n');
+const lastmodOf = (p) => p.modified || p.published || (nextLastmods[p.path] || {}).d || today;
+write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${T.abs(p.path)}</loc><lastmod>${lastmodOf(p)}</lastmod><changefreq>${p.changefreq || 'weekly'}</changefreq><priority>${p.priority || (p.path === '/' ? '1.0' : '0.7')}</priority></url>`).join('\n')}\n</urlset>\n`);
 // 검색·AI 답변 엔진은 모두 허용하되, 주문·결제·운영자 화면은 어느 봇에게도 열지 않는다
 const BOTS = ['Yeti', 'Daumoa', 'Googlebot', 'Bingbot', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot'];
 const PRIVATE = ['/admin/', '/orders/', '/checkout/'].map((p) => `Disallow: ${site.basePath}${p}`).join('\n');

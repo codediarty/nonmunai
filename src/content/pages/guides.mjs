@@ -21,9 +21,20 @@ ${sorted.length ? '' : '<p class="muted">가이드를 준비하고 있어요.</p
 </div></section>
 ${ctaBand(T, { title: '읽는 것보다 빠른 방법', text: '관심 주제 한 줄만 적어 주세요. 논문AI가 본문과 참고문헌까지 집필하고, 같은 전공 분야 박사가 최종 검수까지 마친 뒤 메일로 보내 드려요.', topic: true })}`,
   }];
+  // 함께 읽으면 좋은 글: 같은 분류 안에서 순서대로 돌아가며 다음 글 3편을 고른다(최신 글에만 링크가 몰리지 않게).
+  // 분류에 글이 모자라면 전체 목록에서 같은 방식으로 채운다
+  const after = (list, g, n, skip = []) => {
+    const i = list.findIndex((x) => x.slug === g.slug);
+    const out = [];
+    for (let k = 1; k < list.length && out.length < n; k++) {
+      const x = list[(i + k + list.length) % list.length];
+      if (x.slug !== g.slug && !skip.includes(x) && !out.includes(x)) out.push(x);
+    }
+    return out;
+  };
   for (const g of sorted) {
-    const related = sorted.filter((x) => x.slug !== g.slug && x.category === g.category).slice(0, 3);
-    const more = related.length < 3 ? sorted.filter((x) => x.slug !== g.slug && !related.includes(x)).slice(0, 3 - related.length) : [];
+    const related = after(sorted.filter((x) => x.category === g.category), g, 3);
+    const more = related.length < 3 ? after(sorted, g, 3 - related.length, related) : [];
     const svc = g.service || '/thesis-writing/';
     const faq = (g.faq || []).map((f) => ({ q: f.q, a: f.a }));
     const path = `/guide/${g.slug}/`;
@@ -33,7 +44,7 @@ ${ctaBand(T, { title: '읽는 것보다 빠른 방법', text: '관심 주제 한
       ogImage: `/assets/img/og/guide-${g.slug}.png`, priority: '0.7', changefreq: 'monthly',
       geo: `${(g.summary || []).join(' ')}`,
       schema: [{ '@context': 'https://schema.org', '@type': 'Article', headline: g.title, description: g.description, datePublished: `${g.date}T09:00:00+09:00`, dateModified: `${g.updated || g.date}T09:00:00+09:00`, inLanguage: 'ko-KR', articleSection: g.category, keywords: (g.keywords || []).join(', '), mainEntityOfPage: T.abs(path), image: T.abs(`/assets/img/og/guide-${g.slug}.png`), author: { '@type': 'Organization', name: '논문AI 연구진', url: T.abs('/about/') }, publisher: { '@id': T.abs('/#organization') } }],
-      body: `<div class="wrap"><header class="g-head">${crumbs(T, [['홈', '/'], ['가이드', '/guide/'], [g.category, '/guide/']])}<h1 class="h-1">${esc(g.title)}</h1><div class="g-meta"><span>${esc(g.category)}</span><span>읽는 시간 ${g.minutes}분</span><span>${g.date.replace(/-/g, '.')} 작성</span><span>논문AI 연구진</span></div></header>
+      body: `<div class="wrap"><header class="g-head">${crumbs(T, [['홈', '/'], ['가이드', '/guide/'], [g.category, '/guide/']])}<h1 class="h-1">${esc(g.title)}</h1><div class="g-meta"><span>${esc(g.category)}</span><span>읽는 시간 ${g.minutes}분</span><span>${g.date.replace(/-/g, '.')} 작성</span>${g.updated && g.updated !== g.date ? `<span>${String(g.updated).replace(/-/g, '.')} 수정</span>` : ''}<span>논문AI 연구진</span></div></header>
 <div class="split">
 <article class="prose">
 ${g.summary && g.summary.length ? `<div class="g-sum"><b>핵심 요약</b><ul>${g.summary.map((s) => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}

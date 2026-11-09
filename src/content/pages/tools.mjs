@@ -13,25 +13,66 @@ function head(T, path, label, h1, lead) {
   return `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], ['무료 도구', '/tools/'], [label, path]])}<h1 class="h-1" style="margin-top:20px">${esc(h1)}</h1><p class="lead" style="max-width:42em">${lead}</p></div></section>`;
 }
 
-export default function tools({ T }) {
+export default function tools({ T, guides = [] }) {
   const pages = [];
   const ex = '대학생의 SNS 이용과 우울의 관계에서 자기효능감의 조절효과';
   const exDesign = buildDesign({ title: ex, typeId: 'master', fieldId: 'counsel', start: '2026-11-02' });
 
-  // 도구 모음
+  // 도구 모음: 논문 쓰는 순서대로 도구를 소개하고, 상황별 도구·가이드와 계산 방식, 자주 묻는 질문을 함께 싣는다
+  const TOOL_LIST = [
+    ['/free/', 'workflow', '무료 논문 설계', '주제 한 줄로 연구모형, 가설, 분석 계획, 표본 수, 일정을 받아 보세요.'],
+    ['/tools/toc/', 'list-tree', '논문 목차 생성기', '논문 유형과 연구방법에 맞는 장·절·항 목차를 만들어 드려요.'],
+    ['/tools/sample-size/', 'calculator', '표본 수 계산기', '회귀, t검정, 분산분석, 상관, 카이제곱 표본 수를 계산해 보세요.'],
+    ['/tools/references/', 'book-open-text', '참고문헌 생성기', '학술지, 단행본, 학위논문, 웹 자료를 APA 7판 형식으로 바꿔 드려요.'],
+  ];
+  const guideLink = (slug, label) => `<a href="${T.u(`/guide/${slug}/`)}">${esc(label)}</a>`;
+  const toolsFaq = [
+    { q: '논문 무료 도구는 회원가입 없이 쓸 수 있나요?', a: '네. 무료 논문 설계, 논문 목차 생성기, 표본 수 계산기, 참고문헌 생성기는 모두 회원가입이나 결제 없이 바로 쓰실 수 있어요. 횟수 제한도 없어요.' },
+    { q: '입력한 주제나 문헌 정보가 저장되나요?', a: '계산은 모두 브라우저 안에서 이루어지고 서버로 전송되지 않아요. 참고문헌 생성기의 내 목록만 다시 열어 볼 수 있도록 지금 쓰는 브라우저에 임시로 저장되고, 비우기 버튼으로 언제든 지울 수 있어요.' },
+    { q: '도구 결과를 논문에 그대로 써도 되나요?', a: '연구를 시작하는 출발점으로 활용해 주세요. 표본 수는 효과크기, 유의수준, 검정력 같은 계산 조건을 함께 밝혀 적고, 목차와 설계는 학교 양식과 지도교수님 의견에 맞춰 다듬는 것이 좋아요.' },
+    { q: '표본 수 계산기 결과가 G*Power와 다르게 나와요.', a: '같은 분석 방법, 효과크기, 유의수준, 검정력, 예측변수 수를 넣으면 같은 값이 나와요. 다르다면 G*Power에서 고른 검정 종류(예: 회귀의 R² 증가분과 전체 모형 검정)나 단측·양측 설정이 서로 다른지 먼저 확인해 보세요.' },
+    { q: '도구로 해결되지 않는 부분은 어떻게 하나요?', a: '본문 작성, 설문조사, 통계분석처럼 손이 많이 가는 단계는 필요한 부분만 골라 맡기실 수 있어요. 무료 설계 결과 화면에서 바로 의뢰서로 이어지고, 결제하기 전까지는 비용이 들지 않아요.' },
+  ];
+  const hubGuides = ['choosing-thesis-topic', 'survey-sample-size', 'thesis-table-of-contents', 'apa7-references', 'research-proposal-guide', 'how-to-make-questionnaire'].map((s) => guides.find((g) => g.slug === s)).filter(Boolean);
   pages.push({
     path: '/tools/', kind: 'tools', navTitle: '무료 도구', h1: '논문 무료 도구',
-    title: '논문 무료 도구 | 목차 생성기·표본 수 계산기·참고문헌 생성기 논문AI',
-    description: '회원가입 없이 바로 쓰는 논문 무료 도구입니다. 주제로 연구 설계를 만드는 무료 논문 설계, 논문 목차 생성기, G*Power 방식 표본 수 계산기, APA 7판 참고문헌 생성기를 제공합니다.',
-    keywords: ['논문 무료 도구', '논문 작성 AI 무료', '논문 목차 생성기', '표본 수 계산기', '참고문헌 생성기'],
-    crumbs: [['홈', '/'], ['무료 도구', '/tools/']],
-    body: `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], ['무료 도구', '/tools/']])}<h1 class="h-1" style="margin-top:20px">논문 무료 도구</h1><p class="lead" style="max-width:40em">로그인 없이 바로 쓰는 연구 도구예요. 계산은 모두 브라우저 안에서 이루어지고, 입력하신 내용은 서버로 전송되거나 저장되지 않아요.</p></div></section>
+    title: '논문 무료 도구 | 논문 설계·목차 생성기·표본 수 계산기·참고문헌 생성기 논문AI',
+    description: '회원가입 없이 바로 쓰는 논문 무료 도구 모음입니다. 주제로 연구모형과 가설을 만드는 무료 논문 설계, 논문 목차 생성기, G*Power 방식 표본 수 계산기, APA 7판 참고문헌 생성기를 논문 쓰는 순서대로 써 보세요.',
+    keywords: ['논문 무료 도구', '논문 작성 AI 무료', '논문 작성 도구', '논문 목차 생성기', '표본 수 계산기', 'G*Power 표본 수', 'APA 참고문헌 생성기', '연구모형 만들기'],
+    crumbs: [['홈', '/'], ['무료 도구', '/tools/']], faq: toolsFaq, priority: '0.8',
+    geo: `논문AI 무료 도구(회원가입 없음, 브라우저 안에서 계산): 1) 무료 논문 설계: 주제 문장이나 키워드로 연구모형, 가설, 연구 문제, 측정도구 후보, 분석 계획, G*Power 방식 표본 수, 일정, 목차를 산출한다. 2) 표본 수 계산기: 다중회귀, 독립·대응표본 t검정, 일원분산분석, 상관, 카이제곱, 비율 추정의 최소 표본 수를 G*Power와 같은 방식(비중심 F·카이제곱 분포, 상관 정확 분포)으로 계산하고 탈락률을 반영한 모집 인원과 근거 문장을 준다. 예: 다중회귀 f²=.15, 예측변수 5개, α=.05, 검정력 .80이면 92명. 3) 논문 목차 생성기: 논문 유형과 연구방법(양적, 질적, 문헌연구, 프로그램 효과)에 맞는 장·절·항 목차를 만들고 Word로 저장한다. 4) 참고문헌 생성기: 학술지, 단행본, 학위논문, 보고서, 웹 자료를 APA 7판 참고문헌과 본문 인용으로 바꾸고, DOI를 https://doi.org 주소로 정리하며, 한글 문헌을 먼저 정렬한다.`,
+    schema: [{ '@context': 'https://schema.org', '@type': 'ItemList', name: '논문AI 논문 무료 도구', itemListElement: TOOL_LIST.map(([href, , name, d], i) => ({ '@type': 'ListItem', position: i + 1, item: { '@type': 'WebApplication', name, description: d, url: T.abs(href), applicationCategory: 'EducationalApplication', operatingSystem: 'Web', inLanguage: 'ko-KR', offers: { '@type': 'Offer', price: 0, priceCurrency: 'KRW' } } })) }],
+    body: `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], ['무료 도구', '/tools/']])}<h1 class="h-1" style="margin-top:20px">논문 무료 도구</h1><p class="lead" style="max-width:42em">논문 주제 설계부터 표본 수, 목차, 참고문헌 정리까지 로그인 없이 바로 쓰는 연구 도구예요. 계산은 모두 브라우저 안에서 이루어지고, 입력하신 내용은 서버로 전송되거나 저장되지 않아요.</p></div></section>
 <section class="sec"><div class="wrap"><div class="tools">
-<a class="tool" href="${T.u('/free/')}"><span class="tool-ic">${T.icon('workflow')}</span><b>무료 논문 설계</b><span>주제 한 줄로 연구모형, 가설, 분석 계획, 표본 수, 일정을 받아 보세요.</span></a>
-<a class="tool" href="${T.u('/tools/toc/')}"><span class="tool-ic">${T.icon('list-tree')}</span><b>논문 목차 생성기</b><span>논문 유형과 연구방법에 맞는 장·절·항 목차를 만들어 드려요.</span></a>
-<a class="tool" href="${T.u('/tools/sample-size/')}"><span class="tool-ic">${T.icon('calculator')}</span><b>표본 수 계산기</b><span>회귀, t검정, 분산분석, 상관, 카이제곱 표본 수를 계산해 보세요.</span></a>
-<a class="tool" href="${T.u('/tools/references/')}"><span class="tool-ic">${T.icon('book-open-text')}</span><b>참고문헌 생성기</b><span>학술지, 단행본, 학위논문, 웹 자료를 APA 7판 형식으로 바꿔 드려요.</span></a>
-</div></div></section>`,
+${TOOL_LIST.map(([href, ic, name, d]) => `<a class="tool" href="${T.u(href)}"><span class="tool-ic">${T.icon(ic)}</span><b>${esc(name)}</b><span>${esc(d)}</span></a>`).join('\n')}
+</div></div></section>
+<section class="sec sec-alt"><div class="wrap-narrow prose">
+<h2 style="margin-top:0">논문 쓰는 순서대로 써 보세요</h2>
+<p>네 가지 도구는 학위논문을 준비하는 순서에 맞춰 이어서 쓰도록 만들었어요. 앞 단계에서 정한 내용이 다음 단계의 입력값이 돼요.</p>
+<ol>
+<li><b>주제와 연구 설계</b>: <a href="${T.u('/free/')}">무료 논문 설계</a>에 주제 문장이나 관심 키워드를 넣으면 연구 대상과 변인을 읽어 연구모형, 가설, 분석 계획을 잡아 드려요. 주제가 아직 넓다면 ${guideLink('choosing-thesis-topic', '논문 주제 정하는 법')}을 먼저 읽어 보세요.</li>
+<li><b>필요한 표본 수</b>: 분석 방법이 정해지면 <a href="${T.u('/tools/sample-size/')}">표본 수 계산기</a>로 최소 표본 수와 탈락률을 반영한 모집 인원을 계산해요. 연구계획서에 그대로 옮길 수 있는 근거 문장도 함께 드려요.</li>
+<li><b>목차 초안</b>: <a href="${T.u('/tools/toc/')}">논문 목차 생성기</a>에서 논문 유형과 연구방법을 고르면 장·절·항 목차가 나와요. 제목 속 변인 이름이 이론적 배경과 측정도구 절에 그대로 들어가고, Word 파일로 저장할 수 있어요.</li>
+<li><b>참고문헌 정리</b>: 읽은 문헌은 <a href="${T.u('/tools/references/')}">참고문헌 생성기</a>로 APA 7판 형식에 맞춰 모아 두세요. 본문 인용 형식도 함께 보여 드리고, 한글 문헌을 먼저 정렬해 드려요.</li>
+</ol>
+<h2>이럴 때 이 도구를 쓰세요</h2>
+<div class="table-wrap"><table class="g-table"><thead><tr><th>이런 상황이라면</th><th>쓸 도구</th><th>함께 볼 가이드</th></tr></thead><tbody>
+<tr><td>주제는 있는데 연구모형과 가설이 막막해요</td><td><a href="${T.u('/free/')}">무료 논문 설계</a></td><td>${guideLink('choosing-thesis-topic', '논문 주제 정하는 법')}</td></tr>
+<tr><td>연구계획서에 표본 수 근거를 적어야 해요</td><td><a href="${T.u('/tools/sample-size/')}">표본 수 계산기</a></td><td>${guideLink('survey-sample-size', '논문 표본 수 계산')}</td></tr>
+<tr><td>학교 양식에 맞는 목차 초안이 필요해요</td><td><a href="${T.u('/tools/toc/')}">논문 목차 생성기</a></td><td>${guideLink('thesis-table-of-contents', '논문 목차 구성법')}</td></tr>
+<tr><td>참고문헌 형식이 문헌마다 제각각이에요</td><td><a href="${T.u('/tools/references/')}">참고문헌 생성기</a></td><td>${guideLink('apa7-references', 'APA 7판 참고문헌 작성법')}</td></tr>
+<tr><td>심사용 연구계획서를 처음 써요</td><td><a href="${T.u('/free/')}">무료 논문 설계</a>, <a href="${T.u('/tools/sample-size/')}">표본 수 계산기</a></td><td>${guideLink('research-proposal-guide', '연구계획서 작성법')}</td></tr>
+<tr><td>설문 문항을 어떻게 구성할지 모르겠어요</td><td><a href="${T.u('/free/')}">무료 논문 설계</a>(측정도구 후보)</td><td>${guideLink('how-to-make-questionnaire', '설문지 만드는 법')}</td></tr>
+</tbody></table></div>
+<h2>결과는 이렇게 계산해요</h2>
+<p><b>표본 수 계산기</b>는 G*Power와 같은 방식으로 비중심 F 분포와 카이제곱 분포, 상관계수의 정확 분포를 써서 계산해요. 기본값은 유의수준 .05, 검정력 .80이고, 예를 들어 다중회귀분석에서 중간 효과크기 f²=.15, 예측변수 5개라면 최소 92명, 탈락률 15%를 더하면 109명을 모집하도록 안내해요.</p>
+<p><b>참고문헌 생성기</b>는 APA 7판 규칙을 따라요. 저자는 20명까지 모두 적고 마지막 저자 앞에 &amp;를 붙이며, 21명 이상이면 앞의 19명과 마지막 저자만 적어요. DOI는 https://doi.org/ 주소 형태로 정리하고, 본문 인용은 저자가 셋 이상이면 국내 문헌은 '외', 해외 문헌은 'et al.'로 줄여 보여 드려요.</p>
+<p><b>논문 목차 생성기</b>와 <b>무료 논문 설계</b>는 주제 문장에서 연구 대상과 원인 변인, 결과 변인, 매개·조절 변인을 읽어 내고 연구방법별 표준 구성을 적용해요. 같은 내용을 입력하면 늘 같은 결과가 나와서, 조건을 바꿔 가며 비교해 보기 좋아요.</p>
+<p>도구로 방향을 잡은 뒤 본문 작성이나 설문조사, 통계분석이 필요하다면 <a href="${T.u('/thesis-writing/')}">논문 작성 지원</a>, <a href="${T.u('/survey/')}">설문조사</a>, <a href="${T.u('/statistics/')}">통계분석</a>에서 필요한 단계만 골라 맡기실 수 있어요.</p>
+</div></section>
+${hubGuides.length ? `<section class="sec-tight"><div class="wrap"><h2 class="h-3" style="margin-bottom:16px">도구와 함께 읽으면 좋은 가이드</h2><div class="related">${hubGuides.map((g) => `<a class="g-card" href="${T.u(`/guide/${g.slug}/`)}"><b>${esc(g.title)}</b><span>${esc(g.description)}</span><small>${esc(g.category)} · ${g.minutes}분</small></a>`).join('')}</div></div></section>` : ''}
+${faqBlock(T, toolsFaq, { title: '논문 무료 도구 자주 묻는 질문' })}
+${ctaBand(T, { title: '내 주제로 바로 설계해 보기', text: '주제 한 줄이면 연구모형, 가설, 목차, 표본 수를 무료로 확인해 보실 수 있어요.', topic: 'free' })}`,
   });
 
   // 무료 논문 설계

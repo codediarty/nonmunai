@@ -9,8 +9,8 @@ export function llmsTxt(ctx, pages) {
   const { T } = ctx;
   const pick = (paths) => paths.map((x) => pages.find((p) => p.path === x)).filter(Boolean);
   const services = pick(['/ai-thesis/', '/thesis-writing/', '/thesis-editing/', '/professor-feedback/', '/research-proposal/', '/master-thesis/', '/dissertation/', '/journal-paper/', '/survey/', '/statistics/', '/consulting/']);
-  const tools = pick(['/free/', '/tools/toc/', '/tools/sample-size/', '/tools/references/']);
-  const info = pick(['/pricing/', '/process/', '/faq/', '/about/', '/ethics/', '/refund/']);
+  const tools = pick(['/tools/', '/free/', '/tools/toc/', '/tools/sample-size/', '/tools/references/']);
+  const info = pick(['/pricing/', '/process/', '/faq/', '/about/', '/ethics/', '/guide/', '/refund/']);
   const guides = pages.filter((p) => p.path.startsWith('/guide/') && p.path !== '/guide/');
   return `# 논문AI
 

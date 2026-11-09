@@ -40,9 +40,9 @@ export default function info({ T }) {
   ];
   pages.push({
     path: '/pricing/', kind: 'info', navTitle: '가격 안내', h1: '논문AI 가격 안내',
-    title: '논문AI 가격 | 논문 작성 비용, 논문 첨삭·컨설팅·통계분석 비용',
+    title: '논문 작성 비용 | 석사논문·논문 첨삭·통계분석·설문조사 비용 가격표 논문AI',
     description: `논문 작성 비용(${PROMO_NAME}): 석사논문 80 Page ${W('master', 80)}, 박사논문 130 Page ${W('doctor', 130)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 소논문 15 Page ${W('short', 15)}. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수 포함. 논문 첨삭, 컨설팅, 통계분석·설문조사 가격까지 한눈에 보세요.`,
-    keywords: ['논문 작성 비용', '논문 첨삭 비용', '논문 컨설팅 비용', '석사논문 작성 비용', '박사논문 작성 비용', '논문 자동작성 가격', '논문 교정 비용', '논문 통계분석 비용', '설문조사 비용'],
+    keywords: ['논문 작성 비용', '논문 가격', '석사논문 비용', '석사논문 작성 비용', '박사논문 작성 비용', '학사 졸업논문 비용', '논문 첨삭 비용', '논문 교정 비용', '논문 컨설팅 비용', '논문 통계분석 비용', '설문조사 대행 비용', '논문 자동작성 가격'],
     crumbs: [['홈', '/'], ['가격 안내', '/pricing/']], faq: pricingFaq, priority: '0.9', styles: ['site', 'home'], scripts: ['pricing'],
     body: `${pageHead(T, `논문 한 편, ${PROMO_NAME}로`, `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}에서 ${PROMO_NAME} ${qn('master', 80)}, 박사학위논문 130 Page는 정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)}에서 ${qn('doctor', 130)}이에요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수까지 모두 기본으로 들어 있어요.`, '/pricing/', '가격 안내')}
 <section class="sec sec-tight" id="tiers" aria-labelledby="tiers-h"><div class="wrap">

@@ -95,13 +95,13 @@ export { tocToText };
 export const fullQuote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
 const wonNum = (n) => Math.round(Number(n) || 0).toLocaleString('ko-KR');
 export const TIERS = [
-  { kind: '소논문', pages: 15, typeId: 'short', desc: '수업 과제와 학회 발표용 한 편', inc: ['주제와 연구 질문 정리', '본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수, 수정 1회'], cta: '소논문 의뢰하기' },
-  { kind: '학사 졸업논문', pages: 30, typeId: 'bachelor', desc: '졸업 요건에 맞춘 학부 논문', inc: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수, 수정 1회'], cta: '졸업논문 의뢰하기' },
-  { kind: '석사학위논문', pages: 80, typeId: 'master', featured: true, desc: '연구 설계부터 결론까지 학위논문 한 편', inc: ['연구모형·가설·분석 계획 연구 설계서', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수, 수정 1회'], cta: '석사논문 의뢰하기' },
-  { kind: '박사학위논문', pages: 130, typeId: 'doctor', desc: '장별 집필 계획으로 끝까지 일관되게', inc: ['연구모형과 장별 집필 계획', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수, 수정 1회'], cta: '박사논문 의뢰하기' },
+  { kind: '소논문', pages: 15, typeId: 'short', info: ['/ai-thesis/', 'AI 논문 자동작성 안내'], desc: '수업 과제와 학회 발표용 한 편', inc: ['주제와 연구 질문 정리', '본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수, 수정 1회'], cta: '소논문 의뢰하기' },
+  { kind: '학사 졸업논문', pages: 30, typeId: 'bachelor', info: ['/thesis-writing/', '졸업논문 작성 안내'], desc: '졸업 요건에 맞춘 학부 논문', inc: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수, 수정 1회'], cta: '졸업논문 의뢰하기' },
+  { kind: '석사학위논문', pages: 80, typeId: 'master', info: ['/master-thesis/', '석사논문 작성 안내'], featured: true, desc: '연구 설계부터 결론까지 학위논문 한 편', inc: ['연구모형·가설·분석 계획 연구 설계서', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수, 수정 1회'], cta: '석사논문 의뢰하기' },
+  { kind: '박사학위논문', pages: 130, typeId: 'doctor', info: ['/dissertation/', '박사논문 작성 안내'], desc: '장별 집필 계획으로 끝까지 일관되게', inc: ['연구모형과 장별 집필 계획', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수, 수정 1회'], cta: '박사논문 의뢰하기' },
 ];
 
-function tierCard(T, { kind, pages, typeId, desc, inc, featured = false, cta }) {
+function tierCard(T, { kind, pages, typeId, desc, inc, featured = false, cta, info }) {
   const q = fullQuote(typeId, pages);
   const code = q.lines[0] ? q.lines[0].code : '';
   const list = listPriceFor(code, q.total);
@@ -114,6 +114,7 @@ function tierCard(T, { kind, pages, typeId, desc, inc, featured = false, cta }) 
 <p class="tier-meta"><span>실존 참고문헌</span><span>전공 박사 최종 검수</span></p>
 <a class="btn ${featured ? 'btn-primary' : 'btn-dark'} btn-block" href="${href}">${esc(cta)}</a>
 <ul class="tier-inc">${inc.map((x) => `<li>${T.icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul>
+${info ? `<a class="tier-more" href="${T.u(info[0])}">${esc(info[1])}</a>` : ''}
 </article>`;
 }
 
