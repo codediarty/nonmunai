@@ -35,7 +35,11 @@ for (const ep of ['https://api.indexnow.org/indexnow', 'https://searchadvisor.na
     console.log(`${ep} → ${r.status} (${urlList.length}개)${ok ? '' : ` 응답: ${await brief(r)}`}`);
     // 묶음 전송이 거절되면 주소마다 GET으로 한 번씩 다시 보내 어느 주소가 왜 막혔는지 남긴다(과다 전송을 피해 10개까지)
     if (!ok && r.status !== 429) {
-      for (const u of urlList.slice(0, 10)) {
+      const tried = urlList.slice(0, 10);
+      // 보낸 주소가 홈 하나뿐이면, 사이트 전체가 막힌 것인지 홈만의 문제인지 가르기 위해 최근에 바뀐 하위 주소 하나를 함께 확인한다
+      const canary = [...entries].sort((x, y) => (y.lastmod || '').localeCompare(x.lastmod || '')).map((e) => e.loc).find((u) => u !== `${base}/` && !tried.includes(u));
+      if (tried.every((u) => u === `${base}/`) && canary) tried.push(canary);
+      for (const u of tried) {
         try {
           const g = await fetch(`${ep}?url=${encodeURIComponent(u)}&key=${key}&keyLocation=${encodeURIComponent(keyLocation)}`);
           const gok = g.status === 200 || g.status === 202;
