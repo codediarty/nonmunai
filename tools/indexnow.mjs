@@ -25,10 +25,23 @@ const sendAll = process.argv.includes('--all') || process.env.INDEXNOW_ALL === '
 const urlList = (sendAll ? entries : entries.filter((e) => !e.lastmod || e.lastmod >= since)).map((e) => e.loc);
 if (!urlList.length) { console.log(`바뀐 주소 없음(기준 ${since} 이후): 건너뜀`); process.exit(0); }
 console.log(`${sendAll ? '전체' : `${since} 이후 바뀐`} 주소 ${urlList.length}개 / sitemap ${entries.length}개`);
-const body = JSON.stringify({ host, key, keyLocation: `${base}/${key}.txt`, urlList });
+const keyLocation = `${base}/${key}.txt`;
+const body = JSON.stringify({ host, key, keyLocation, urlList });
+const brief = async (r) => { try { return (await r.text()).replace(/\s+/g, ' ').trim().slice(0, 300); } catch { return ''; } };
 for (const ep of ['https://api.indexnow.org/indexnow', 'https://searchadvisor.naver.com/indexnow']) {
   try {
     const r = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body });
-    console.log(`${ep} → ${r.status} (${urlList.length}개)`);
+    const ok = r.status === 200 || r.status === 202;
+    console.log(`${ep} → ${r.status} (${urlList.length}개)${ok ? '' : ` 응답: ${await brief(r)}`}`);
+    // 묶음 전송이 거절되면 주소마다 GET으로 한 번씩 다시 보내 어느 주소가 왜 막혔는지 남긴다(과다 전송을 피해 10개까지)
+    if (!ok && r.status !== 429) {
+      for (const u of urlList.slice(0, 10)) {
+        try {
+          const g = await fetch(`${ep}?url=${encodeURIComponent(u)}&key=${key}&keyLocation=${encodeURIComponent(keyLocation)}`);
+          const gok = g.status === 200 || g.status === 202;
+          console.log(`  GET ${u} → ${g.status}${gok ? '' : ` 응답: ${await brief(g)}`}`);
+        } catch (e) { console.log(`  GET ${u} 실패: ${e.message}`); }
+      }
+    }
   } catch (e) { console.log(`${ep} 실패: ${e.message}`); }
 }
