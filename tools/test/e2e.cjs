@@ -1918,12 +1918,12 @@ async function tests() {
     has(await text(p, '#hxLock .pv-lock'), '결제하시면 나머지 78 Page를 완성해 드려요', '결제 후 완성 안내');
     ok(await p.$eval('#hxScroll', (x) => x.classList.contains('is-free') && x.scrollTop > 0), '다 쓴 뒤 지면을 굴려 읽을 수 없음');
   }));
-  await check(39, '홈 보안 섹션: 철저한 보안 관리와 연구 자료 보호, 주문번호로 작업, 전달 후 90일 모든 자료 삭제, 암호화 약속과 삭제 일정, 약관·FAQ에도 같은 약속', async () => withCtx({}, async (p) => {
+  await check(39, '홈 세 가지 약속: 실존 참고문헌, 전공 박사 검수, 철저한 보안 관리(주문번호로 작업, 비밀유지, 전달 후 90일 자동 삭제), 약관·FAQ에도 같은 약속', async () => withCtx({}, async (p) => {
     await p.goto(`${BASE}/`);
+    eq(await p.$$eval('#trust .why', (ls) => ls.length), 3, '약속 수');
     const sec = await text(p, '#secure');
-    for (const s of ['철저한 보안 관리로', '연구 자료를 지켜요', '주문 내용 비밀 유지', '주문번호로 진행', '비밀유지 의무', '90일이 지나면 모두 자동으로 영구 삭제', 'HTTPS로 암호화', '자동 영구 삭제', '복구할 수 없어요']) has(sec, s, '비밀 보장 섹션');
-    eq(await p.$$eval('#secure .sc-grid li', (ls) => ls.length), 6, '비밀 보장 약속 수');
-    eq(await p.$$eval('#secure .sc-steps li', (ls) => ls.length), 3, '삭제 일정 단계 수');
+    for (const s of ['철저한 보안 관리', '주문번호로 진행', '비밀유지 의무', '90일이 지나면', '자동으로 영구 삭제']) has(sec, s, '보안 약속');
+    has(await text(p, '#references'), 'DOI·KCI·RISS', '실존 참고문헌 약속');
     ok(await p.$('#secure a[href$="/privacy/"]'), '개인정보처리방침 링크 없음');
     has(await text(p, '.hx-proof2'), '철저한 보안 관리', '첫 화면 신뢰 표시');
     has(await text(p, '.ft'), '철저한 보안 관리', '바닥글');
@@ -2033,19 +2033,19 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       ok(!lk.error, `휴대전화 뒤 4자리로 조회가 안 됨: ${lk.error && lk.error.message}`);
     } finally { await c.close().catch(() => {}); }
   }, { direct: true }));
-  await check(41, '학교 양식·연구 방법은 보조 선택이고, 파일 없이 골라도 접수되며 요청 사항에 따로 보낸다고 남음', async () => withShop(() => withCtx({}, async (p) => {
+  await check(41, '처음 화면은 논문 완성 한 길: 작업 탭·양식·연구 방법 고르기 없이 주제와 종류만, 전공은 선택이고 요청 사항은 주문에 남음', async () => withShop(() => withCtx({}, async (p) => {
     await catchShop(p);
-    await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt: '사회복지학과 졸업논문인데 독거노인 고독사 예방 쪽으로 써줘' })}`);
+    await p.goto(`${BASE}/paper/new/`);
+    await p.evaluate(() => { try { localStorage.removeItem('nm:draft:quick'); } catch (e) { /* 무시 */ } });
+    await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt: '독거노인 고독사 예방 쪽으로 졸업논문 써줘' })}`);
     await p.waitForSelector('#qoTopic');
-    eq(await p.$eval('input[name="qoFmt"]:checked', (e) => e.value), 'general', '기본 양식 선택');
-    await p.click('label.qo-fmt-sub');
-    await p.waitForSelector('[data-up="format"]');
-    // 연구 방법은 접힌 칸에서 한 번 눌러 바꾸고, 금액은 그대로
-    const before = await text(p, '#qoSum');
-    eq(await p.$eval('input[name="qoMethod"]:checked', (e) => e.value), 'auto', '기본 연구 방법');
+    ok(!(await p.isVisible('.qo-tabs')), '처음 화면에 작업 탭이 보임');
+    ok(await p.isVisible('#qoOther button[data-task="edit"]'), '다른 작업 링크가 없음');
+    ok(!(await p.$('input[name="qoFmt"], input[name="qoMethod"]')), '양식·연구 방법 고르기 칸이 보임');
+    eq(await p.$eval('input[name="qoPkg"]:checked', (e) => e.value), 'bachelor30', '적은 문장에서 읽은 논문 종류');
+    eq(await p.inputValue('#qoMajor'), '', '전공 칸(비어 있어도 됨)');
     await p.click('.qo-more > summary');
-    await p.click('label.qo-seg-i:has(input[name="qoMethod"][value="survey"])');
-    eq(await text(p, '#qoSum'), before, '연구 방법을 바꿔도 결제 요약 그대로');
+    await p.fill('#qoReq', '설문 연구로 해 주세요. 학교 양식은 결제 후에 보낼게요.');
     await p.fill('#qoName', '박학사');
     await p.fill('#qoPhone', '010-1111-2222');
     const email = mail('fmt');
@@ -2055,9 +2055,15 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
     const orderNo = ((await text(p, '#app')).match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
     const lk = await api('lookupOrder', { orderNo, contact: email, pin: '2222' });
     const o = (await api('getOrder', { orderNo: lk.orderNo, token: lk.token })).order;
-    eq([o.input.paper.typeId, o.input.paper.hasFormat, o.amount], ['bachelor', 'no', 59000], '학사·양식 파일 없음·금액');
-    has(o.input.common.request, '학교 양식은 나중에', '양식 안내 기록');
-    eq(o.input.common.method, 'survey', '고른 연구 방법');
+    eq([o.input.paper.typeId, o.input.paper.hasFormat, o.input.common.method, o.amount], ['bachelor', 'no', 'auto', 59000], '학사·양식 파일 없음·연구 방법 자동·금액');
+    has(o.input.common.request, '설문 연구로 해 주세요', '요청 사항 기록');
+    // 다른 작업 링크를 누르면 작업 탭이 나타나고 원고 칸으로 바뀐다
+    await p.goto(`${BASE}/paper/new/`);
+    await p.waitForSelector('#qoTopic');
+    await p.click('#qoOther button[data-task="feedback"]');
+    await p.waitForSelector('.qo-tabs:not([hidden]) .qo-tab.is-on[data-task="feedback"]');
+    ok(await p.$('#qoFb'), '피드백 반영 칸이 없음');
+    ok(!(await p.isVisible('#qoOther')), '다른 작업 링크가 남아 있음');
   })));
   await check(41, '옵션은 같은 화면에서 켜고 끄면 금액이 바로 바뀌고, 필수 칸이 비면 그 칸으로 안내', async () => withCtx({ mobile: true }, async (p) => {
     await p.goto(`${BASE}/paper/new/`);

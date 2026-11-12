@@ -54,7 +54,7 @@ ${pageTiers(T)}
 ${groups.map(([g, codes]) => `<div class="page-sec">${priceTable(T, codes, { caption: g })}</div>`).join('')}
 </div></section>
 ${faqBlock(T, pricingFaq, { title: '가격 관련 자주 묻는 질문' })}
-${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 있어요', text: '관심 주제와 전공만 적고 결제하시면 돼요. 같은 전공 분야 박사의 최종 검수를 마친 완성본을 메일로 보내 드려요.', primary: ['논문 의뢰하기', '/paper/new/'], secondary: ['통계분석 의뢰하기', '/statistics/new/'] })}`,
+${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 있어요', text: '관심 주제를 적고 논문 종류만 고르시면 결제 화면이 바로 열려요. 같은 전공 분야 박사의 최종 검수를 마친 완성본을 메일로 보내 드려요.', primary: ['논문 의뢰하기', '/paper/new/'], secondary: ['통계분석 의뢰하기', '/statistics/new/'] })}`,
   });
   pages[pages.length - 1].geo = groups.map(([g, codes]) => `${g}: ${codes.map((c) => `${c} ${price(c) || '별도 견적'}`).join(', ')}`).join('\n');
 

@@ -1,4 +1,5 @@
-// 한 화면 논문 주문: 관심 주제와 전공, 논문 종류만 받고 바로 결제 화면으로 잇는다
+// 한 화면 논문 주문: 관심 주제와 논문 종류만 받고 바로 결제 화면으로 잇는다(전공은 선택, 양식·연구 방법 단계 없음)
+// 처음 화면은 '논문 완성' 한 가지 길만 보여 주고, 첨삭·피드백 반영·연구계획서는 아래쪽 작은 링크로 고른다
 // 논문 완성·연구계획서는 연락처를 받지 않는다(결제 화면에서 받음). 상품이 하나로 맞으면 결제 화면을 바로 연다.
 // 원고 첨삭·피드백 반영은 원고 파일이 필요해 기존처럼 주문서를 먼저 접수한다.
 import { submitOrder, uploader, ICON } from './wizard.js';
@@ -112,25 +113,23 @@ const isDirect = () => !!directLink();
 function shell(root) {
   root.innerHTML = `<div class="qo">
 <div class="qo-hero"><div class="wrap qo-hero-in">
-<p class="qo-eyebrow"><span>논문 의뢰</span></p>
 <h1 class="qo-h1">주제만 알려 주세요.<br>완성본으로 보내 드려요.</h1>
-<p class="qo-lead">관심 주제와 전공, 논문 종류만 골라 주세요. 제목과 목차, 연구 방법은 논문AI와 같은 전공 박사가 정하고, 최종 검수까지 마쳐서 보내 드려요.</p>
-<ul class="qo-proof"><li>${ICON.check}<span>참고문헌 100% 실존 검증</span></li><li>${ICON.check}<span>같은 전공 박사 검수</span></li><li>${ICON.check}<span>검수 완료본만 메일 전달</span></li><li>${ICON.check}<span>철저한 보안 관리 · 연구 자료 보호</span></li></ul>
+<p class="qo-lead">관심 주제를 적고 논문 종류만 고르면 결제 화면이 바로 열려요. 제목과 목차, 연구 방법은 같은 전공 박사가 정해 드려요.</p>
 </div></div>
 <div class="wrap qo-grid">
 <form class="qo-form" id="qoForm" novalidate autocomplete="off">
-<div class="qo-tabs" role="tablist" aria-label="필요한 작업">${TASKS.map(([v, t, d]) => `<button type="button" role="tab" class="qo-tab" data-task="${v}" aria-selected="false"><b>${t}</b><small>${d}</small></button>`).join('')}</div>
+<div class="qo-tabs" role="tablist" aria-label="필요한 작업" hidden>${TASKS.map(([v, t, d]) => `<button type="button" role="tab" class="qo-tab" data-task="${v}" aria-selected="false"><b>${t}</b><small>${d}</small></button>`).join('')}</div>
 <section class="qo-sec" id="qoS1"></section>
-<section class="qo-mobile-pv" id="qoPvM" aria-label="내 논문 작성 미리보기"></section>
 <section class="qo-sec" id="qoS2"></section>
-<section class="qo-sec" id="qoS3"></section>
 <section class="qo-sec qo-sec-more" id="qoMore"></section>
 <section class="qo-sec" id="qoS4"></section>
 <input type="text" name="hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" data-k="hp">
 <div class="qo-go"><p class="qo-err" id="qoErr" role="alert"></p>
 <button class="btn btn-primary btn-lg btn-block qo-submit" type="submit" id="qoSubmit">결제하고 의뢰하기</button>
-<p class="qo-safe">${ICON.check}<span>결제가 확인되면 바로 집필을 시작해요 · 카드·간편결제·계좌이체</span></p>
-<p class="qo-safe qo-secret">${ICON.shield}<span>연구 자료는 철저한 보안 속에 관리해요. 작업은 이름 대신 주문번호로 하고, 전달 후 90일이 지나면 자료를 모두 지워요.</span></p></div>
+<p class="qo-safe">${ICON.check}<span>회원가입 없이 카드·간편결제·계좌이체 · 결제가 확인되면 바로 집필을 시작해요</span></p>
+<p class="qo-safe qo-secret">${ICON.shield}<span>작업은 이름 대신 주문번호로 하고, 전달 후 90일이 지나면 자료를 모두 지워요.</span></p></div>
+<p class="qo-other" id="qoOther"><span>다른 작업이 필요하세요?</span>${TASKS.filter(([v]) => v !== 'full').map(([v, t]) => `<button type="button" data-task="${v}">${t}</button>`).join('')}</p>
+<section class="qo-mobile-pv" id="qoPvM" aria-label="내 논문 작성 미리보기"></section>
 </form>
 <aside class="qo-side" aria-label="내 논문 미리보기와 결제 금액"><div class="qo-side-in"><div id="qoPv"></div><div class="qo-sum" id="qoSum"></div></div></aside>
 </div>
@@ -139,6 +138,10 @@ function shell(root) {
 }
 
 function taskTabs(root) {
+  const tabs = $('.qo-tabs', root);
+  if (tabs) tabs.hidden = S.task === 'full';
+  const other = $('#qoOther', root);
+  if (other) other.hidden = S.task !== 'full';
   for (const b of $$('.qo-tab', root)) {
     const on = b.dataset.task === S.task;
     b.classList.toggle('is-on', on);
@@ -172,9 +175,9 @@ ${uploader(S, 'feedback', { label: '의견이 담긴 파일', hint: '메모가 �
   return `<h2 class="qo-h"><span class="qo-n">1</span>어떤 논문을 쓸까요?</h2>
 <div class="field qo-topic"><label class="label" for="qoTopic">관심 주제나 키워드<span class="req">*</span></label>
 <textarea class="textarea qo-ta" id="qoTopic" rows="3" data-k="topic" maxlength="200" placeholder="관심 주제나 키워드를 입력하세요">${esc(S.topic)}</textarea>
-<p class="hint">예: 직장인 워라밸이랑 이직 관련해서 · 제목은 정하지 않아도 괜찮아요. 전공 박사가 다듬어서 가장 좋은 제목으로 정해 드려요.</p>
+<p class="hint">예: 직장인 워라밸이랑 이직 관련해서 · 제목은 정하지 않아도 돼요.</p>
 <div id="qoRead">${parseChips()}</div></div>
-<div class="field"><label class="label" for="qoMajor">전공 분야<span class="req">*</span></label><input class="input" id="qoMajor" data-k="major" list="qoMajors" maxlength="60" value="${esc(S.major)}" placeholder="나의 전공 분야를 입력하세요">${majors}<p class="hint">예: 간호학, 경영학, 사회복지학 · 목록에 없어도 그대로 적어 주세요.</p></div>`;
+<div class="field"><label class="label" for="qoMajor">전공 분야 <span class="qo-opt">(선택)</span></label><input class="input" id="qoMajor" data-k="major" list="qoMajors" maxlength="60" value="${esc(S.major)}" placeholder="예: 간호학, 경영학, 사회복지학">${majors}<p class="hint">비워 두셔도 주제에 맞는 전공 박사가 맡아요.</p></div>`;
 }
 
 function priceTag(code, total) {
@@ -205,18 +208,7 @@ ${S.task === 'edit' ? `<div class="field qo-pages"><label class="label" for="qoE
 <p class="hint qo-pkg-note">학교 기준 분량이 다르면 요청 사항에 적어 주세요. 확인하고 맞춰 드려요.</p>`;
 }
 
-function s3Html() {
-  if (S.task === 'feedback') return '';
-  const school = S.format === 'school';
-  const direct = isDirect();
-  return `<h2 class="qo-h"><span class="qo-n">3</span>양식은 어떻게 할까요?</h2>
-<div class="qo-fmt" role="radiogroup" aria-label="양식">
-<label class="qo-fmt-main${!school ? ' is-on' : ''}"><input type="radio" name="qoFmt" value="general"${!school ? ' checked' : ''}><span class="qo-fmt-mk" aria-hidden="true">${ICON.check}</span><span><b>일반적인 논문 양식으로 해 주세요</b><small>APA 7판 학위논문 형식 · 나중에 학교 양식으로 바꿀 수 있어요</small></span></label>
-<label class="qo-fmt-sub${school ? ' is-on' : ''}"><input type="radio" name="qoFmt" value="school"${school ? ' checked' : ''}><span><b>학교 양식 첨부</b><small>파일이 있다면</small></span></label>
-</div>
-${school ? `<div class="qo-fmt-up">${direct ? '<p class="hint">양식 파일은 결제 후 받으시는 주문 안내 메일의 주문 페이지에서 올려 주시면 돼요.</p>' : uploader(S, 'format', { label: '양식 파일', hint: '작성 지침, 서식 파일(hwp, docx), PDF 모두 괜찮아요. 지금 없으면 나중에 주문 페이지에서 보내 주셔도 돼요' })}<div class="field"><label class="label" for="qoFname">학교·학술지 이름</label><input class="input" id="qoFname" data-k="formatName" maxlength="100" value="${esc(S.formatName)}" placeholder="예: ○○대학교 대학원 (선택)"></div></div>` : ''}`;
-}
-
+// 양식 단계는 두지 않는다: 기본은 일반 학위논문 양식(APA 7판), 학교 양식은 결제 후 주문 페이지나 요청 사항으로 받는다
 function moreHtml() {
   const direct = isDirect();
   const cat = CONFIG.catalog;
@@ -227,13 +219,9 @@ function moreHtml() {
   const box = (key, title, price, desc, off = false) => `<label class="qo-add${S.addons[key] ? ' is-on' : ''}${off ? ' is-off' : ''}"><input type="checkbox" data-add="${key}"${S.addons[key] ? ' checked' : ''}${off ? ' disabled' : ''}><span class="qo-add-mk" aria-hidden="true">${ICON.check}</span><span class="qo-add-t"><b>${title}</b><small>${desc}</small></span><span class="qo-add-p num">+${won(price)}</span></label>`;
   const paid = direct ? 0 : Object.entries(S.addons).filter(([k, v]) => v && k !== 'revisions').length + (Number(S.addons.revisions) ? 1 : 0);
   const on = paid + (S.files || []).filter((f) => f.slot === 'materials').length + (S.request.trim() ? 1 : 0);
-  const wantsMethod = writeLike();
-  const curMethod = METHODS.some(([v]) => v === S.method) ? S.method : 'auto';
-  const methodOn = wantsMethod && curMethod !== 'auto';
-  const sub = direct ? '연구 방법, 받을 파일 형식, 제출 일정, 요청 사항' : `${wantsMethod ? '연구 방법, ' : ''}심사 발표 PPT, 우선 처리, 참고 자료, 요청 사항`;
-  return `<details class="qo-more"${on || methodOn ? ' open' : ''}><summary><span><b>더 알려 주실 것이 있나요?</b><small>${sub}</small></span><em>선택</em></summary>
+  const sub = direct ? '학교 양식, 원하는 연구 방법, 받을 파일, 제출 일정' : '심사 발표 PPT, 우선 처리, 참고 자료, 요청 사항';
+  return `<details class="qo-more"${on ? ' open' : ''}><summary><span><b>더 알려 주실 것이 있나요?</b><small>${sub}</small></span><em>선택</em></summary>
 <div class="qo-more-in">
-${wantsMethod ? `<div class="field qo-method"><span class="label" id="qoMethodL">연구 방법</span><div class="qo-seg" role="radiogroup" aria-labelledby="qoMethodL">${METHODS.map(([v, t]) => `<label class="qo-seg-i${curMethod === v ? ' is-on' : ''}"><input type="radio" name="qoMethod" value="${v}"${curMethod === v ? ' checked' : ''}>${t}</label>`).join('')}</div><p class="hint">어떤 방법을 골라도 금액은 같아요.</p></div>` : ''}
 ${direct ? '' : `<div class="qo-adds">
 ${ppt ? box('ppt', '심사 발표 PPT·PDF', ppt.price, '발표 자료 15~20장(PPT·PDF)과 장표별 스크립트') : ''}
 ${pr ? box('priority', '우선 처리', pr.price, prOff ? '지금은 작업 일정상 받을 수 없어요' : '작업 순서를 앞당겨 더 빨리 보내 드려요', prOff) : ''}
@@ -244,15 +232,14 @@ ${rv ? `<label class="qo-add qo-add-sel"><span class="qo-add-t"><b>추가 수정
 <div class="row-2 qo-row"><div class="field"><label class="label" for="qoOut">받을 파일</label><select class="select" id="qoOut" data-k="outputFormat"><option value="docx"${S.outputFormat === 'docx' ? ' selected' : ''}>워드(docx)</option><option value="hwp"${S.outputFormat === 'hwp' ? ' selected' : ''}>한글(hwp)</option><option value="pdf"${S.outputFormat === 'pdf' ? ' selected' : ''}>PDF</option></select></div>
 <div class="field"><label class="label" for="qoDue">제출 일정 (선택)</label><input class="input" id="qoDue" type="date" data-k="due" value="${esc(S.due)}"></div></div>
 ${!direct && writeLike() ? uploader(S, 'materials', { label: '참고할 자료', hint: '선행연구, 메모, 설문지, 데이터 등이 있으면 올려 주세요' }) : ''}
-<div class="field"><label class="label" for="qoReq">요청 사항</label><textarea class="textarea" id="qoReq" rows="3" data-k="request" maxlength="1500" placeholder="예: 최근 5년 국내 논문 위주로 부탁드려요">${esc(S.request)}</textarea>${direct && writeLike() ? '<p class="hint">참고 자료가 있으면 결제 후 주문 페이지에서 올려 주시면 돼요.</p>' : ''}</div>
+<div class="field"><label class="label" for="qoReq">요청 사항</label><textarea class="textarea" id="qoReq" rows="3" data-k="request" maxlength="1500" placeholder="예: 설문 연구로 해 주세요. ○○대학교 양식이에요. 최근 5년 국내 논문 위주로 부탁드려요.">${esc(S.request)}</textarea>${writeLike() ? `<p class="hint">원하는 연구 방법이나 학교 이름을 적어 주세요. 비워 두시면 주제에 맞춰 정해 드려요.${direct ? ' 학교 양식 파일과 참고 자료는 결제 후 주문 페이지에서 올리시면 돼요.' : ''}</p>` : ''}</div>
 </div></details>`;
 }
 
 function s4Html() {
   const terms = `<p class="consent-note">의뢰하면 <a href="${url('/terms/')}" target="_blank">이용약관</a>, <a href="${url('/privacy/')}" target="_blank">개인정보 처리방침</a>, <a href="${url('/refund/')}" target="_blank">환불 규정</a>에 동의한 것으로 봐요. 나만을 위한 맞춤 제작이라 결제가 확인되면 바로 작업이 시작되고, 완성본 발송 전 취소는 결제 금액의 20%를 환불하며 발송 후에는 환불되지 않아요.</p>`;
   if (isDirect()) return terms;
-  const n = S.task === 'feedback' ? 3 : 4;
-  return `<h2 class="qo-h"><span class="qo-n">${n}</span>결과물은 어디로 보내 드릴까요?</h2>
+  return `<h2 class="qo-h"><span class="qo-n">3</span>결과물은 어디로 보내 드릴까요?</h2>
 <div class="qo-contact">
 <div class="field"><label class="label" for="qoName">이름<span class="req">*</span></label><input class="input" id="qoName" data-k="contact.name" maxlength="40" autocomplete="name" value="${esc(S.contact.name)}" placeholder="홍길동"></div>
 <div class="field"><label class="label" for="qoPhone">휴대전화<span class="req">*</span></label><input class="input" id="qoPhone" data-k="contact.phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc(S.contact.phone)}" placeholder="010-0000-0000"></div>
@@ -330,7 +317,6 @@ function refreshFlow(force = false) {
   if (!force && d === LAST_DIRECT) return;
   LAST_DIRECT = d;
   const open = $('.qo-more', ROOT) && $('.qo-more', ROOT).open;
-  if (S.task !== 'feedback') $('#qoS3', ROOT).innerHTML = s3Html();
   $('#qoMore', ROOT).innerHTML = moreHtml();
   if (open && $('.qo-more', ROOT)) $('.qo-more', ROOT).open = true;
   $('#qoS4', ROOT).innerHTML = s4Html();
@@ -351,7 +337,6 @@ function renderTask() {
   taskTabs(ROOT);
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
-  $('#qoS3', ROOT).hidden = S.task === 'feedback';
   refreshFlow(true);
   const editLike = !writeLike();
   ROOT.classList.toggle('is-edit', editLike);
@@ -395,7 +380,6 @@ function rerenderUploads() {
   const openMore = $('.qo-more', ROOT) && $('.qo-more', ROOT).open;
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
-  if (S.task !== 'feedback') $('#qoS3', ROOT).innerHTML = s3Html();
   $('#qoMore', ROOT).innerHTML = moreHtml();
   if (openMore && $('.qo-more', ROOT)) $('.qo-more', ROOT).open = true;
   refreshPrice();
@@ -404,7 +388,6 @@ const activeSlots = () => {
   const s = new Set();
   if (!writeLike()) s.add('manuscript');
   if (S.task === 'feedback') s.add('feedback');
-  if (S.task !== 'feedback' && S.format === 'school') s.add('format');
   if (writeLike()) s.add('materials');
   return s;
 };
@@ -415,7 +398,6 @@ function validate() {
   const c = S.contact;
   if (writeLike()) {
     if (S.topic.trim().length < 2) return ['qoTopic', '관심 주제나 키워드를 한 가지 이상 적어 주세요.'];
-    if (S.major.trim().length < 2) return ['qoMajor', '전공 분야를 적어 주세요. 목록에 없어도 그대로 적으시면 돼요.'];
     if (isDirect()) return null;
   } else {
     if (!hasFile('manuscript')) return ['qoS1', '기존 원고 파일을 올려 주세요.'];
@@ -469,7 +451,7 @@ function goPay(href, q) {
 <p class="go-foot" role="status"><span class="spin" aria-hidden="true"></span><span>결제 화면을 여는 중이에요</span></p>
 </div>`;
   document.body.appendChild(host);
-  setTimeout(() => { location.href = href; }, 1600);
+  setTimeout(() => { location.href = href; }, 1000);
   // 결제 화면에서 뒤로 오면 창을 닫는다
   window.addEventListener('pageshow', () => host.remove(), { once: true });
 }
@@ -529,6 +511,8 @@ export async function startQuickOrder(root) {
   if (!fromLink && saved && saved.v === DEF.v) S = { ...S, ...saved, addons: { ...DEF.addons, ...(saved.addons || {}) }, contact: { ...DEF.contact, ...(saved.contact || {}) }, touched: { ...DEF.touched, ...(saved.touched || {}) } };
   else if (saved && saved.v === DEF.v) S.contact = { ...DEF.contact, ...(saved.contact || {}) };
   if (DEMO_PROMPTS.includes(S.topic)) S.topic = '';
+  // 양식은 고르는 단계가 없어졌다(예전에 저장된 '학교 양식' 선택은 쓰지 않는다)
+  S.format = 'general';
   // 홈 프롬프트·가격 카드·서비스 페이지에서 넘어온 값
   const task = params.get('task');
   if (task && TASKS.some(([v]) => v === task)) S.task = task;
@@ -611,11 +595,6 @@ function bind() {
       save(); refreshFlow(); refreshPrice(); refreshPreview();
     } else if (t.name === 'qoEtype') {
       S.etype = t.value; save(); $('#qoS2', ROOT).innerHTML = s2Html(); refreshPrice();
-    } else if (t.name === 'qoMethod') {
-      S.method = t.value; save();
-      for (const x of $$('input[name="qoMethod"]', ROOT)) x.closest('.qo-seg-i').classList.toggle('is-on', x.checked);
-    } else if (t.name === 'qoFmt') {
-      S.format = t.value; save(); $('#qoS3', ROOT).innerHTML = s3Html();
     } else if (t.dataset.add) {
       S.addons[t.dataset.add] = t.checked; t.closest('.qo-add').classList.toggle('is-on', t.checked); save(); refreshPrice();
     } else if (t.tagName === 'SELECT' && t.dataset.k) {

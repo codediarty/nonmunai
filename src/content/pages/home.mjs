@@ -1,6 +1,6 @@
 import { faqBlock, ctaBand, price, item, pageTiers, verifiedBadge, verifiedCard } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
-import { computeQuote, DEFAULT_CATALOG, won, listPriceFor, offText, discountRate, PROMO_NAME, PROMO_SHORT } from '../../js/core/pricing.js';
+import { computeQuote, DEFAULT_CATALOG, won, listPriceFor, offText, PROMO_NAME, PROMO_SHORT } from '../../js/core/pricing.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPT, DEMO_TITLE } from '../../js/core/preview.js';
 import { HOME_FAQ as FAQ_TOP, ALL_FAQ } from '../faq.mjs';
 
@@ -128,240 +128,105 @@ ${verifiedCard({ cls: 'hx-vcard' })}
 </div>`;
 }
 
-// 홈 가이드 묶음: 논문을 쓰는 단계별로 많이 찾는 가이드(제목의 쌍점 앞은 링크 글, 뒤는 보조 설명)
+// 홈 가이드 묶음: 무료 도구와 논문을 쓰는 단계별로 많이 찾는 가이드(제목의 쌍점 앞은 링크 글, 뒤는 보조 설명)
 const GUIDE_GROUPS = [
   ['주제와 설계', ['choosing-thesis-topic', 'research-proposal-guide', 'how-to-write-thesis', 'thesis-table-of-contents']],
   ['설문과 통계', ['how-to-make-questionnaire', 'survey-sample-size', 'cronbach-alpha', 'spss-analysis-guide']],
   ['문헌, 심사, 투고', ['literature-review-prisma', 'apa7-references', 'professor-feedback-revision', 'journal-submission']],
 ];
+const TOOL_LINKS = [
+  ['/free/', '무료 논문 설계', '주제 한 줄로 연구모형과 가설'],
+  ['/tools/toc/', '논문 목차 생성기', '장·절·항 목차 자동 구성'],
+  ['/tools/sample-size/', '표본 수 계산기', '회귀, t검정, 분산분석'],
+  ['/tools/references/', '참고문헌 생성기', 'APA 7판 형식으로 변환'],
+];
 function guideBlock(T, guides) {
   const bySlug = new Map((guides || []).map((g) => [g.slug, g]));
+  const li = (href, head, sub) => `<li><a href="${href}"><b>${esc(head)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</a></li>`;
   const cols = GUIDE_GROUPS.map(([label, slugs]) => {
     const items = slugs.map((s) => bySlug.get(s)).filter(Boolean).map((g) => {
       const [head, ...rest] = g.title.split(':');
-      return `<li><a href="${T.u(`/guide/${g.slug}/`)}"><b>${esc(head.trim())}</b>${rest.length ? `<span>${esc(rest.join(':').trim())}</span>` : ''}</a></li>`;
+      return li(T.u(`/guide/${g.slug}/`), head.trim(), rest.join(':').trim());
     }).join('');
     return items ? `<div class="gd3-col"><p class="gd3-t">${esc(label)}</p><ul>${items}</ul></div>` : '';
   }).join('');
-  if (!cols) return '';
-  return `<div class="gd3"><div class="gd3-hd"><h3 class="h-3" id="gd-h">많이 찾는 논문 작성 가이드</h3><a href="${T.u('/guide/')}">가이드 전체 보기</a></div><div class="gd3-cols">${cols}</div></div>`;
+  const tools = `<div class="gd3-col"><p class="gd3-t"><a href="${T.u('/tools/')}">무료 도구</a></p><ul>${TOOL_LINKS.map(([h, t, s]) => li(T.u(h), t, s)).join('')}</ul></div>`;
+  return `<div class="gd3 gd3-solo"><div class="gd3-hd"><h2 class="h-3" id="gd-h">논문 쓰다 막힐 때 보는 무료 가이드와 도구</h2><a href="${T.u('/guide/')}">논문 작성 가이드 전체 보기</a></div><div class="gd3-cols gd3-4">${tools}${cols}</div></div>`;
 }
 
+// 홈은 짧게: 첫 화면(주제 한 줄) → 논문 종류 고르기(가격) → 진행 순서 → 세 가지 약속 → 따로 맡기기 → 자주 묻는 질문 → 가이드 → 마지막 안내
 export default function home({ T, guides }) {
-  const kinds = [['master', '석사논문', 80], ['doctor', '박사논문', 130], ['journal', '학술지 논문', 20]];
+  const go = T.u('/paper/new/');
   const body = `
 <section class="hx" aria-labelledby="hx-h">
 <div class="wrap hx-in">
 <div class="hx-copy">
-<h1 class="hx-h1" id="hx-h"><span class="eyebrow">전공 박사가 검수하는 AI 논문</span><span class="h-display hx-h">관심 주제 한 줄로<br>논문을 완성합니다</span></h1>
-<p class="lead hx-lead">관심 주제와 전공만 알려 주세요. 제목과 목차, 본문, 참고문헌까지 논문AI가 집필하고, 같은 전공 분야의 박사가 최종 검수를 모두 마친 뒤에 메일로 보내 드려요.</p>
-<ul class="hx-oneday" aria-label="논문 종류별 의뢰">${kinds.map(([t, n, pg]) => `<li><a href="${T.u('/paper/new/')}?type=${t}&amp;task=full">${T.icon('file-text')}<span><b>${n}</b> ${pg} Page</span></a></li>`).join('')}</ul>
+<h1 class="hx-h1" id="hx-h"><span class="eyebrow">AI 논문 작성 · 전공 박사 최종 검수</span><span class="h-display hx-h">관심 주제 한 줄로<br>논문을 완성합니다</span></h1>
+<p class="lead hx-lead">주제만 적고 논문 종류를 고르면 끝이에요. 논문AI가 실존 참고문헌으로 본문을 쓰고, 같은 전공 분야 박사가 최종 검수한 완성본을 메일로 보내 드려요.</p>
 <p class="hx-deal"><span class="hx-deal-k">석사학위논문 80 Page</span><span class="hx-deal-v">${wasPrice(L80, Q80.total)}<b class="num">${won(Q80.total)}</b></span><small>${PROMO_SHORT}</small></p>
-<div class="hx-cta"><a class="btn btn-primary btn-lg" href="${T.u('/paper/new/')}">논문 의뢰하기</a><a class="btn btn-ghost btn-lg" href="#pricing">가격표 보기</a></div>
-<ul class="hx-proof2"><li>${T.icon('book-check')}참고문헌 100% 실존 검증</li><li>${T.icon('user-check')}전공 분야 박사 최종 검수</li><li>${T.icon('shield-check')}철저한 보안 관리 · 연구 자료 보호</li></ul>
+<div class="hx-cta"><a class="btn btn-primary btn-lg" href="${go}">논문 의뢰하기</a><a class="hx-cta-sub" href="#pricing">논문 종류별 가격 보기</a></div>
+<ul class="hx-proof2"><li>${T.icon('book-check')}참고문헌 100% 실존 검증</li><li>${T.icon('user-check')}전공 분야 박사 최종 검수</li><li>${T.icon('shield-check')}철저한 보안 관리 · 회원가입 없이 주문</li></ul>
 <p class="hx-trust">${T.icon('building-2')}<span>운영 <b>성균관컨설팅</b> · 성균관대학교 RISE사업 지원 기업</span></p>
 </div>
 <div class="hx-visual">${heroWindow(T)}</div>
-</div>
-<div class="wrap"><dl class="spec">
-<div><dt>작성하는 논문</dt><dd>석사·박사학위논문, 학술지 투고논문(KCI), 학사 졸업논문, 소논문, 연구계획서</dd></div>
-<div><dt>인용·양식</dt><dd>APA 7판 기본, 학교 학위논문 양식과 학술지 투고 규정 적용</dd></div>
-<div><dt>받는 파일</dt><dd>한글(HWP), 워드(DOCX), PDF 중 원하는 형식</dd></div>
-</dl></div>
-</section>
-
-<section class="sec sec-ink rv" id="references" aria-labelledby="rv-h">
-<div class="wrap rv-in">
-<div class="rv-copy">
-<div class="rv-hd">${verifiedBadge({ size: 48, cls: 'vbadge rv-badge' })}<p class="eyebrow">참고문헌 100% 실존 검증</p></div>
-<h2 class="h-2" id="rv-h">AI가 지어낸 참고문헌은<br>한 편도 넣지 않아요</h2>
-<p class="rv-lead">일반 AI 채팅은 그럴듯한 가짜 논문을 지어내기도 해요. 논문AI는 실제로 존재하는 문헌만 쓰고, 문장마다 근거가 된 문헌을 본문 인용으로 이어 드려요.</p>
-<ol class="rv-steps">
-<li><b>실존 문헌만 찾아요</b><span>국내외 학술 데이터베이스에서 주제에 맞는 문헌을 찾고, 원문을 확인할 수 있는 문헌만 후보로 둬요.</span></li>
-<li><b>서지 정보를 한 편씩 대조해요</b><span>저자, 연도, 제목, 학술지, 권호, 쪽, DOI를 원문 기록과 하나하나 맞춰요.</span></li>
-<li><b>본문 인용과 목록을 1:1로 맞춰요</b><span>본문에 인용한 문헌은 모두 참고문헌에 있고, 참고문헌의 문헌은 모두 본문에 인용돼요.</span></li>
-</ol>
-</div>
-<div class="rv-viz" aria-label="참고문헌 대조표 예시">
-<div class="rv-card">
-<div class="rv-card-hd"><b>참고문헌 대조표</b><span class="rv-tag">예시</span></div>
-<div class="rv-sum">
-<div><span>참고문헌</span><b class="num">42편</b></div>
-<div class="is-ok"><span>실존 확인</span><b class="num">42편</b></div>
-<div><span>본문 인용</span><b class="num">126곳</b></div>
-<div><span>누락·불일치</span><b class="num">0</b></div>
-</div>
-<table class="rv-table">
-<thead><tr><th scope="col">문헌</th><th scope="col">확인 경로</th><th scope="col">상태</th><th scope="col" class="r">본문 인용</th></tr></thead>
-<tbody>
-${REFS.map((r) => `<tr><td><b>${r.cite.replace(/, (\d{4})$/, ' ($1)')}</b><small>${r.html.match(/<i>([^,<]+)/)[1]}</small></td><td><span class="rv-src">DOI</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">${r.n}곳</td></tr>`).join('')}
-<tr><td><b>국내 학술지 논문 20편</b><small class="ko">KCI 등재·등재후보 학술지</small></td><td><span class="rv-src">KCI</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">72곳</td></tr>
-<tr><td><b>학위논문·단행본 14편</b><small class="ko">국내외 학위논문과 전문 서적</small></td><td><span class="rv-src">RISS</span></td><td><span class="rv-ok">${T.icon('check')}확인</span></td><td class="r num">34곳</td></tr>
-</tbody>
-</table>
-</div>
-</div>
 </div>
 </section>
 
 <section class="sec" id="pricing" aria-labelledby="tier-h">
 <div class="wrap">
-<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME}</p><h2 class="h-2 price-h" id="tier-h">석사논문 <span class="nowrap">80 Page</span>, <span class="num nowrap" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원</h2><p>정가 ${won(L80)}인 석사학위논문을 논문AI에서는 ${discountRate(L80, Q80.total)}% 할인된 가격에 맡기실 수 있어요. 박사학위논문 130 Page는 정가 ${won(L130)}에서 <span data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요. 실존 참고문헌과 본문 인용, <span class="nowrap">전공 분야 박사</span>의 최종 검수까지 모두 들어 있어요.</p></div>
+<div class="sec-head is-center"><p class="eyebrow eyebrow-sale">${PROMO_NAME}</p><h2 class="h-2" id="tier-h">논문 종류만 고르면 바로 시작해요</h2><p>고르신 종류로 주문서가 바로 열려요. 석사학위논문 80 Page는 정가 ${won(L80)}에서 <span class="num" data-q="master:80">${won(Q80.total).replace('원', '')}</span>원, 박사학위논문 130 Page는 <span class="num" data-q="doctor:130">${won(Q130.total).replace('원', '')}</span>원이에요.</p></div>
 ${pageTiers(T)}
-<p class="tiers-foot">학술지 투고논문 20 Page는 ${won(Q20.total)}이에요. 논문 첨삭, 교수님 피드백 반영, 통계분석 가격은 <a href="${T.u('/pricing/')}">전체 가격표</a>에서 확인해 보세요.</p>
 </div>
 </section>
 
-<section class="sec sec-alt" aria-labelledby="qc-h">
-<div class="wrap oneday">
-<div class="sec-head"><p class="eyebrow">전공 분야 박사 최종 검수</p><h2 class="h-2" id="qc-h">AI가 쓴 원고를 그대로 보내지 않아요</h2><p>논문AI가 실존 문헌으로 본문을 집필하면, 주문하신 논문과 같은 전공 분야의 박사가 처음부터 끝까지 읽으며 검수해요. 검수 항목을 모두 통과한 완성본만 메일로 보내 드려요.</p></div>
-<ol class="flow4">
-<li><span class="flow4-n">1</span><b>관심 주제 적기</b><p>관심 주제나 키워드, 전공을 편하게 적고 논문 종류를 골라 주세요. 제목은 정하지 않아도 괜찮아요.</p></li>
-<li><span class="flow4-n">2</span><b>바로 결제</b><p>주문서를 내면 결제 화면이 바로 열려요. 회원가입 없이 카드, 간편결제, 계좌이체로 결제할 수 있어요.</p></li>
-<li><span class="flow4-n">3</span><b>AI 집필</b><p>주제를 다듬어 제목을 정하고, 실존 문헌으로 장별 본문을 쓰면서 인용을 하나하나 연결해요.</p></li>
-<li><span class="flow4-n">4</span><b>전공 박사 최종 검수</b><p>같은 전공 박사가 한 줄씩 검수하고 바로잡은 완성본을 메일로 보내 드려요.</p></li>
-</ol>
-<div class="qc-card">
-<div class="qc-hd"><b>전공 박사가 확인하는 것</b><span>${verifiedBadge({ size: 22, cls: 'vbadge qc-badge' })}검수를 모두 통과한 완성본만 보내 드려요</span></div>
-<ul class="qc-list">
-<li>${T.icon('list-checks')}<b>연구 설계와 논리</b><span>연구 문제와 가설, 분석 방법이 서로 맞고 장과 장이 자연스럽게 이어지는지</span></li>
-<li>${T.icon('book-open-check')}<b>참고문헌과 인용</b><span>모든 문헌의 실존 여부와 서지 정보, 본문 인용과 목록의 1:1 일치</span></li>
-<li>${T.icon('sigma')}<b>통계와 수치</b><span>표와 본문의 수치가 맞는지, 통계 해석이 정확한지</span></li>
-<li>${T.icon('graduation-cap')}<b>전공 용어와 문장</b><span>그 전공에서 실제로 쓰는 용어와 학술 문체로 읽히는지</span></li>
-<li>${T.icon('file-check')}<b>양식과 형식</b><span>학교·학술지 양식과 APA 7판, 표·그림 번호와 목차</span></li>
-</ul>
-<p class="qc-foot">검수까지 마친 완성본 기준 전달 <a href="${T.u('/paper/new/')}?type=master&amp;task=full">석사학위논문 영업일 ${Q80.days}일</a><a href="${T.u('/paper/new/')}?type=doctor&amp;task=full">박사학위논문 ${Q130.days}일</a><a href="${T.u('/paper/new/')}?type=journal&amp;task=full">학술지 투고논문 ${Q20.days}일</a><a href="${T.u('/paper/new/')}?type=bachelor&amp;task=full">학사 졸업논문 ${Q30.days}일</a></p>
-</div>
-</div>
-</section>
-
-<section class="sec sec-ink sc" id="secure" aria-labelledby="sc-h">
+<section class="sec sec-alt" id="how" aria-labelledby="how-h">
 <div class="wrap">
-<div class="sec-head sc-head"><div class="sc-hd"><span class="sc-seal">${T.icon('shield-check')}</span><p class="eyebrow">보안 · 연구 자료 보호</p></div><h2 class="h-2" id="sc-h">철저한 보안 관리로<br>연구 자료를 지켜요</h2><p>연구 자료와 원고는 의뢰하신 분의 소중한 자산이에요. 주문 내용은 의뢰하신 분만 볼 수 있게 관리하고, 완성본을 보내 드린 뒤에는 올리신 자료까지 모두 삭제해요. 이용약관과 개인정보처리방침에 적어 둔 약속이에요.</p></div>
-<ul class="sc-grid">
-<li>${T.icon('shield-check')}<b>주문 내용 비밀 유지</b><span>주문 내용과 결과물은 의뢰하신 분만 볼 수 있어요. 동의 없이 공개하거나 다른 분께 다시 팔지 않고, 후기나 홍보에도 쓰지 않아요.</span></li>
-<li>${T.icon('user-lock')}<b>이름 대신 주문번호로 작업</b><span>집필과 검수는 주문번호로 진행해요. 담당 박사에게도 이름과 연락처는 전달되지 않고, 모든 담당자는 비밀유지 의무를 지켜요.</span></li>
-<li>${T.icon('trash-2')}<b>전달 후 모든 자료 삭제</b><span>올리신 파일과 완성본은 전달 후 90일이 지나면 모두 자동으로 영구 삭제돼요. 그 전이라도 삭제를 요청하시면 바로 지워 드려요.</span></li>
-<li>${T.icon('lock-keyhole')}<b>암호화 전송, 비공개 보관</b><span>모든 전송은 HTTPS로 암호화하고, 자료는 주문별 비공개 공간에 보관해요. 주문번호와 조회 비밀번호가 있어야만 열려요.</span></li>
-<li>${T.icon('key-round')}<b>비밀번호·카드 번호 미보관</b><span>조회 비밀번호는 복원할 수 없는 암호화 값으로만 저장해요. 카드 번호는 결제대행사가 처리하고 논문AI에는 남지 않아요.</span></li>
-<li>${T.icon('id-card')}<b>가입 없이, 최소한의 정보만</b><span>회원가입 없이 이름, 이메일, 휴대전화만 적으면 돼요. AI 집필에도 이름과 연락처 같은 개인정보는 넣지 않아요.</span></li>
-</ul>
-<div class="sc-del">
-<p class="sc-del-t">${T.icon('timer-reset')}<b>자료 삭제 일정</b></p>
-<ol class="sc-steps">
-<li><span class="sc-dot">1</span><b>완성본 전달</b><p>메일과 주문 페이지로 보내 드려요. 완성본은 꼭 내려받아 두세요.</p></li>
-<li><span class="sc-dot">2</span><b>90일 보관</b><p>다시 내려받으실 수 있게 보관해요. 그사이 언제든 삭제를 요청할 수 있어요.</p></li>
-<li><span class="sc-dot sc-dot-end">${T.icon('trash-2')}</span><b>자동 영구 삭제</b><p>올리신 파일과 완성본을 모두 지워요. 지운 자료는 복구할 수 없어요.</p></li>
+<div class="sec-head"><h2 class="h-2" id="how-h">주문은 1분, 나머지는 논문AI가 해요</h2><p>제목이나 목차, 연구 방법을 정해 오지 않으셔도 돼요. 회원가입도 필요 없어요.</p></div>
+<ol class="flow4 flow3">
+<li><span class="flow4-n">1</span><b>관심 주제 적기</b><p>"직장인 워라밸이랑 이직 관련해서"처럼 편하게 적고 논문 종류를 골라 주세요.</p></li>
+<li><span class="flow4-n">2</span><b>바로 결제</b><p>결제 화면이 바로 열려요. 카드, 간편결제, 계좌이체로 결제하시면 바로 집필이 시작돼요.</p></li>
+<li><span class="flow4-n">3</span><b>검수 완료본 받기</b><p>AI가 쓰고 같은 전공 박사가 검수한 완성본을 메일로 보내 드려요. 석사학위논문은 영업일 ${Q80.days}일 이내예요.</p></li>
 </ol>
-<p class="sc-note">결제하지 않은 주문은 30일, 제출하지 않은 주문서는 3일 뒤 자동으로 지워져요. 전자상거래법에 따라 주문·결제 기록만 정해진 기간 따로 보관하고, 원고와 파일은 남기지 않아요. <a href="${T.u('/privacy/')}">보관과 삭제 기준 자세히 보기</a></p>
-</div>
 </div>
 </section>
 
-<section class="sec" aria-labelledby="cmp-h">
-<div class="wrap cmp">
-<div class="sec-head"><h2 class="h-2" id="cmp-h">일반 AI 채팅과 무엇이 다를까요</h2><p>문장을 만들어 주는 것과 제출할 수 있는 논문을 완성하는 것은 전혀 다른 일이에요.</p></div>
-<div class="table-wrap"><table class="cmp-table">
-<thead><tr><th scope="col">항목</th><th scope="col">일반 AI 채팅</th><th scope="col" class="is-us">논문AI</th></tr></thead>
-<tbody>
-<tr><th scope="row">참고문헌</th><td data-label="일반 AI 채팅">그럴듯한 가짜 문헌이 섞일 수 있음</td><td class="is-us" data-label="논문AI">${T.icon('check')}실존 문헌만, DOI·KCI·RISS 대조</td></tr>
-<tr><th scope="row">본문 인용</th><td data-label="일반 AI 채팅">근거를 직접 찾아 달아야 함</td><td class="is-us" data-label="논문AI">${T.icon('check')}문장마다 연결, 목록과 1:1</td></tr>
-<tr><th scope="row">분량</th><td data-label="일반 AI 채팅">한 번에 몇 쪽 남짓</td><td class="is-us" data-label="논문AI">${T.icon('check')}15 Page부터 130 Page까지 장별 완성</td></tr>
-<tr><th scope="row">연구 설계</th><td data-label="일반 AI 채팅">물어볼 때마다 답이 달라짐</td><td class="is-us" data-label="논문AI">${T.icon('check')}연구모형·가설·분석 계획까지 일관된 설계</td></tr>
-<tr><th scope="row">통계분석</th><td data-label="일반 AI 채팅">실제 데이터 분석이 어려움</td><td class="is-us" data-label="논문AI">${T.icon('check')}실제 데이터로 SPSS 분석과 해석</td></tr>
-<tr><th scope="row">양식</th><td data-label="일반 AI 채팅">형식은 직접 맞춰야 함</td><td class="is-us" data-label="논문AI">${T.icon('check')}APA 7판, 학교·학술지 양식 적용</td></tr>
-<tr><th scope="row">박사 검수</th><td data-label="일반 AI 채팅">없음, 직접 확인해야 함</td><td class="is-us" data-label="논문AI">${T.icon('check')}같은 전공 박사 최종 검수</td></tr>
-</tbody></table></div>
+<section class="sec" id="trust" aria-labelledby="trust-h">
+<div class="wrap">
+<div class="sec-head"><h2 class="h-2" id="trust-h">믿고 맡길 수 있는 세 가지 약속</h2><p>문장만 만들어 주는 AI 채팅과 달리, 심사에 낼 수 있는 논문으로 끝까지 책임져요.</p></div>
+<div class="why3">
+<article class="why" id="references">${verifiedBadge({ size: 40, cls: 'vbadge why-ic' })}<h3>참고문헌 100% 실존 검증</h3><p>AI가 지어낸 가짜 논문은 한 편도 넣지 않아요. 저자, 연도, 제목, 권호, DOI를 DOI·KCI·RISS 원문 기록과 한 편씩 대조하고, 본문 인용과 참고문헌 목록을 1:1로 맞춰요.</p><a href="${T.u('/ai-thesis/')}">AI 논문 자동작성과 실존 문헌 검증</a></article>
+<article class="why"><span class="why-ic why-ic-ink">${T.icon('user-check')}</span><h3>전공 분야 박사 최종 검수</h3><p>같은 전공 박사가 연구 설계와 논리, 참고문헌, 통계 수치, 전공 용어, 학교 양식을 한 줄씩 확인해요. 검수를 모두 통과한 완성본만 보내 드려요.</p><a href="${T.u('/process/')}">신청부터 전달까지 진행 방식</a></article>
+<article class="why" id="secure"><span class="why-ic why-ic-ink">${T.icon('shield-check')}</span><h3>철저한 보안 관리</h3><p>집필과 검수는 이름 대신 주문번호로 진행하고, 모든 담당자는 비밀유지 의무를 지켜요. 전달 후 90일이 지나면 올리신 자료와 완성본을 모두 자동으로 영구 삭제해요.</p><a href="${T.u('/privacy/')}">자료 보관과 삭제 기준</a></article>
+</div>
 </div>
 </section>
 
 <section class="sec sec-alt" aria-labelledby="svc-h">
 <div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="svc-h">논문 완성 말고도, 필요한 것만 맡기세요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 따로 맡길 수 있어요. 어디서부터 맡길지 모르겠다면 <a href="${T.u('/consulting/')}">논문 컨설팅</a>으로 막힌 단계부터 함께 정리해 드려요.</p></div>
+<div class="sec-head"><h2 class="h-2" id="svc-h">필요한 것만 따로 맡길 수도 있어요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 맡기세요. 어디서부터 맡길지 모르겠다면 <a href="${T.u('/consulting/')}">논문 컨설팅</a>으로 막힌 단계부터 정리해 드려요.</p></div>
 <div class="svc2">
 ${[
-    ['file-pen-line', '논문 첨삭·교정', '문장과 논리, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
-    ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정 보완, 첨삭까지 해 드려요. 수정표 포함이에요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
-    ['clipboard-list', '연구계획서', '연구 목적과 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `석사 ${price('P-MASTER-PROP')}`, '/research-proposal/'],
-    ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문조사 진행, 설문 결과 정리와 통계 해석까지 한 번에 맡길 수 있어요.', price('S-FULL'), '/survey/'],
-    ['chart-column', '논문 맞춤 통계분석', '주제와 가설에 맞는 분석을 설계하고 APA 통계표와 해석을 드려요.', `표준형 ${price('T-INTERP')}`, '/statistics/'],
-    ['presentation', '심사 발표 PPT·PDF', '논문 핵심을 담은 발표 자료(PPT·PDF)와 장표별 스크립트를 만들어 드려요.', `${price('A-PPT')}`, '/pricing/'],
+    ['file-pen-line', '논문 첨삭·교정', '문장, 논리, 인용, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
+    ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정표까지 드려요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
+    ['clipboard-list', '연구계획서 작성', '연구 목적, 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `석사 ${price('P-MASTER-PROP')}`, '/research-proposal/'],
+    ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문 진행, 결과 정리와 통계 해석까지 맡겨요.', price('S-FULL'), '/survey/'],
+    ['chart-column', '논문 통계분석', 'SPSS 분석과 APA 통계표, 결과 해석까지 드려요.', `표준형 ${price('T-INTERP')}`, '/statistics/'],
+    ['compass', '논문 컨설팅', '주제 선정부터 심사 준비까지 막힌 단계를 함께 정리해요.', '필요한 단계만 선택', '/consulting/'],
   ].map(([ic, t, d, p, h]) => `<a class="svc2-item" href="${T.u(h)}"><span class="svc2-ic">${T.icon(ic)}</span><b>${esc(t)}</b><span class="svc2-d">${esc(d)}</span><span class="svc2-p">${esc(p)}</span></a>`).join('')}
 </div>
 <div class="svc svc-quick"><span class="svc-quick-t">바로 신청하기</span><a class="btn btn-dark" href="${T.u('/paper/new/')}">논문 의뢰하기</a><a class="btn btn-ghost" href="${T.u('/survey/new/')}">설문조사 의뢰하기</a><a class="btn btn-ghost" href="${T.u('/statistics/new/')}">통계분석 의뢰하기</a></div>
 </div>
 </section>
 
-<section class="sec" aria-labelledby="out-h">
-<div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="out-h">받아 보시는 결과물</h2><p>논문 심사에서 실제로 쓰는 형식 그대로 보내 드려요. 아래는 결과물 형식을 보여 드리기 위한 예시예요.</p></div>
-<div class="tabs out2" data-tabs>
-<div class="tab-list out2-list" role="tablist" aria-label="결과물 예시" aria-orientation="vertical">
-<button role="tab" aria-selected="true" aria-controls="out-1" id="tab-1"><b>연구 설계서</b><span>연구모형, 가설, 분석 계획, 표본 수</span></button>
-<button role="tab" aria-selected="false" aria-controls="out-2" id="tab-2" tabindex="-1"><b>장별 원고</b><span>실존 문헌 인용이 달린 본문</span></button>
-<button role="tab" aria-selected="false" aria-controls="out-3" id="tab-3" tabindex="-1"><b>통계표와 해석</b><span>APA 형식 표와 결과 해석</span></button>
-<button role="tab" aria-selected="false" aria-controls="out-4" id="tab-4" tabindex="-1"><b>수정 대조표</b><span>교수님 의견별 수정 내용과 위치</span></button>
-</div>
-<div class="out2-panels">
-<div class="tab-panel" role="tabpanel" id="out-1" aria-labelledby="tab-1">
-<div class="art sheet"><div class="art-in">
-<p class="art-title">연구 설계서</p>
-<dl class="art-dl"><div><dt>연구 제목</dt><dd>${DEMO_TITLE}</dd></div><div><dt>연구 유형</dt><dd>양적 연구(설문조사) · 영향 관계 검증</dd></div><div><dt>연구 가설</dt><dd>H1 워라밸 인식은 이직의도에 부(-)의 영향을 미칠 것이다.<br>H2 일-여가, 일-가족, 일-성장 균형은 이직의도에 각각 부(-)의 영향을 미칠 것이다.<br>H3 성별과 직급에 따라 워라밸 인식과 이직의도에 차이가 있을 것이다.</dd></div><div><dt>분석 계획</dt><dd>신뢰도 분석, 기술통계, t검정·분산분석, 상관분석, 다중회귀분석</dd></div><div><dt>표본</dt><dd>최소 77명, 탈락률 15% 고려 91명 이상</dd></div></dl>
-</div></div></div>
-<div class="tab-panel" role="tabpanel" id="out-2" aria-labelledby="tab-2" hidden>
-<div class="art sheet art-page"><div class="art-in">
-<p class="pg-ch">제1장 서론</p><p class="pg-sec">1. 연구의 필요성</p>
-<p class="pg-body">직원의 자발적 이직은 숙련 인력의 손실과 대체 인력의 채용·교육 비용으로 이어져 조직의 경쟁력을 떨어뜨리기 때문에, 지난 한 세기 동안 조직 연구의 핵심 주제로 다루어져 왔다<span class="pg-cite">(Hom et al., 2017)</span>. 특히 이직의도는 실제 이직을 예측하는 가장 강력한 선행 변인 가운데 하나로 확인되었다<span class="pg-cite">(Griffeth et al., 2000)</span>.</p>
-<p class="pg-body pg-fade">직무요구-자원 이론은 과도한 직무요구가 소진을, 충분한 직무자원이 직무열의를 이끈다고 설명한다<span class="pg-cite">(Bakker et al., 2023)</span>.</p>
-<p class="art-cap">예시 문단이에요. 실제 원고는 주문하신 주제와 자료를 바탕으로 쓰고, 인용 문헌은 모두 실제로 확인되는 문헌만 사용해요.</p>
-</div></div></div>
-<div class="tab-panel" role="tabpanel" id="out-3" aria-labelledby="tab-3" hidden>
-<div class="art sheet"><div class="art-in art-grid">
-<table class="apa"><caption><b>표 6</b><i>워라밸이 이직의도에 미치는 영향</i></caption><thead><tr><th>변인</th><th><span class="st">B</span></th><th><span class="st">SE</span></th><th>β</th><th><span class="st">t</span></th></tr></thead><tbody><tr><td>일-여가 균형</td><td>-0.31</td><td>0.08</td><td>-.29</td><td>-3.88***</td></tr><tr><td>일-가족 균형</td><td>-0.22</td><td>0.07</td><td>-.21</td><td>-3.14**</td></tr><tr><td>일-성장 균형</td><td>-0.18</td><td>0.07</td><td>-.17</td><td>-2.57*</td></tr></tbody><tfoot><tr><td colspan="5"><span class="st">R</span>² = .34, <span class="st">F</span> = 27.41***. 예시 수치입니다.</td></tr></tfoot></table>
-<div class="easy"><p class="easy-h">결과 해석</p><p>일과 여가, 가족, 성장의 균형을 높게 인식할수록 이직의도가 낮았습니다. 세 요인이 이직의도를 34% 설명했고, 그중 일-여가 균형의 영향이 가장 컸습니다.</p></div>
-</div></div></div>
-<div class="tab-panel" role="tabpanel" id="out-4" aria-labelledby="tab-4" hidden>
-<div class="art sheet"><div class="art-in">
-<table class="rev"><thead><tr><th>교수님 의견</th><th>수정 내용</th><th>위치</th></tr></thead><tbody>
-<tr><td><span class="pen">연구의 필요성에 최근 국내 자료를 보완할 것</span></td><td>최근 5년 국내 실태 자료와 선행연구를 보완해 문단을 재구성</td><td>1장 1절</td></tr>
-<tr><td><span class="pen">통제변수 선정 근거가 부족함</span></td><td>선행연구 근거와 함께 통제변수 선정 이유를 3장에 추가</td><td>3장 4절</td></tr>
-<tr><td><span class="pen">표 형식을 APA로 통일할 것</span></td><td>모든 표를 APA 7판 형식으로 정리하고 번호 재부여</td><td>4장 전체</td></tr>
-</tbody></table>
-</div></div></div>
-</div>
-</div>
-</div>
-</section>
+${faqBlock(T, HOME_FAQ, { lead: `AI 논문 작성, 석사논문·박사논문 비용, 실존 참고문헌, 박사 검수까지 가장 많이 물어보시는 질문이에요. 더 많은 답은 <a href="${T.u('/faq/')}">자주 묻는 질문</a>에서 볼 수 있어요.` })}
 
-<section class="sec sec-alt" aria-labelledby="tools-h">
+<section class="sec sec-alt" aria-labelledby="gd-h">
 <div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="tools-h">가입 없이 써 보는 무료 도구와 가이드</h2><p>로그인 없이 바로 쓰는 <a href="${T.u('/tools/')}">논문 무료 도구</a>예요. 결과는 브라우저 안에서 계산되고 저장되지 않아요. 막히는 단계가 있다면 논문 작성 가이드로 먼저 확인해 보세요.</p></div>
-<div class="tools">
-<a class="tool" href="${T.u('/free/')}"><span class="tool-ic">${T.icon('workflow')}</span><b>무료 논문 설계</b><span>주제 한 줄로 연구모형과 가설, 분석 계획을 받아 보세요.</span></a>
-<a class="tool" href="${T.u('/tools/toc/')}"><span class="tool-ic">${T.icon('list-tree')}</span><b>논문 목차 생성기</b><span>제목과 연구방법을 넣으면 장·절·항 목차를 만들어 드려요.</span></a>
-<a class="tool" href="${T.u('/tools/references/')}"><span class="tool-ic">${T.icon('book-open-text')}</span><b>참고문헌 생성기</b><span>학술지, 단행본, 학위논문을 APA 7판 형식으로 바꿔 드려요.</span></a>
-<a class="tool" href="${T.u('/tools/sample-size/')}"><span class="tool-ic">${T.icon('calculator')}</span><b>표본 수 계산기</b><span>회귀, t검정, 분산분석, 상관, 카이제곱 표본 수를 계산해 보세요.</span></a>
-</div>
 ${guideBlock(T, guides)}
 </div>
 </section>
 
-<section class="sec" aria-labelledby="trust-h">
-<div class="wrap">
-<div class="sec-head"><h2 class="h-2" id="trust-h">믿고 맡길 수 있도록</h2><p>논문은 연구자의 이름으로 남아요. 그래서 지키는 원칙이 분명해요.</p></div>
-<ul class="trust4">
-<li>${T.icon('book-check')}<b>실존 문헌만 인용</b><span>존재하지 않는 논문이나 출처는 쓰지 않아요.</span></li>
-<li>${T.icon('database')}<b>실제 데이터만 분석</b><span>학습용 시뮬레이션에는 가상 데이터 표시가 붙어요.</span></li>
-<li>${T.icon('lock-keyhole')}<b>주문별 비공개 보관</b><span>주문번호와 조회 비밀번호가 있어야 열람할 수 있어요.</span></li>
-<li>${T.icon('timer-reset')}<b>90일 뒤 자동 삭제</b><span>전달 후 보관 기간이 지나면 파일을 자동으로 지워요.</span></li>
-</ul>
-<p class="trust-more"><a href="${T.u('/ethics/')}">연구윤리 원칙 자세히 보기</a><a href="${T.u('/process/')}">신청부터 전달까지 진행 방식</a><a href="${T.u('/about/')}">논문AI 소개</a></p>
-</div>
-</section>
-
-${faqBlock(T, HOME_FAQ, { lead: `박사 검수, 석사논문 작성 비용, 실존 참고문헌까지 가장 많이 물어보시는 질문을 모았어요. 더 많은 답은 <a href="${T.u('/faq/')}">자주 묻는 질문</a>에서 볼 수 있어요.` })}
-
-${ctaBand(T, { title: '관심 주제 한 줄이면 시작돼요', text: '주제와 전공만 적으면 논문AI가 집필하고, 같은 전공 분야 박사가 최종 검수까지 마친 뒤 메일로 보내 드려요. 참고문헌은 모두 실존 검증된 문헌이에요.', topic: true })}
+${ctaBand(T, { title: '관심 주제 한 줄이면 시작돼요', text: '주제만 적으면 논문AI가 쓰고, 같은 전공 분야 박사가 최종 검수까지 마친 완성본을 메일로 보내 드려요.', topic: true })}
 `;
   return [{
     path: '/',
@@ -369,15 +234,15 @@ ${ctaBand(T, { title: '관심 주제 한 줄이면 시작돼요', text: '주제�
     kind: 'home',
     title: '논문AI | AI 논문 작성, 전공 박사가 검수하는 석사논문·박사논문',
     h1: '논문AI',
-    description: `논문AI는 관심 주제 한 줄로 석사·박사논문을 완성하는 AI 논문 작성 서비스예요. AI가 집필하고 같은 전공 분야 박사가 최종 검수까지 마친 뒤 보내 드려요. 참고문헌 100% 실존 검증. 석사 80 Page ${won(Q80.total)}(정가 ${won(L80)}), 박사 130 Page ${won(Q130.total)}, 학사 ${won(Q30.total)}, 소논문 ${won(Q15.total)}.`,
-    keywords: ['논문AI', '논문 AI', 'AI 논문', 'AI 논문 작성', '논문 작성 AI', '논문 자동작성', '논문 박사 검수', '논문 검수', '석사논문', '석사논문 작성', '박사논문 작성', '학위논문 작성', '학술지 논문 작성', '졸업논문 작성', '소논문 작성', '논문 작성 사이트', '논문 작성 비용', '석사논문 비용', '논문 첨삭', '논문 컨설팅', '논문 통계분석', '논문 참고문헌'],
+    description: `논문AI는 관심 주제 한 줄로 석사·박사논문을 완성하는 AI 논문 작성 서비스예요. AI가 실존 참고문헌으로 집필하고 같은 전공 분야 박사가 최종 검수까지 마친 뒤 보내 드려요. 석사 80 Page ${won(Q80.total)}(정가 ${won(L80)}), 박사 130 Page ${won(Q130.total)}, 학사 ${won(Q30.total)}, 소논문 ${won(Q15.total)}.`,
+    keywords: ['논문AI', '논문 AI', 'AI 논문', 'AI 논문 작성', '논문 작성 AI', '논문 써주는 AI', '논문 자동작성', '논문 작성', '논문 작성 사이트', '석사논문', '석사논문 작성', '석사논문 비용', '박사논문 작성', '학위논문 작성', '학술지 논문 작성', '졸업논문 작성', '소논문 작성', '논문 작성 비용', '논문 박사 검수', '논문 참고문헌', '논문 첨삭', '논문 통계분석', '논문 컨설팅'],
     ogImage: '/assets/img/og/home.png',
     faq: HOME_FAQ,
     styles: ['site', 'home'],
     scripts: ['home'],
     priority: '1.0',
     changefreq: 'weekly',
-    geo: `논문AI는 관심 주제 한 줄(전공·주제)로 논문을 완성하는 AI 논문 작성 서비스이다. 결제가 확인되면 AI가 실존 문헌으로 본문을 집필하고, 주문 논문과 같은 전공 분야의 박사가 연구 설계와 논리, 참고문헌, 통계 수치, 형식을 최종 검수한 뒤 완성본을 메일로 보낸다. 참고문헌은 DOI·KCI·RISS 원문 기록과 대조한 실존 문헌만 쓰고 본문 인용과 참고문헌 목록을 1:1로 연결한다. 가격(${PROMO_NAME})은 석사학위논문 80 Page ${won(Q80.total)}(정가 ${won(L80)}), 박사학위논문 130 Page ${won(Q130.total)}(정가 ${won(L130)}), 학술지 투고논문 20 Page ${won(Q20.total)}, 학사 졸업논문 30 Page ${won(Q30.total)}, 소논문 15 Page ${won(Q15.total)}이다. 박사 검수를 포함한 전달은 석사 영업일 ${Q80.days}일, 박사 ${Q130.days}일 이내이다. 논문 첨삭·교정(석사 30 Page ${price('P-MASTER-EDIT')}), 교수님 피드백 반영(${price('P-MASTER-FB')}), 연구계획서(${price('P-MASTER-PROP')}), 설문조사 원스톱(${price('S-FULL')}), 논문 통계분석(${price('T-BASIC')}부터)도 주문할 수 있다.`,
+    geo: `논문AI는 관심 주제 한 줄(전공·주제)로 논문을 완성하는 AI 논문 작성 서비스이다. 주문은 관심 주제를 적고 논문 종류(소논문, 학사 졸업논문, 학술지 투고논문, 석사학위논문, 박사학위논문)를 고른 뒤 결제하면 끝나며 회원가입이 필요 없다. 결제가 확인되면 AI가 실존 문헌으로 본문을 집필하고, 주문 논문과 같은 전공 분야의 박사가 연구 설계와 논리, 참고문헌, 통계 수치, 형식을 최종 검수한 뒤 완성본을 메일로 보낸다. 참고문헌은 DOI·KCI·RISS 원문 기록과 대조한 실존 문헌만 쓰고 본문 인용과 참고문헌 목록을 1:1로 연결한다. 일반 AI 채팅과 달리 가짜 참고문헌을 쓰지 않고, 15 Page부터 130 Page까지 장별로 논문 한 편을 끝까지 완성한다. 가격(${PROMO_NAME})은 석사학위논문 80 Page ${won(Q80.total)}(정가 ${won(L80)}), 박사학위논문 130 Page ${won(Q130.total)}(정가 ${won(L130)}), 학술지 투고논문 20 Page ${won(Q20.total)}, 학사 졸업논문 30 Page ${won(Q30.total)}, 소논문 15 Page ${won(Q15.total)}이다. 박사 검수를 포함한 전달은 석사 영업일 ${Q80.days}일, 박사 ${Q130.days}일 이내이다. 논문 첨삭·교정(석사 30 Page ${price('P-MASTER-EDIT')}), 교수님 피드백 반영(${price('P-MASTER-FB')}), 연구계획서(${price('P-MASTER-PROP')}), 설문조사 원스톱(${price('S-FULL')}), 논문 통계분석(${price('T-BASIC')}부터), 논문 컨설팅도 주문할 수 있다. 결제와 영수증은 운영사 성균관컨설팅 이름으로 처리된다.`,
     schema: [{
       '@context': 'https://schema.org', '@type': 'Service', name: '논문AI 논문 완성', serviceType: 'AI 논문 작성, 논문 첨삭, 설문조사, 통계분석', provider: { '@id': T.abs('/#organization') }, areaServed: { '@type': 'Country', name: 'KR' },
       description: '관심 주제 한 줄로 논문을 완성하고 실존 참고문헌과 본문 인용을 연결하는 AI 논문 작성 서비스(AI 집필, 같은 전공 박사 최종 검수)',

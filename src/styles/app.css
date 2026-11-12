@@ -667,3 +667,22 @@
   .qo-fmt-sub span { display: flex; align-items: baseline; gap: 8px; }
   .qo-fmt-sub small { margin: 0; }
 }
+
+/* 한 화면 주문 단순화(2026-11-12): 처음에는 '논문 완성' 한 길만, 다른 작업은 아래 작은 링크로 */
+.qo-tabs[hidden] { display: none; }
+#qoS1 { border-top: 0; }
+.qo-hero { padding-bottom: 92px; }
+.qo-lead { margin-bottom: 0; }
+.qo-opt { font-weight: 600; color: var(--faint); }
+.qo-other { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 14px; margin: 16px 0 0; font-size: 13.5px; color: var(--muted); }
+.qo-other[hidden] { display: none; }
+.qo-other button { all: unset; cursor: pointer; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.qo-other button:hover { color: var(--blue-2); text-decoration-color: currentColor; }
+.qo-other button:focus-visible { border-radius: 4px; box-shadow: var(--focus); }
+@media (max-width: 980px) {
+  .qo-mobile-pv { padding-top: 22px; }
+}
+@media (max-width: 640px) {
+  .qo-hero { padding: 24px 0 76px; }
+  .qo-other { justify-content: flex-start; }
+}

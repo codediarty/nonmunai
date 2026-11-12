@@ -620,3 +620,70 @@
 @media (max-width: 560px) {
   .hx-doc { height: 480px; }
 }
+
+/* ---------------------------------------------------------------- 단순한 홈(2026-11-12): 고르기 쉬운 가격 카드, 세 단계, 세 가지 약속 */
+.hx-cta { align-items: center; }
+.hx-cta-sub { padding: 6px 4px; font-size: 15px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 5px; }
+.hx-cta-sub:hover { color: var(--blue-2); text-decoration-color: currentColor; }
+
+.tiers { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.tier { padding: 24px 18px 20px; }
+.tier-desc { min-height: 0; }
+.tier-buy { margin-top: auto; padding-top: 14px; }
+.tier-buy .tier-was { margin-top: 0; }
+.tier-price b { font-size: 34px; }
+.tier-go { margin-top: 16px; }
+.tier-more { align-self: center; margin-top: 12px; font-size: 13px; }
+.tier-all { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; margin: 26px 0 0; padding: 14px 18px; border-radius: 14px; background: var(--paper-2); font-size: 14px; color: var(--ink-2); }
+.tier-all b { font-weight: 800; color: var(--ink); }
+.tier-all span { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.tier-all .i { width: 16px; height: 16px; color: var(--green); stroke-width: 2.6; }
+.tier-trust { margin-top: 16px; }
+
+.flow3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; }
+.flow3 li:nth-child(3) .flow4-n { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 0 6px rgba(35, 70, 232, .12); }
+.flow3 li:nth-child(4) .flow4-n { box-shadow: none; }
+
+.why3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.why { display: flex; flex-direction: column; gap: 10px; padding: 28px 26px 24px; background: #fff; border: 1px solid var(--rule); border-radius: 18px; }
+.why h3 { margin: 6px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -0.035em; color: var(--ink); }
+.why p { flex: 1; margin: 0; font-size: 15px; line-height: 1.7; color: var(--muted); word-break: keep-all; }
+.why a { align-self: flex-start; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.why a:hover { color: var(--blue-2); text-decoration-color: currentColor; }
+.why-ic { flex: none; }
+.why-ic-ink { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: var(--blue-soft); color: var(--blue); }
+.why-ic-ink .i { width: 22px; height: 22px; }
+
+.gd3-solo { margin-top: 0; }
+.gd3-solo .gd3-hd .h-3 { font-size: clamp(20px, 2.2vw, 24px); }
+.gd3-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.gd3-col .gd3-t a { display: inline; padding: 0; color: inherit; }
+
+@media (max-width: 1180px) {
+  .tiers { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 900px; margin-inline: auto; }
+  .gd3-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+  .tiers { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 760px; }
+  .flow3 { grid-template-columns: minmax(0, 1fr); row-gap: 26px; }
+  .flow3 li { display: grid; grid-template-columns: 38px minmax(0, 1fr); column-gap: 16px; }
+  .flow3 .flow4-n { grid-row: 1 / span 2; margin: 0; }
+  .why3 { grid-template-columns: minmax(0, 1fr); max-width: 720px; }
+}
+@media (max-width: 560px) {
+  .tiers { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .tier { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'hd buy' 'desc buy' 'go go' 'more more'; column-gap: 12px; padding: 18px 16px 16px; }
+  .tier.is-featured { order: -1; }
+  .tier-hd { grid-area: hd; }
+  .tier-desc { grid-area: desc; margin-top: 2px; font-size: 13.5px; }
+  .tier-buy { grid-area: buy; align-self: center; margin: 0; padding: 0; text-align: right; }
+  .tier-buy .tier-was { justify-content: flex-end; }
+  .tier-price b { font-size: 26px; }
+  .tier-go { grid-area: go; margin-top: 14px; }
+  .tier-more { grid-area: more; margin-top: 10px; }
+  .tier-flag { top: -11px; left: 14px; }
+  .tier-all { justify-content: flex-start; padding: 14px; font-size: 13.5px; }
+  .tier-all b { flex-basis: 100%; }
+  .why { padding: 22px 18px 20px; }
+  .gd3-4 { grid-template-columns: minmax(0, 1fr); }
+}
