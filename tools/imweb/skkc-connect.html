@@ -146,6 +146,8 @@
       f.dispatchEvent(new Event('change', { bubbles: true }));
     };
     var tidy = function () {
+      // 장바구니에 논문AI 상품이 있을 때만 정리한다(같은 창에서 카피클린 상품을 결제할 때는 그대로 둔다)
+      if (!/\[논문AI\]/.test(((document.querySelector('main') || document.body || {}).textContent) || '')) return;
       var ps = all('p');
       for (var i = 0; i < ps.length; i++) {
         var t = (ps[i].textContent || '').trim();
