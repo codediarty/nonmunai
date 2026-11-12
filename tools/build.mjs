@@ -121,10 +121,11 @@ const lastmodOf = (p) => p.modified || p.published || (nextLastmods[p.path] || {
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${T.abs(p.path)}</loc><lastmod>${lastmodOf(p)}</lastmod><changefreq>${p.changefreq || 'weekly'}</changefreq><priority>${p.priority || (p.path === '/' ? '1.0' : '0.7')}</priority></url>`).join('\n')}\n</urlset>\n`);
 // 검색·AI 답변 엔진은 모두 허용하되, 주문·결제·운영자 화면은 어느 봇에게도 열지 않는다
 const BOTS = ['Yeti', 'Daumoa', 'Googlebot', 'Bingbot', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot'];
-const PRIVATE = ['/admin/', '/orders/', '/checkout/'].map((p) => `Disallow: ${site.basePath}${p}`).join('\n');
+// 주문 조회(/orders/)는 바닥글에 링크가 있어 noindex로 검색에서 빼고, 크롤링은 막지 않는다(막으면 noindex를 읽지 못해 'robots.txt에 의해 차단됨'으로 남는다)
+const PRIVATE = ['/admin/', '/checkout/'].map((p) => `Disallow: ${site.basePath}${p}`).join('\n');
 // 다음 웹마스터도구 소유 확인: PIN 발급 때 받은 '#DaumWebMasterTool:...' 줄을 site.config.json verification.daum에 넣으면 robots.txt 맨 아래에 붙는다
 const daumLine = String((site.verification || {}).daum || '').trim();
-write('robots.txt', `User-agent: *\nAllow: /\n${PRIVATE}\n\n# 검색엔진·AI 검색·답변 엔진 허용\n${BOTS.map((b) => `User-agent: ${b}\nAllow: /\n${PRIVATE}\n`).join('\n')}\nSitemap: ${T.abs('/sitemap.xml')}\n${daumLine ? `\n${daumLine.startsWith('#') ? daumLine : `#${daumLine}`}\n` : ''}`);
+write('robots.txt', `User-agent: *\nAllow: /\n${PRIVATE}\n\n# 검색엔진·AI 검색·답변 엔진 허용\n${BOTS.map((b) => `User-agent: ${b}\nAllow: /\n${PRIVATE}\n`).join('\n')}\nSitemap: ${T.abs('/sitemap.xml')}\nSitemap: ${T.abs('/rss.xml')}\n${daumLine ? `\n${daumLine.startsWith('#') ? daumLine : `#${daumLine}`}\n` : ''}`);
 const guides = ctx.guides.slice().sort((a, b) => (a.date < b.date ? 1 : -1));
 const rssItems = guides.map((g) => `<item><title>${T.esc(g.title)}</title><link>${T.abs(`/guide/${g.slug}/`)}</link><guid>${T.abs(`/guide/${g.slug}/`)}</guid><pubDate>${new Date(g.date + 'T09:00:00+09:00').toUTCString()}</pubDate><description>${T.esc(g.description)}</description><category>${T.esc(g.category)}</category></item>`).join('');
 write('rss.xml', `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>논문AI 가이드</title><link>${T.abs('/guide/')}</link><description>논문 작성, 설문조사, 통계분석을 처음 하는 분을 위한 실전 가이드</description><language>ko</language>${rssItems}</channel></rss>\n`);
