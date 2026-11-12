@@ -162,3 +162,13 @@
 - 같은 날 URL 검사로 다시 보니 /professor-feedback/, /tools/, /guide/journal-submission/, /guide/professor-feedback-revision/는 이미 색인되어 있었습니다. '페이지' 보고서는 며칠 늦게 갱신되므로 최신 상태는 URL 검사로 확인합니다. '크롤링됨' 목록에 함께 있는 /rss.xml은 피드 파일이라 색인되지 않는 것이 정상입니다.
 - 2026-11-09 색인 생성 요청 11건: 미색인 가이드 3편(cronbach-alpha, how-to-make-questionnaire, literature-review-prisma), 새 가이드 3편(thesis-introduction, thesis-discussion-conclusion, thesis-abstract), 내용을 고친 색인 페이지 5개(홈, /tools/, /professor-feedback/, /guide/journal-submission/, /guide/professor-feedback-revision/). 12번째(/master-thesis/)에서 하루 할당량이 찼습니다.
 - 새 사이트는 보통 몇 주에 걸쳐 색인이 늘어납니다. Search Console의 URL 검사에서 색인 생성 요청은 하루 10개 안팎만 되므로, 중요한 페이지부터 나눠서 요청합니다.
+- 11월 10일: 남은 서비스 페이지 10개(석사·박사, 가격, 작성 지원, AI 자동작성, 첨삭, 학술지, 연구계획서, 설문, 통계)의 색인 생성 요청을 마쳤고, 가이드 6편(Cronbach's α, 설문지, 문헌연구, 서론, 논의와 결론, 초록)이 모두 색인된 것을 URL 검사로 확인했습니다.
+
+### 검색엔진별 점검(2026-11-12)
+
+- **Google**: 색인 50개(사이트맵 49개 모두 포함), 호스트 문제·직접 조치·삭제 요청 없음, 사이트맵 정상(11/10 읽음). '색인 안 됨' 6개는 일부러 뺀 페이지입니다(주문서 3개와 이용약관은 noindex, /orders/, 피드 파일 rss.xml). 'nonmunai'로 검색하면 1위에 사이트 이름 '논문AI'로 나옵니다. '논문AI'처럼 일반 명사에 가까운 검색어는 라이너, DBpia 같은 큰 사이트가 앞을 차지해서 브랜드 신호(외부 언급과 링크)가 쌓여야 올라옵니다.
+- **Bing**: 색인 0개였습니다. IndexNow는 200으로 받았지만 새 도메인은 그것만으로 잘 들어가지 않습니다. Bing 웹마스터 도구(bing.com/webmasters)에 Google 계정으로 로그인해 'Google Search Console에서 가져오기'를 하면 사이트와 사이트맵이 한 번에 등록됩니다. ChatGPT 검색과 Copilot이 Bing 색인을 쓰므로 AI 검색 노출에 중요합니다. 새 계정 가입과 로그인이 필요한 일이라 운영자가 직접 해야 합니다.
+- **다음**: 웹문서·사이트 검색에 아직 나오지 않습니다. 웹마스터도구(PIN 로그인)에서 수집 요청을 할 수 있습니다.
+- **네이버**: 서치어드바이저와 네이버 검색은 Claude의 브라우저에서 열리지 않아 직접 확인하지 못했습니다. 대신 IndexNow로 바뀐 주소를 네이버에 보내고 있습니다. 네이버 IndexNow는 하위 주소는 받지만(200) 홈 주소(https://nonmunai.kr/)는 '422 Invalid urls'로 거절해서, 홈은 빼고 보내도록 고쳤습니다. 홈은 사이트 등록과 사이트맵으로 수집됩니다. 서치어드바이저에서는 '요청 > 웹 페이지 수집'으로 주요 주소를 직접 요청하고, '리포트 > 사이트 진단'에서 수집 오류가 없는지 보면 됩니다.
+- **robots.txt**: 주문 조회(/orders/)는 noindex 페이지라 크롤링 차단을 풀었습니다(막아 두면 구글이 noindex를 읽지 못해 '차단됨'으로 남습니다). RSS 사이트맵 줄도 더했습니다.
+- **외부 링크**: 성균관컨설팅 아임웹(skkc.co.kr)에는 nonmunai.kr로 가는 일반 링크가 없습니다(주문 연결 배너는 스크립트라 검색엔진이 링크로 보지 않습니다). 바닥글에 '논문AI 공식 사이트' 링크를 넣으면 네이버·다음이 skkc.co.kr을 수집할 때 nonmunai.kr도 함께 찾아갑니다(아임웹 관리자 로그인이 필요합니다).

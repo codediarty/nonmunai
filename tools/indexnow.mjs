@@ -26,20 +26,20 @@ const urlList = (sendAll ? entries : entries.filter((e) => !e.lastmod || e.lastm
 if (!urlList.length) { console.log(`바뀐 주소 없음(기준 ${since} 이후): 건너뜀`); process.exit(0); }
 console.log(`${sendAll ? '전체' : `${since} 이후 바뀐`} 주소 ${urlList.length}개 / sitemap ${entries.length}개`);
 const keyLocation = `${base}/${key}.txt`;
-const body = JSON.stringify({ host, key, keyLocation, urlList });
 const brief = async (r) => { try { return (await r.text()).replace(/\s+/g, ' ').trim().slice(0, 300); } catch { return ''; } };
+const isRoot = (u) => u === `${base}/` || u === base;
 for (const ep of ['https://api.indexnow.org/indexnow', 'https://searchadvisor.naver.com/indexnow']) {
+  // 네이버 IndexNow는 홈 주소(https://도메인/)를 받지 않는다(422 Invalid urls, 2026-11-12 확인. 하위 주소는 200).
+  // 홈은 서치어드바이저 사이트 등록과 사이트맵으로 수집되므로 네이버에는 홈을 빼고 보낸다
+  const list = /naver\.com/.test(ep) ? urlList.filter((u) => !isRoot(u)) : urlList;
+  if (!list.length) { console.log(`${ep} → 건너뜀(바뀐 주소가 홈뿐)`); continue; }
   try {
-    const r = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body });
+    const r = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify({ host, key, keyLocation, urlList: list }) });
     const ok = r.status === 200 || r.status === 202;
-    console.log(`${ep} → ${r.status} (${urlList.length}개)${ok ? '' : ` 응답: ${await brief(r)}`}`);
+    console.log(`${ep} → ${r.status} (${list.length}개)${ok ? '' : ` 응답: ${await brief(r)}`}`);
     // 묶음 전송이 거절되면 주소마다 GET으로 한 번씩 다시 보내 어느 주소가 왜 막혔는지 남긴다(과다 전송을 피해 10개까지)
     if (!ok && r.status !== 429) {
-      const tried = urlList.slice(0, 10);
-      // 보낸 주소가 홈 하나뿐이면, 사이트 전체가 막힌 것인지 홈만의 문제인지 가르기 위해 최근에 바뀐 하위 주소 하나를 함께 확인한다
-      const canary = [...entries].sort((x, y) => (y.lastmod || '').localeCompare(x.lastmod || '')).map((e) => e.loc).find((u) => u !== `${base}/` && !tried.includes(u));
-      if (tried.every((u) => u === `${base}/`) && canary) tried.push(canary);
-      for (const u of tried) {
+      for (const u of list.slice(0, 10)) {
         try {
           const g = await fetch(`${ep}?url=${encodeURIComponent(u)}&key=${key}&keyLocation=${encodeURIComponent(keyLocation)}`);
           const gok = g.status === 200 || g.status === 202;
