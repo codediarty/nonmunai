@@ -161,7 +161,7 @@ export default function home({ T, guides }) {
 <section class="hx" aria-labelledby="hx-h">
 <div class="wrap hx-in">
 <div class="hx-copy">
-<h1 class="hx-h1" id="hx-h"><span class="eyebrow">AI 논문 작성 · 전공 박사 최종 검수</span><span class="h-display hx-h">관심 주제 한 줄로<br>논문을 완성합니다</span></h1>
+<h1 class="hx-h1" id="hx-h"><span class="eyebrow">논문AI · AI 논문 작성, 전공 박사 최종 검수</span><span class="h-display hx-h">관심 주제 한 줄로<br>논문을 완성합니다</span></h1>
 <p class="lead hx-lead">주제만 적고 논문 종류를 고르면 끝이에요. 논문AI가 실존 참고문헌으로 본문을 쓰고, 같은 전공 분야 박사가 최종 검수한 완성본을 메일로 보내 드려요.</p>
 <p class="hx-deal"><span class="hx-deal-k">석사학위논문 80 Page</span><span class="hx-deal-v">${wasPrice(L80, Q80.total)}<b class="num">${won(Q80.total)}</b></span><small>${PROMO_SHORT}</small></p>
 <div class="hx-cta"><a class="btn btn-primary btn-lg" href="${go}">논문 의뢰하기</a><a class="hx-cta-sub" href="#pricing">논문 종류별 가격 보기</a></div>

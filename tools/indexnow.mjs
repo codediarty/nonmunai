@@ -32,6 +32,13 @@ for (const ep of ['https://api.indexnow.org/indexnow', 'https://searchadvisor.na
   // 네이버 IndexNow는 홈 주소(https://도메인/)를 받지 않는다(422 Invalid urls, 2026-11-12 확인. 하위 주소는 200).
   // 홈은 서치어드바이저 사이트 등록과 사이트맵으로 수집되므로 네이버에는 홈을 빼고 보낸다
   const list = /naver\.com/.test(ep) ? urlList.filter((u) => !isRoot(u)) : urlList;
+  // 홈이 바뀌었으면 네이버에는 끝 빗금 없는 주소(https://도메인)로 한 번만 따로 알려 본다(거절돼도 다른 주소 전송에는 영향 없음)
+  if (/naver\.com/.test(ep) && urlList.some(isRoot)) {
+    try {
+      const g = await fetch(`${ep}?url=${encodeURIComponent(base)}&key=${key}&keyLocation=${encodeURIComponent(keyLocation)}`);
+      console.log(`${ep} 홈(${base}) → ${g.status}${g.status === 200 || g.status === 202 ? '' : ` 응답: ${await brief(g)}`}`);
+    } catch (e) { console.log(`${ep} 홈 실패: ${e.message}`); }
+  }
   if (!list.length) { console.log(`${ep} → 건너뜀(바뀐 주소가 홈뿐)`); continue; }
   try {
     const r = await fetch(ep, { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify({ host, key, keyLocation, urlList: list }) });

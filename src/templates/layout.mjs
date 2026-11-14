@@ -110,7 +110,7 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
   }
 
   const orgLd = {
-    '@context': 'https://schema.org', '@type': 'Organization', '@id': abs('/#organization'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI'],
+    '@context': 'https://schema.org', '@type': 'Organization', '@id': abs('/#organization'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI', 'nonmunai'],
     url: abs('/'), logo: abs('/assets/img/logo-512.png'), email: site.brand.email, telephone: site.brand.phone,
     address: { '@type': 'PostalAddress', streetAddress: '서부로 2066 성균관대학교 브릿지팩토리', addressLocality: '수원시 장안구', addressRegion: '경기도', postalCode: '16419', addressCountry: 'KR' },
     parentOrganization: { '@type': 'Organization', name: site.brand.operator, url: site.brand.operatorUrl },
@@ -123,7 +123,7 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
     const canonical = abs(page.path);
     const ogImage = abs(page.ogImage || '/assets/img/og/default.png');
     const ld = [];
-    if (page.path === '/') ld.push(orgLd, { '@context': 'https://schema.org', '@type': 'WebSite', '@id': abs('/#website'), name: '논문AI', alternateName: '논문 AI', url: abs('/'), inLanguage: 'ko-KR', publisher: { '@id': abs('/#organization') } });
+    if (page.path === '/') ld.push(orgLd, { '@context': 'https://schema.org', '@type': 'WebSite', '@id': abs('/#website'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI', 'nonmunai'], url: abs('/'), inLanguage: 'ko-KR', publisher: { '@id': abs('/#organization') } });
     if (page.crumbs && page.crumbs.length > 1) ld.push(breadcrumbLd(page.crumbs));
     if (page.faq && page.faq.length) ld.push(faqLd(page.faq));
     (page.schema || []).forEach((s) => ld.push(s));
@@ -144,6 +144,8 @@ ${page.keywords ? `<meta name="keywords" content="${esc(page.keywords.join(', ')
 <link rel="canonical" href="${canonical}">
 <meta property="og:type" content="${page.ogType || 'website'}">
 <meta property="og:site_name" content="논문AI">
+<meta name="application-name" content="논문AI">
+<meta name="apple-mobile-web-app-title" content="논문AI">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="${esc(page.ogTitle || title)}">
 <meta property="og:description" content="${esc(desc)}">
