@@ -1,4 +1,4 @@
-import { faqBlock, ctaBand, crumbs, priceTable, price, item, statusTimeline, STATUS_STEPS, pageTiers, fullQuote, shortExtra } from '../../templates/parts.mjs';
+import { faqBlock, ctaBand, crumbs, priceTable, price, item, statusTimeline, STATUS_STEPS, pageTiers, fullQuote, shortExtra, lineupCards, lineupOptions } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
 import { won, listPriceFor, PROMO_NAME } from '../../js/core/pricing.js';
 import { FAQ_GROUPS, ALL_FAQ } from '../faq.mjs';
@@ -21,7 +21,7 @@ export default function info({ T }) {
     { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 논문AI에서 주문하시면 ${PROMO_NAME} ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 박사의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
     { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 박사학위논문 ${B('P-DOCTOR-EDIT')} Page 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 ${B('P-JOURNAL-EDIT')} Page 기준 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이에요. 교수님 피드백 반영·수정 보완·첨삭은 석사·박사학위논문 모두 ${price('P-MASTER-FB')}이고, 피드백 항목 수와 관계없이 한 가격에 수정표까지 포함돼요.` },
     { q: '논문 컨설팅 비용은 얼마인가요?', a: `연구 설계(연구모형, 가설, 목차, 표본 수)는 무료 논문 설계에서 먼저 받아 보실 수 있어요. 연구계획서 작성은 석사 ${price('P-MASTER-PROP')}, 박사 ${price('P-DOCTOR-PROP')}이고, 필요한 단계만 골라 맡기실 수 있어서 막힌 단계의 비용만 내시면 돼요.` },
-    { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 기본형 ${price('T-BASIC')}, 표준형 ${price('T-INTERP')}이고, 연구결과(4장) 작성까지 맡기시면 ${price('T-CHAPTER')}이에요. 매개·조절효과 같은 심화 분석은 ${price('T-ADV')}이 더해지고, 설문지 작성부터 설문 결과·통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요.` },
+    { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 분석과 통계표 ${price('T-BASIC')}, 결과 해석까지 ${price('T-INTERP')}, 연구결과(4장) 본문 작성까지 ${price('T-CHAPTER')}이에요. 설문지 작성부터 설문 결과·통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요. 분석 방법을 몰라도 괜찮아요. 주문서에서 데이터와 주제를 알려 주시면 맞는 분석을 정하고 금액도 바로 보여 드려요.` },
     { q: '표시된 가격에 부가세가 포함되어 있나요?', a: '네, 모든 가격은 부가세를 포함한 금액이에요.' },
     { q: '응답자 모집 같은 작업은 어떻게 결제하나요?', a: '응답자 모집이나 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은, 자료를 먼저 확인하고 견적을 확정해 드린 뒤에 결제하시면 돼요.' },
   ];
@@ -49,9 +49,18 @@ export default function info({ T }) {
 <div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 완성</h2><p>관심 주제와 전공을 적고 논문 종류만 고르시면 바로 시작해요. AI가 집필하고 같은 전공 분야 박사가 최종 검수를 마친 완성본을 상품별 기본 납기 안에 메일로 보내 드려요.</p></div>
 ${pageTiers(T)}
 </div></section>
-<section class="sec sec-alt"><div class="wrap">
-<div class="note" style="margin-bottom:36px;background:#fff">${T.icon('info')}<div><b>모든 가격은 부가세 포함이에요.</b> 기본 납기는 주말과 공휴일을 뺀 영업일 기준이고, 자료 보완을 기다리는 기간은 납기에 넣지 않아요. 기준 분량을 넘는 부분은 표에 적힌 단위로 추가돼요.</div></div>
+<section class="sec sec-alt" id="more" aria-labelledby="more-h"><div class="wrap">
+<div class="sec-head is-center"><h2 class="h-2" id="more-h">필요한 것만 골라 맡기기</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 맡기세요. 무엇을 맡길지만 고르면, 논문 종류에 맞는 금액은 주문서에서 바로 계산돼요.</p></div>
+${lineupCards(T, { help: true })}
+${lineupOptions(T)}
+</div></section>
+<section class="sec sec-tight" id="all-prices"><div class="wrap">
+<details class="pt-all"><summary><span><b>상품별 전체 가격표</b><small>논문 종류별 기준 분량, 추가 분량 요금, 기본 납기를 모두 보여 드려요</small></span>${T.icon('plus')}</summary>
+<div class="pt-all-in">
+<div class="note" style="margin-bottom:28px;background:#fff">${T.icon('info')}<div><b>모든 가격은 부가세 포함이에요.</b> 기본 납기는 주말과 공휴일을 뺀 영업일 기준이고, 자료 보완을 기다리는 기간은 납기에 넣지 않아요. 기준 분량을 넘는 부분은 표에 적힌 단위로 추가돼요.</div></div>
 ${groups.map(([g, codes]) => `<div class="page-sec">${priceTable(T, codes, { caption: g })}</div>`).join('')}
+</div>
+</details>
 </div></section>
 ${faqBlock(T, pricingFaq, { title: '가격 관련 자주 묻는 질문' })}
 ${ctaBand(T, { title: '관심 주제 한 줄이면 오늘 바로 시작할 수 있어요', text: '관심 주제를 적고 논문 종류만 고르시면 결제 화면이 바로 열려요. 같은 전공 분야 박사의 최종 검수를 마친 완성본을 메일로 보내 드려요.', primary: ['논문 의뢰하기', '/paper/new/'], secondary: ['통계분석 의뢰하기', '/statistics/new/'] })}`,

@@ -136,12 +136,12 @@ ${faqBlock(T, freeFaq, { title: '무료 논문 설계 자주 묻는 질문' })}`
 <p class="hint" style="margin-top:12px">이 목차로 본문까지 맡기고 싶으시면 <a href="${T.u('/thesis-writing/')}">논문 작성 지원</a>을 확인해 보세요.</p></div>
 </div></section>
 <section class="sec sec-alt"><div class="wrap-narrow prose"><h2 style="margin-top:0">연구방법별 목차 구성의 차이</h2>
-<table class="g-table"><thead><tr><th>연구방법</th><th>3장 연구방법에 들어가는 절</th><th>4장 결과의 구성</th></tr></thead><tbody>
+<div class="table-wrap"><table class="g-table"><thead><tr><th>연구방법</th><th>3장 연구방법에 들어가는 절</th><th>4장 결과의 구성</th></tr></thead><tbody>
 <tr><td>설문·통계(양적)</td><td>연구 모형, 연구 가설, 연구 대상 및 자료 수집, 측정 도구, 자료 분석 방법</td><td>일반적 특성, 신뢰도, 기술통계, 상관, 가설 검증</td></tr>
 <tr><td>면담·사례(질적)</td><td>연구 설계, 연구 참여자, 자료 수집, 자료 분석, 연구의 엄밀성, 윤리적 고려</td><td>참여자 특성, 주제 모음과 주제, 경험의 구조</td></tr>
 <tr><td>문헌연구</td><td>검색 전략, 선정·배제 기준, PRISMA 선정 과정, 질 평가와 자료 추출</td><td>선정 문헌 특성, 연구 동향, 결과 종합</td></tr>
 <tr><td>프로그램 효과</td><td>연구 설계, 대상, 프로그램 구성, 측정 도구, 자료 수집, 분석</td><td>동질성 검증, 가설 검증</td></tr>
-</tbody></table>
+</tbody></table></div>
 <p>목차를 정하는 원리는 <a href="/guide/thesis-table-of-contents/">논문 목차 구성법</a>에서 더 자세히 설명해 드려요.</p></div></section>
 ${faqBlock(T, tocFaq, { title: '논문 목차 자주 묻는 질문' })}`,
   });

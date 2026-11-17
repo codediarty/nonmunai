@@ -687,3 +687,55 @@
   .why { padding: 22px 18px 20px; }
   .gd3-4 { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* 필요한 것만 골라 맡기기: 큼직한 상품 묶음 카드(가격 안내) */
+.lu-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.lu { display: flex; flex-direction: column; padding: 26px 24px 22px; background: #fff; border: 1px solid var(--rule); border-radius: 16px; min-width: 0; }
+.lu-hd { display: flex; align-items: center; gap: 12px; }
+.lu-ic { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 42px; height: 42px; border-radius: 12px; background: var(--blue-soft); color: var(--blue); }
+.lu-ic .i { width: 22px; height: 22px; }
+.lu-name { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.035em; color: var(--ink); }
+.lu-desc { margin: 12px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--muted); word-break: keep-all; }
+.lu-from { margin: 16px 0 0; font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.03em; line-height: 1.1; }
+.lu-from b { font-size: 32px; font-weight: 850; letter-spacing: -0.05em; margin-right: 2px; }
+.lu-lv { list-style: none; flex: 1; display: grid; align-content: start; gap: 2px; margin: 16px 0 18px; padding: 12px 0 0; border-top: 1px solid var(--rule-2); }
+.lu-lv li { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 14.5px; color: var(--ink-2); }
+.lu-lv li span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.lu-lv li b { flex: none; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+.lu-lv li em { font-style: normal; font-size: 11.5px; font-weight: 800; color: var(--blue); background: var(--blue-soft); padding: 1px 7px; border-radius: 6px; line-height: 1.6; }
+.lu-more { align-self: flex-start; margin-top: 12px; font-size: 13.5px; font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.lu-more:hover { color: var(--blue); text-decoration-color: currentColor; }
+.lu-opts { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 18px; margin: 22px 0 0; font-size: 14px; color: var(--ink-2); }
+.lu-opts b { color: var(--ink); }
+.lu-opts span { display: inline-flex; align-items: baseline; gap: 6px; }
+.lu-opts i { font-style: normal; font-weight: 750; color: var(--muted); }
+
+/* 상품별 전체 가격표: 처음에는 접어 두고, 필요한 사람만 펼쳐 본다 */
+.pt-all { border: 1px solid var(--rule); border-radius: 16px; background: #fff; }
+.pt-all > summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; cursor: pointer; list-style: none; }
+.pt-all > summary::-webkit-details-marker { display: none; }
+.pt-all > summary span { display: grid; gap: 4px; min-width: 0; }
+.pt-all > summary b { font-size: 17px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
+.pt-all > summary small { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.pt-all > summary .i { flex: none; width: 20px; height: 20px; color: var(--ink-2); transition: transform .2s; }
+.pt-all[open] > summary .i { transform: rotate(45deg); }
+.pt-all > summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 16px; }
+.pt-all-in { padding: 4px 24px 24px; border-top: 1px solid var(--rule-2); }
+.pt-all-in .page-sec:last-child { margin-bottom: 0; }
+
+@media (max-width: 1024px) {
+  .lu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .lu-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .lu { padding: 20px 18px 18px; }
+  .lu-from b { font-size: 28px; }
+  .lu-opts { justify-content: flex-start; gap: 6px 14px; font-size: 13.5px; }
+  .lu-opts b { flex-basis: 100%; }
+  .pt-all > summary { padding: 16px 18px; }
+  .pt-all-in { padding: 4px 14px 16px; }
+}
+.lu-help { background: var(--paper-2); border-style: dashed; }
+.lu-help .lu-ic { background: #fff; }
+.lu-help .lu-desc { flex: 1; }
+.lu-help-go { display: grid; gap: 8px; margin-top: 18px; }

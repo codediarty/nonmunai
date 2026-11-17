@@ -52,7 +52,7 @@ ${g.html}
 </article>
 <aside class="aside-sticky">
 ${g.toc && g.toc.length ? `<nav class="g-toc" aria-label="목차"><b>이 글의 목차</b><ol>${g.toc.map((t) => `<li><a href="#${t.id}">${esc(t.text)}</a></li>`).join('')}</ol></nav>` : ''}
-<div class="g-cta"><b>${esc(SERVICE_LABEL[svc] || '논문AI')}</b><p>${svc.startsWith('/tools/') ? '읽은 내용을 무료 도구로 바로 적용해 보세요. 회원가입 없이 쓸 수 있어요.' : '읽은 내용을 바로 적용해 보세요. 혼자 하기 어려운 단계만 골라 맡기셔도 돼요.'}</p><a class="btn btn-primary" href="${T.u(svc)}">자세히 보기</a></div>
+<div class="g-cta"><b>${esc(SERVICE_LABEL[svc] || '논문AI')}</b><p>${g.cta ? esc(g.cta) : svc.startsWith('/tools/') ? '읽은 내용을 무료 도구로 바로 적용해 보세요. 회원가입 없이 쓸 수 있어요.' : '읽은 내용을 바로 적용해 보세요. 혼자 하기 어려운 단계만 골라 맡기셔도 돼요.'}</p><a class="btn btn-primary" href="${T.u(svc)}">자세히 보기</a></div>
 </aside></div></div>
 ${faq.length ? faqBlock(T, faq, { title: '자주 묻는 질문', id: 'gfaq' }) : ''}
 <section class="sec-tight"><div class="wrap"><h2 class="h-3" style="margin-bottom:16px">함께 읽으면 좋은 글</h2><div class="related">${[...related, ...more].map(card).join('')}</div></div></section>

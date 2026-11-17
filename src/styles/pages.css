@@ -264,9 +264,9 @@
   .hero-demo { max-width: 640px; }
   .flow { grid-template-columns: 1fr; gap: 36px; }
   .tools { grid-template-columns: 1fr 1fr; }
-  .split { grid-template-columns: 1fr; }
+  .split { grid-template-columns: minmax(0, 1fr); }
   .aside-sticky { position: static; }
-  .toolbox { grid-template-columns: 1fr; }
+  .toolbox { grid-template-columns: minmax(0, 1fr); }
   .toolbox-form { position: static; }
   .g-list, .related { grid-template-columns: 1fr 1fr; }
 }

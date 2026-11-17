@@ -28,14 +28,14 @@ export function price(code) { const it = item(code); return it ? won(it.price) :
 // 소논문 추가 분량 문구(가격표로 계산): 예) "4쪽 추가마다 9,000원"
 export function shortExtra() { const s = item('P-SHORT-FULL'); return s ? `${s.unitSize} Page 추가마다 ${won(s.unitPrice)}` : ''; }
 
-export function priceTable(T, codes, { caption = '' } = {}) {
+export function priceTable(T, codes, { caption = '', compact = false } = {}) {
   const rows = codes.map((c) => {
     const it = item(c);
     if (!it) return '';
     const ul = it.unitLabel === '쪽' ? ' Page' : (it.unitLabel || '');
     const unit = it.baseUnits ? `기준 ${it.baseUnits}${ul}` : '';
     const list = listPriceFor(c, it.price);
-    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${it.task === 'feedback' || it.task === 'revise' ? '<span class="pt-unit">항목 수와 관계없이 일괄 반영 · 수정표 포함</span>' : unit ? `<span class="pt-unit">${unit} · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
+    return `<tr><th scope="row"><span class="pt-name">${esc(it.name)}</span>${it.task === 'feedback' || it.task === 'revise' ? `<span class="pt-unit">${compact ? '항목 수와 관계없이 한 가격' : '항목 수와 관계없이 일괄 반영 · 수정표 포함'}</span>` : unit ? `<span class="pt-unit">${unit}${compact ? '' : ` · 추가 ${it.unitSize}${ul}당 ${won(it.unitPrice)}`}</span>` : ''}</th><td class="pt-days" data-days="${esc(c)}">${it.days ? `영업일 ${it.days}일` : '견적 후 안내'}</td><td class="pt-price num" data-price="${esc(c)}">${list ? `<s class="pt-list">${won(list)}</s>` : ''}${it.quoteOnly ? '별도 견적' : won(it.price)}</td></tr>`;
   }).join('');
   return `<div class="table-wrap"><table class="price-table">${caption ? `<caption>${esc(caption)}</caption>` : ''}<thead><tr><th scope="col">상품</th><th scope="col">기본 납기</th><th scope="col">가격(부가세 포함)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
@@ -129,6 +129,48 @@ ${TIERS.map((t) => tierCard(T, t)).join('\n')}
 <li>${T.icon('credit-card')}카드·간편결제·계좌이체</li>
 <li>${T.icon('receipt-text')}부가세 포함</li>
 </ul>`;
+}
+
+// 큼직한 상품 구성: 고객에게는 '무엇을 맡길지' 다섯 갈래로만 보여 준다.
+// 세부 상품 코드(가격표·결제 상품)는 그대로 두고, 고르는 단위만 크게 묶는다. 가격은 가격표에서 읽는다.
+// levels: [이름, 상품 코드, 추천 표시(신청서에서 이미 추천하는 단계만)]. 일반 연구보고서·청소년 탐구논문·개인 관심연구와 심화 분석, 학습용 시뮬레이션,
+// 추가 분량 단위 같은 세부 상품은 목록에 따로 내세우지 않고 주문서에서 고르면 금액이 자동으로 계산된다.
+export const LINEUP = [
+  { key: 'proposal', icon: 'clipboard-list', name: '연구계획서 작성', desc: '계획서 심사에서 받을 질문에 답할 수 있게 연구 목적, 이론, 방법, 일정을 정리해 드려요.', levels: [['학사', 'P-BACHELOR-PROP'], ['석사', 'P-MASTER-PROP'], ['박사', 'P-DOCTOR-PROP']], href: '/paper/new/?task=proposal', cta: '연구계획서 의뢰하기', info: '/research-proposal/' },
+  { key: 'edit', icon: 'file-pen-line', name: '논문 첨삭·교정', desc: '이미 쓴 원고의 문장, 논리, 인용, 형식을 다듬고 고친 곳을 표시해 드려요.', levels: [['학사', 'P-BACHELOR-EDIT'], ['학술지', 'P-JOURNAL-EDIT'], ['석사', 'P-MASTER-EDIT'], ['박사', 'P-DOCTOR-EDIT']], href: '/paper/new/?task=edit', cta: '첨삭 의뢰하기', info: '/thesis-editing/' },
+  { key: 'feedback', icon: 'message-square-text', name: '교수님 피드백 반영', desc: '의견이 몇 개든 한 가격으로 모두 반영하고, 무엇을 고쳤는지 수정표로 정리해 드려요.', levels: [['학사', 'P-BACHELOR-FB'], ['학술지', 'P-JOURNAL-FB'], ['석사·박사', 'P-MASTER-FB']], href: '/paper/new/?task=feedback', cta: '피드백 반영 의뢰하기', info: '/professor-feedback/' },
+  { key: 'survey', icon: 'list-checks', name: '설문조사', desc: '설문지 작성부터 온라인 설문, 결과 정리와 통계 해석까지 한 번에 맡길 수 있어요.', levels: [['원스톱(작성부터 해석까지)', 'S-FULL', true], ['설문지 작성', 'S-NEW']], href: '/survey/new/', cta: '설문조사 의뢰하기', info: '/survey/' },
+  { key: 'stats', icon: 'chart-column', name: '통계분석', desc: '데이터만 올리면 주제에 맞는 분석 방법을 정해 APA 통계표와 결과 해석까지 드려요.', levels: [['기본형', 'T-BASIC'], ['표준형(결과 해석)', 'T-INTERP', true], ['연구결과 작성까지', 'T-CHAPTER']], href: '/statistics/new/', cta: '통계분석 의뢰하기', info: '/statistics/' },
+];
+// 필요할 때만 더하는 옵션(한 줄로만 안내)
+export const LINEUP_OPTIONS = [['우선 처리', 'A-PRIORITY'], ['학교·학술지 양식 적용', 'A-FORMAT'], ['추가 수정 1회', 'A-REVISION'], ['심사 발표 PPT·PDF', 'A-PPT']];
+// 상품 묶음의 시작 가격(목록에 보이는 단계 가운데 가장 낮은 값)
+export function lineupFrom(l) { const ps = l.levels.map(([, c]) => item(c)).filter(Boolean).map((x) => x.price); return ps.length ? Math.min(...ps) : 0; }
+
+export function lineupCards(T, { keys = null, help = false } = {}) {
+  const list = keys ? LINEUP.filter((l) => keys.includes(l.key)) : LINEUP;
+  return `<div class="lu-grid">${list.map((l) => {
+    const from = lineupFrom(l);
+    const one = l.levels.length === 1;
+    const lv = l.levels.map(([n, c, rec]) => { const it = item(c); return it ? `<li${rec ? ' class="is-rec"' : ''}><span>${esc(n)}${rec ? '<em>추천</em>' : ''}</span><b class="num" data-price="${esc(c)}">${it.quoteOnly ? '별도 견적' : won(it.price)}</b></li>` : ''; }).join('');
+    return `<article class="lu" id="lu-${l.key}">
+<div class="lu-hd"><span class="lu-ic">${T.icon(l.icon)}</span><h3 class="lu-name">${esc(l.name)}</h3></div>
+<p class="lu-desc">${esc(l.desc)}</p>
+<p class="lu-from"><b class="num">${won(from).replace('원', '')}</b>원${one ? '' : '부터'}</p>
+<ul class="lu-lv">${lv}</ul>
+<a class="btn btn-dark btn-block lu-go" href="${T.u(l.href)}">${esc(l.cta)}</a>
+${l.info ? `<a class="lu-more" href="${T.u(l.info)}">자세히 보기</a>` : ''}
+</article>`;
+  }).join('\n')}${help ? `
+<article class="lu lu-help">
+<div class="lu-hd"><span class="lu-ic">${T.icon('compass')}</span><h3 class="lu-name">무엇을 맡길지 모르겠다면</h3></div>
+<p class="lu-desc">지금 어디서 막혔는지만 알려 주세요. 주제 선정, 계획서, 설문과 통계, 원고, 심사 대응 가운데 막힌 단계부터 정리해 필요한 것만 안내해 드려요.</p>
+<div class="lu-help-go"><a class="btn btn-dark btn-block" href="${T.u('/consulting/')}">논문 컨설팅 보기</a><a class="btn btn-ghost btn-block" href="${T.u('/free/')}">무료 논문 설계 먼저 보기</a></div>
+</article>` : ''}</div>`;
+}
+
+export function lineupOptions(T) {
+  return `<p class="lu-opts"><b>필요하면 더할 수 있어요</b>${LINEUP_OPTIONS.map(([n, c]) => { const it = item(c); return it ? `<span>${esc(n)} <i class="num" data-price="${esc(c)}">${won(it.price)}</i></span>` : ''; }).join('')}</p>`;
 }
 
 // 참고문헌 실존 검증 배지: 파란 인증 마크(가장자리가 물결진 원 + 흰 체크)

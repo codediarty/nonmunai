@@ -1,8 +1,10 @@
-import { faqBlock, ctaBand, price, item, pageTiers, verifiedBadge, verifiedCard } from '../../templates/parts.mjs';
+import { faqBlock, ctaBand, price, item, pageTiers, verifiedBadge, verifiedCard, LINEUP, lineupFrom } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
 import { computeQuote, DEFAULT_CATALOG, won, listPriceFor, offText, PROMO_NAME, PROMO_SHORT } from '../../js/core/pricing.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPT, DEMO_TITLE } from '../../js/core/preview.js';
 import { HOME_FAQ as FAQ_TOP, ALL_FAQ } from '../faq.mjs';
+// 따로 맡기기 상품의 시작 가격(가격 안내 페이지의 상품 묶음과 같은 값)
+const FROM = (key) => won(lineupFrom(LINEUP.find((l) => l.key === key)));
 
 // 대표 가격: 가격표(pricing.js)로 계산해 늘 같은 값을 쓴다
 const quote = (typeId, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'full', pages } });
@@ -206,11 +208,11 @@ ${pageTiers(T)}
 <div class="sec-head"><h2 class="h-2" id="svc-h">필요한 것만 따로 맡길 수도 있어요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 맡기세요. 어디서부터 맡길지 모르겠다면 <a href="${T.u('/consulting/')}">논문 컨설팅</a>으로 막힌 단계부터 정리해 드려요.</p></div>
 <div class="svc2">
 ${[
-    ['file-pen-line', '논문 첨삭·교정', '문장, 논리, 인용, 형식을 다듬고 수정 내역을 표시해 드려요.', `석사 30 Page ${price('P-MASTER-EDIT')}`, '/thesis-editing/'],
-    ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정표까지 드려요.', `석사·박사 ${price('P-MASTER-FB')}`, '/professor-feedback/'],
-    ['clipboard-list', '연구계획서 작성', '연구 목적, 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `석사 ${price('P-MASTER-PROP')}`, '/research-proposal/'],
+    ['file-pen-line', '논문 첨삭·교정', '문장, 논리, 인용, 형식을 다듬고 수정 내역을 표시해 드려요.', `${FROM('edit')}부터`, '/thesis-editing/'],
+    ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정표까지 드려요.', `${FROM('feedback')}부터`, '/professor-feedback/'],
+    ['clipboard-list', '연구계획서 작성', '연구 목적, 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `${FROM('proposal')}부터`, '/research-proposal/'],
     ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문 진행, 결과 정리와 통계 해석까지 맡겨요.', price('S-FULL'), '/survey/'],
-    ['chart-column', '논문 통계분석', 'SPSS 분석과 APA 통계표, 결과 해석까지 드려요.', `표준형 ${price('T-INTERP')}`, '/statistics/'],
+    ['chart-column', '논문 통계분석', 'SPSS 분석과 APA 통계표, 결과 해석까지 드려요.', `${FROM('stats')}부터`, '/statistics/'],
     ['compass', '논문 컨설팅', '주제 선정부터 심사 준비까지 막힌 단계를 함께 정리해요.', '필요한 단계만 선택', '/consulting/'],
   ].map(([ic, t, d, p, h]) => `<a class="svc2-item" href="${T.u(h)}"><span class="svc2-ic">${T.icon(ic)}</span><b>${esc(t)}</b><span class="svc2-d">${esc(d)}</span><span class="svc2-p">${esc(p)}</span></a>`).join('')}
 </div>

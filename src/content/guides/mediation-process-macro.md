@@ -6,6 +6,7 @@ keywords: ["매개효과 분석", "PROCESS macro", "PROCESS Model 4", "부트스
 category: "통계분석"
 date: "2026-10-24"
 service: "/statistics/"
+cta: "Model 4 결과표와 간접효과 해석이 헷갈린다면 데이터를 올려 주세요. 부트스트랩 결과까지 APA 표와 해석으로 정리해 드려요."
 summary:
   - "Model 4는 X가 M을 거쳐 Y에 미치는 단순매개를 검증합니다"
   - "간접효과의 95% 부트스트랩 신뢰구간에 0이 없으면 유의합니다"
