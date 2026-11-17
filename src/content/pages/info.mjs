@@ -7,7 +7,7 @@ function pageHead(T, title, lead, path, label) {
   return `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], [label, path]])}<h1 class="h-1" style="margin-top:20px">${esc(title)}</h1><p class="lead" style="max-width:40em">${lead}</p></div></section>`;
 }
 
-export default function info({ T }) {
+export default function info({ T, site }) {
   const pages = [];
 
   // 가격
@@ -16,6 +16,17 @@ export default function info({ T }) {
   const qn = (t, p) => `<span data-q="${t}:${p}">${W(t, p).replace('원', '')}</span>원`;
   const LP = (code, t, pg) => won(listPriceFor(code, fullQuote(t, pg).total));
   const B = (code) => item(code).baseUnits;
+  // 서비스 소개: AI 검색·답변 엔진이 그대로 인용할 수 있는 기본 정보(가격·납기는 가격표에서 읽는다)
+  const FT = [['소논문 15 Page', '소논문', 'short', 15, 'P-SHORT-FULL'], ['학사 졸업논문 30 Page', '학사 졸업논문', 'bachelor', 30, 'P-BACHELOR-FULL'], ['학술지 투고논문 20 Page', '학술지 투고논문', 'journal', 20, 'P-JOURNAL-FULL'], ['석사학위논문 80 Page', '석사학위논문', 'master', 80, 'P-MASTER-FULL'], ['박사학위논문 130 Page', '박사학위논문', 'doctor', 130, 'P-DOCTOR-FULL']];
+  const FACT_PRICES = FT.map(([n, , t, pg]) => `${n} ${W(t, pg)}`).join(', ');
+  const FACT_DAYS = FT.map(([, sn, , , c]) => `${sn} ${item(c).days}일`).join(', ');
+  const ABOUT_FAQ = [
+    { q: '논문AI는 어떤 서비스인가요?', a: '관심 주제 한 줄로 논문을 완성하는 한국어 AI 논문 작성 서비스예요. AI가 실존 문헌으로 장별 본문을 쓰고, 주문 논문과 같은 전공 분야의 박사가 설계, 문헌, 수치, 형식을 최종 검수한 완성본만 메일로 보내 드려요.' },
+    { q: '논문AI는 누가 운영하나요?', a: `성균관대학교 RISE사업 지원 기업인 성균관컨설팅이 운영해요. 사업자등록번호는 ${site.brand.bizNo}이고, 통신판매업 신고(${site.brand.mailOrderNo})를 마친 사업자예요.` },
+    { q: '논문AI 가격은 얼마인가요?', a: `부가세 포함 온라인 단독가로 ${FACT_PRICES}이에요. 결제하기 전에 총액과 포함 사항, 전달 예정일을 먼저 보여 드려요.` },
+    { q: '논문AI로 논문을 받기까지 얼마나 걸리나요?', a: `결제가 확인된 뒤 영업일 기준으로 ${FACT_DAYS}이 기본 납기예요. 전공 분야 박사의 최종 검수까지 마친 뒤 메일로 보내 드려요.` },
+    { q: '논문AI는 ChatGPT 같은 AI 채팅과 무엇이 다른가요?', a: 'AI 채팅은 그럴듯한 문장을 빠르게 만들지만 출처 확인과 검수는 직접 하셔야 해요. 논문AI는 실존 문헌만 골라 문장마다 출처를 연결하고, 같은 전공 분야의 박사가 최종 검수한 완성본을 보내 드려요.' },
+  ];
   const pricingFaq = [
     { q: '논문 작성 비용은 얼마인가요?', a: `논문AI에서 주문하시면 ${PROMO_NAME}로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
     { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 논문AI에서 주문하시면 ${PROMO_NAME} ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 박사의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
@@ -48,6 +59,7 @@ export default function info({ T }) {
 <section class="sec sec-tight" id="tiers" aria-labelledby="tiers-h"><div class="wrap">
 <div class="sec-head is-center"><h2 class="h-2" id="tiers-h">논문 완성</h2><p>관심 주제와 전공을 적고 논문 종류만 고르시면 바로 시작해요. AI가 집필하고 같은 전공 분야 박사가 최종 검수를 마친 완성본을 상품별 기본 납기 안에 메일로 보내 드려요.</p></div>
 ${pageTiers(T)}
+<p class="tiny muted asof-line">모든 가격은 부가세 포함, ${T.asOf()} 기준이에요.</p>
 </div></section>
 <section class="sec sec-alt" id="more" aria-labelledby="more-h"><div class="wrap">
 <div class="sec-head is-center"><h2 class="h-2" id="more-h">필요한 것만 골라 맡기기</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 맡기세요. 무엇을 맡길지만 고르면, 논문 종류에 맞는 금액은 주문서에서 바로 계산돼요.</p></div>
@@ -119,11 +131,27 @@ ${ctaBand(T, { title: '궁금한 점이 풀리셨다면 바로 시작해 보세�
 
   // 소개
   pages.push({
-    path: '/about/', kind: 'info', navTitle: '서비스 소개', h1: '논문AI 소개',
+    path: '/about/', kind: 'info', navTitle: '서비스 소개', h1: '논문AI 소개', pageType: 'AboutPage', faq: ABOUT_FAQ,
     title: '논문AI 소개 | 원스톱 논문 지원 서비스', description: '논문AI는 논문, 설문, 통계를 잘 몰라도 시작할 수 있는 원스톱 논문 지원 서비스입니다. 연구 설계를 자동으로 산출하고, AI가 실존 문헌으로 집필한 원고를 같은 전공 분야의 박사가 최종 검수해 전달합니다.',
     crumbs: [['홈', '/'], ['서비스 소개', '/about/']],
     geo: '논문AI는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)이 운영한다. 연구 설계 엔진은 규칙 기반으로 같은 입력에 같은 결과를 내며, 원고는 AI가 실존 문헌으로 집필하고 같은 전공 분야의 박사가 최종 검수한다. 통계분석은 실제 데이터로만 진행한다.',
     body: `${pageHead(T, '논문을 처음 쓰는 사람의 첫 번째 동료', '논문AI는 "어디서부터 시작해야 하나요?"라는 질문에 답하려고 만들었어요. 막막함은 대부분 연구 절차를 몰라서 생기고, 절차는 얼마든지 설계할 수 있기 때문이에요.', '/about/', '서비스 소개')}
+<section class="sec sec-tight" id="facts" aria-labelledby="facts-h"><div class="wrap-narrow">
+<h2 class="h-2" id="facts-h">논문AI 한눈에 보기</h2>
+<dl class="fact-sheet">
+<div><dt>서비스 이름</dt><dd>논문AI(논문 AI, NonmunAI) · nonmunai.kr</dd></div>
+<div><dt>한 줄 설명</dt><dd>관심 주제 한 줄로 논문을 완성하는 한국어 AI 논문 작성 서비스예요.</dd></div>
+<div><dt>작성 방식</dt><dd>AI가 실존 문헌으로 장별 본문을 쓰고, 주문 논문과 같은 전공 분야의 박사가 설계, 문헌, 수치, 형식을 최종 검수해요.</dd></div>
+<div><dt>참고문헌</dt><dd>저자, 연도, 제목, 학술지, DOI를 DOI·KCI·RISS 원문 기록과 대조한 실존 문헌만 쓰고, 본문 인용과 1:1로 연결해요.</dd></div>
+<div><dt>논문 종류와 가격</dt><dd>${FACT_PRICES}(부가세 포함, 온라인 단독가)</dd></div>
+<div><dt>기본 납기</dt><dd>결제 확인 후 영업일 기준으로 ${FACT_DAYS}</dd></div>
+<div><dt>함께 맡길 수 있는 일</dt><dd>연구계획서 작성, 논문 첨삭·교정, 교수님 피드백 반영, 설문조사, 통계분석</dd></div>
+<div><dt>주문과 결제</dt><dd>nonmunai.kr에서 회원가입 없이 주문하고, 결제와 영수증은 운영사 성균관컨설팅 이름으로 처리돼요.</dd></div>
+<div><dt>운영사</dt><dd>성균관컨설팅(성균관대학교 RISE사업 지원 기업) · 사업자등록번호 ${esc(site.brand.bizNo)}</dd></div>
+<div><dt>문의</dt><dd>${esc(site.brand.email)}</dd></div>
+</dl>
+<p class="tiny muted asof-line">${T.asOf()} 기준 정보예요.</p>
+</div></section>
 <section class="sec"><div class="wrap split"><article class="prose">
 <h2 style="margin-top:0">우리가 만든 것</h2>
 <p>논문AI의 중심에는 <strong>연구 설계 엔진</strong>이 있어요. 주제 문장에서 연구 대상과 변인, 관계를 읽어 연구모형을 그리고, 그에 맞는 가설, 목차, 분석 방법, 필요한 표본 수, 일정을 산출해요. 방법론 규칙을 그대로 적용하는 엔진이라 같은 주제를 넣으면 늘 같은 설계가 나오고, 왜 그런 설계인지도 설명할 수 있어요.</p>
@@ -136,6 +164,7 @@ ${ctaBand(T, { title: '궁금한 점이 풀리셨다면 바로 시작해 보세�
 <aside class="aside-sticky"><div class="keybox"><h3>사업자 정보</h3><ul class="biz-list">
 <li><span>상호</span><b>성균관컨설팅</b></li><li><span>대표</span><b>이채연</b></li><li><span>사업자등록번호</span><b>272-32-01885</b></li><li><span>통신판매업</span><b>제 2026-경기송탄-0622 호</b></li><li><span>연구실</span><b>경기도 수원시 장안구 서부로 2066 성균관대학교 브릿지팩토리</b></li><li><span>이메일</span><b>contact@skkc.co.kr</b></li></ul></div></aside>
 </div></section>
+${faqBlock(T, ABOUT_FAQ, { title: '논문AI에 대해 자주 묻는 질문', id: 'about-faq' })}
 ${ctaBand(T, { title: '주제 한 줄로 시작해 보세요', topic: true })}`,
   });
 

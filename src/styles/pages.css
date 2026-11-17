@@ -388,3 +388,15 @@
 }
 
 .phero + .sec { padding-top: 64px; }
+
+/* 서비스 소개: 논문AI 한눈에 보기(기본 정보 표) */
+.fact-sheet { display: grid; margin: 18px 0 0; border-top: 1px solid var(--rule); }
+.fact-sheet > div { display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 16px; padding: 14px 2px; border-bottom: 1px solid var(--rule-2); }
+.fact-sheet dt { font-weight: 800; color: var(--ink); font-size: 14.5px; letter-spacing: -0.02em; }
+.fact-sheet dd { margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.65; word-break: keep-all; }
+.asof-line { margin-top: 14px; }
+.asof-line time { font-variant-numeric: tabular-nums; }
+#tiers .asof-line { text-align: center; }
+@media (max-width: 560px) {
+  .fact-sheet > div { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 12px 0; }
+}

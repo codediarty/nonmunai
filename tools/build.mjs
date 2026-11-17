@@ -91,16 +91,6 @@ function withBase(html) {
   if (!b) return html;
   return html.replace(/(\s(?:href|src|action|poster)=")(\/[^"]*)"/g, (m, a, u) => (u.startsWith('//') || u === b || u.startsWith(b + '/') ? m : `${a}${b}${u}"`));
 }
-const seen = new Set();
-for (const p of pages) {
-  if (seen.has(p.path)) throw new Error('중복 경로: ' + p.path);
-  seen.add(p.path);
-  const html = withBase(T.layout(p));
-  const rel = p.path === '/404.html' ? '404.html' : path.join(p.path.replace(/^\//, ''), 'index.html');
-  write(rel, html);
-}
-
-// 6) 사이트맵·robots·RSS·llms.txt·매니페스트
 // lastmod는 실제로 내용이 바뀐 날만 갱신한다: 가이드는 머리말(updated·date), 나머지는 tools/lastmod.json에 남긴 내용 지문으로 판단
 const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // 한국 날짜
 const indexable = pages.filter((p) => !p.noindex && p.path !== '/404.html');
@@ -118,9 +108,21 @@ for (const p of indexable) {
 // 배포용 로컬 빌드(docs/, 설정 주소 그대로)에서만 기록한다. CI·개발 서버 빌드는 읽기만 한다
 if (!process.env.CI && !process.env.OUT_DIR && !process.env.SITE_URL && !process.env.BASE_PATH) fs.writeFileSync(lmFile, JSON.stringify(nextLastmods, null, 1) + '\n');
 const lastmodOf = (p) => p.modified || p.published || (nextLastmods[p.path] || {}).d || today;
+// 렌더링 전에 페이지마다 마지막 변경일을 붙여 둔다(구조화 데이터 dateModified와 본문 '기준일' 표기에 쓴다)
+for (const p of indexable) p.lastmod = lastmodOf(p);
+const seen = new Set();
+for (const p of pages) {
+  if (seen.has(p.path)) throw new Error('중복 경로: ' + p.path);
+  seen.add(p.path);
+  const html = withBase(T.layout(p));
+  const rel = p.path === '/404.html' ? '404.html' : path.join(p.path.replace(/^\//, ''), 'index.html');
+  write(rel, html);
+}
+
+// 6) 사이트맵·robots·RSS·llms.txt·매니페스트
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexable.map((p) => `  <url><loc>${T.abs(p.path)}</loc><lastmod>${lastmodOf(p)}</lastmod><changefreq>${p.changefreq || 'weekly'}</changefreq><priority>${p.priority || (p.path === '/' ? '1.0' : '0.7')}</priority></url>`).join('\n')}\n</urlset>\n`);
 // 검색·AI 답변 엔진은 모두 허용하되, 주문·결제·운영자 화면은 어느 봇에게도 열지 않는다
-const BOTS = ['Yeti', 'Daumoa', 'Googlebot', 'Bingbot', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot-Extended', 'CCBot'];
+const BOTS = ['Yeti', 'Daumoa', 'Googlebot', 'Bingbot', 'GPTBot', 'OAI-SearchBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User', 'Google-Extended', 'Applebot', 'Applebot-Extended', 'DuckAssistBot', 'MistralAI-User', 'meta-externalagent', 'Amazonbot', 'CCBot'];
 // 주문 조회(/orders/)는 바닥글에 링크가 있어 noindex로 검색에서 빼고, 크롤링은 막지 않는다(막으면 noindex를 읽지 못해 'robots.txt에 의해 차단됨'으로 남는다)
 const PRIVATE = ['/admin/', '/checkout/'].map((p) => `Disallow: ${site.basePath}${p}`).join('\n');
 // 다음 웹마스터도구 소유 확인: PIN 발급 때 받은 '#DaumWebMasterTool:...' 줄을 site.config.json verification.daum에 넣으면 robots.txt 맨 아래에 붙는다

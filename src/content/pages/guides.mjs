@@ -8,7 +8,7 @@ export default function guidePages({ T, guides }) {
   const sorted = guides.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   const card = (g) => `<a class="g-card" href="${T.u(`/guide/${g.slug}/`)}"><b>${esc(g.title)}</b><span>${esc(g.description)}</span><small>${esc(g.category)} · ${g.minutes}분 · ${g.date.replace(/-/g, '.')}</small></a>`;
   const pages = [{
-    path: '/guide/', kind: 'guide-index', navTitle: '논문 작성 가이드', h1: '논문 작성 가이드',
+    path: '/guide/', kind: 'guide-index', pageType: 'CollectionPage', navTitle: '논문 작성 가이드', h1: '논문 작성 가이드',
     title: '논문 작성 가이드 | 논문 작성법·설문·SPSS 통계 해설 논문AI',
     description: '처음 논문을 쓰는 분을 위한 실전 가이드입니다. 논문 작성법, 연구계획서, 목차 구성, 설문지 제작, 표본 수, SPSS 통계분석과 결과 해석, 학술지 투고, AI 연구윤리까지 정리했습니다.',
     keywords: ['논문 작성법', '논문 쓰는 법', 'SPSS 통계분석 방법', '설문지 만드는 법', '연구계획서 작성법'],

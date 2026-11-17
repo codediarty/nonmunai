@@ -515,7 +515,7 @@ ${wrapTables(s.body)}
 <section class="sec sec-alt" id="price"><div class="wrap">
 <div class="sec-head"><h2 class="h-2">${esc(s.navTitle)} 가격과 기본 납기</h2><p>${esc(c.priceIntro || '모든 가격은 부가세 포함이에요. 필요한 단계만 골라 신청하시고, 그 금액만 결제하시면 돼요.')}</p></div>
 ${priceTable(T, s.priceCodes, { compact: true })}
-<p class="tiny muted" style="margin-top:12px">${s.priceCodes.some((c) => (item(c) || {}).unitSize) ? '기준 분량보다 길면 정해진 단위 요금만 더해지고, 주문서에서 바로 계산돼요. ' : ''}필요하면 우선 처리 ${price('A-PRIORITY')}, 학교·학술지 양식 적용 ${price('A-FORMAT')}, 추가 수정 ${price('A-REVISION')}을 더할 수 있어요. <a href="${T.u('/pricing/')}#all-prices">전체 가격표 보기</a></p>
+<p class="tiny muted" style="margin-top:12px">${s.priceCodes.some((c) => (item(c) || {}).unitSize) ? '기준 분량보다 길면 정해진 단위 요금만 더해지고, 주문서에서 바로 계산돼요. ' : ''}필요하면 우선 처리 ${price('A-PRIORITY')}, 학교·학술지 양식 적용 ${price('A-FORMAT')}, 추가 수정 ${price('A-REVISION')}을 더할 수 있어요. 가격은 부가세 포함, ${T.asOf()} 기준이에요. <a href="${T.u('/pricing/')}#all-prices">전체 가격표 보기</a></p>
 </div></section>
 
 ${guideCards.length ? `<section class="sec-tight"><div class="wrap"><h2 class="h-3" style="margin-bottom:16px">함께 읽으면 좋은 가이드</h2><div class="related">${guideCards.map((g) => `<a class="g-card" href="${T.u(`/guide/${g.slug}/`)}"><b>${esc(g.title)}</b><span>${esc(g.description)}</span><small>${esc(g.category)} · ${g.minutes}분</small></a>`).join('')}</div></div></section>` : ''}

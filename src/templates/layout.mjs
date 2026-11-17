@@ -101,8 +101,8 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
     return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
   }
 
-  function breadcrumbLd(crumbs) {
-    return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[0], item: abs(c[1]) })) };
+  function breadcrumbLd(crumbs, id) {
+    return { '@context': 'https://schema.org', '@type': 'BreadcrumbList', ...(id ? { '@id': id } : {}), itemListElement: crumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c[0], item: abs(c[1]) })) };
   }
 
   function faqLd(faq) {
@@ -113,9 +113,18 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
     '@context': 'https://schema.org', '@type': 'Organization', '@id': abs('/#organization'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI', 'nonmunai'],
     url: abs('/'), logo: abs('/assets/img/logo-512.png'), email: site.brand.email, telephone: site.brand.phone,
     address: { '@type': 'PostalAddress', streetAddress: '서부로 2066 성균관대학교 브릿지팩토리', addressLocality: '수원시 장안구', addressRegion: '경기도', postalCode: '16419', addressCountry: 'KR' },
-    parentOrganization: { '@type': 'Organization', name: site.brand.operator, url: site.brand.operatorUrl },
+    parentOrganization: { '@type': 'Organization', name: site.brand.operator, url: site.brand.operatorUrl, ...(site.brand.bizNo ? { taxID: site.brand.bizNo } : {}) },
     contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: site.brand.email, telephone: site.brand.phone, areaServed: 'KR', availableLanguage: ['ko'] },
+    // AI 검색·답변 엔진이 '논문AI가 무엇인지' 한 번에 알 수 있게 쓰는 기본 설명(사이트의 사실과 같아야 한다)
+    description: '관심 주제 한 줄로 논문을 완성하는 한국어 AI 논문 작성 서비스. AI가 실존 문헌으로 집필하고, 주문 논문과 같은 전공 분야의 박사가 최종 검수한 완성본을 보낸다. 운영사는 성균관컨설팅.',
+    slogan: '관심 주제 한 줄로 논문을 완성합니다',
+    areaServed: { '@type': 'Country', name: '대한민국' },
+    knowsAbout: ['AI 논문 작성', '논문 자동작성', '석사학위논문', '박사학위논문', '학술지 투고논문', '학사 졸업논문', '연구계획서', '논문 첨삭·교정', '교수님 피드백 반영', '논문 설문조사', '논문 통계분석', 'SPSS', 'APA 7판 참고문헌'],
   };
+
+  // 날짜 표기: 본문에 T.asOf()를 넣으면 그 페이지 내용이 마지막으로 바뀐 날(사이트맵 lastmod와 같은 날)로 바뀐다
+  const koDate = (d) => { const [y, m, dd] = String(d).split('-'); return `${y}년 ${Number(m)}월 ${Number(dd)}일`; };
+  const asOf = () => '<time class="asof" datetime="__LASTMOD__">__LASTMOD_KO__</time>';
 
   function layout(page) {
     const title = page.title;
@@ -123,8 +132,12 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
     const canonical = abs(page.path);
     const ogImage = abs(page.ogImage || '/assets/img/og/default.png');
     const ld = [];
-    if (page.path === '/') ld.push(orgLd, { '@context': 'https://schema.org', '@type': 'WebSite', '@id': abs('/#website'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI', 'nonmunai'], url: abs('/'), inLanguage: 'ko-KR', publisher: { '@id': abs('/#organization') } });
-    if (page.crumbs && page.crumbs.length > 1) ld.push(breadcrumbLd(page.crumbs));
+    const lastmod = page.lastmod || page.modified || page.published || '';
+    if (page.path === '/' || page.path === '/about/') ld.push(orgLd);
+    if (page.path === '/') ld.push({ '@context': 'https://schema.org', '@type': 'WebSite', '@id': abs('/#website'), name: '논문AI', alternateName: ['논문 AI', 'NonmunAI', 'nonmunai'], url: abs('/'), inLanguage: 'ko-KR', description: orgLd.description, publisher: { '@id': abs('/#organization') } });
+    // 모든 공개 페이지: 어떤 사이트의 어떤 페이지인지, 언제 마지막으로 바뀌었는지(AI 검색이 최신 정보인지 판단할 때 쓴다)
+    if (!page.noindex && page.path !== '/404.html') ld.push({ '@context': 'https://schema.org', '@type': page.pageType || 'WebPage', '@id': `${canonical}#webpage`, url: canonical, name: title, description: desc, inLanguage: 'ko-KR', isPartOf: { '@type': 'WebSite', '@id': abs('/#website'), name: '논문AI', url: abs('/') }, publisher: { '@id': abs('/#organization') }, ...(page.path === '/' || page.path === '/about/' ? { about: { '@id': abs('/#organization') } } : {}), ...(lastmod ? { dateModified: lastmod } : {}), primaryImageOfPage: { '@type': 'ImageObject', url: ogImage }, ...(page.crumbs && page.crumbs.length > 1 ? { breadcrumb: { '@id': `${canonical}#breadcrumb` } } : {}) });
+    if (page.crumbs && page.crumbs.length > 1) ld.push(breadcrumbLd(page.crumbs, `${canonical}#breadcrumb`));
     if (page.faq && page.faq.length) ld.push(faqLd(page.faq));
     (page.schema || []).forEach((s) => ld.push(s));
     const cfg = { siteUrl: site.siteUrl, basePath: base, apiUrl: site.apiUrl || '', version: assetVersion, brand: site.brand };
@@ -175,7 +188,7 @@ ${ld.map(jsonld).join('\n')}
 <body class="pg-${page.kind || 'page'}${page.chrome ? ' chrome-' + page.chrome : ''}">
 <a class="skip" href="#main">본문 바로가기</a>
 ${header(page)}
-<main id="main">${page.body}</main>
+<main id="main">${String(page.body).replace(/__LASTMOD_KO__/g, koDate(lastmod || new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10))).replace(/__LASTMOD__/g, lastmod || new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10))}</main>
 ${footer(page)}
 ${scripts}
 </body>
@@ -183,5 +196,5 @@ ${scripts}
 `;
   }
 
-  return { u, abs, v, icon, logo, layout, esc, breadcrumbLd, faqLd, orgLd, jsonld };
+  return { u, abs, v, icon, logo, layout, esc, breadcrumbLd, faqLd, orgLd, jsonld, asOf, koDate };
 }

@@ -12,6 +12,11 @@ export function llmsTxt(ctx, pages) {
   const tools = pick(['/tools/', '/free/', '/tools/toc/', '/tools/sample-size/', '/tools/references/']);
   const info = pick(['/pricing/', '/process/', '/faq/', '/about/', '/ethics/', '/guide/', '/refund/']);
   const guides = pages.filter((p) => p.path.startsWith('/guide/') && p.path !== '/guide/');
+  // 정보 기준일: 공개 페이지 가운데 가장 최근에 내용이 바뀐 날(사이트맵 lastmod와 같은 값)
+  const updated = pages.map((p) => p.lastmod || '').filter(Boolean).sort().pop() || '';
+  // 브랜드 질문에 바로 답할 수 있게 서비스 소개 페이지의 질문과 답을 그대로 싣는다
+  const about = pages.find((p) => p.path === '/about/');
+  const brandQa = ((about && about.faq) || []).map((f) => `- Q. ${f.q}\n  A. ${f.a}`).join('\n');
   return `# 논문AI
 
 > 논문AI(논문 AI)는 관심 주제 한 줄(전공·주제)로 논문을 완성하는 한국어 AI 논문 작성 서비스입니다. AI가 실존 문헌으로 집필하고, 주문 논문과 같은 전공 분야의 박사가 최종 검수를 마친 완성본만 메일로 보냅니다. 참고문헌은 DOI·KCI·RISS 원문 기록과 대조한 실존 문헌만 쓰고, 본문 인용과 참고문헌 목록을 1:1로 연결합니다. 소논문 15 Page부터 학사 졸업논문 30 Page, 학술지 투고논문 20 Page, 석사학위논문 80 Page, 박사학위논문 130 Page까지 완성합니다. 논문 첨삭, 교수님 피드백 반영, 연구계획서, 설문조사, 통계분석도 함께 의뢰할 수 있습니다. 운영사는 성균관컨설팅(성균관대학교 RISE사업 지원 기업)입니다.
@@ -27,7 +32,8 @@ export function llmsTxt(ctx, pages) {
 - 자료 삭제: 업로드 파일과 결과물은 전달 완료 후 90일이 지나면 모두 자동으로 영구 삭제하고, 이용자가 요청하면 그 전에 바로 삭제한다. 결제하지 않은 주문은 30일, 제출하지 않은 주문서는 3일 뒤 자동 삭제한다. 전자상거래법에 따른 주문·결제 기록만 법정 기간 동안 따로 보관한다.
 - 이용 조건: 결과물의 성격, 청약철회와 환불, 책임 범위는 이용약관(${T.abs('/terms/')})에 정한다.
 - 문의: ${ctx.site.brand.email}
-
+- 공식 사이트: ${T.abs('/')} (서비스 소개와 기본 정보: ${T.abs('/about/')}, 가격: ${T.abs('/pricing/')})${updated ? `\n- 정보 기준일: ${updated}` : ''}
+${brandQa ? `\n## 논문AI에 대해 자주 묻는 질문\n${brandQa}\n` : ''}
 ## 서비스
 ${services.map((p) => line(T, p)).join('\n')}
 

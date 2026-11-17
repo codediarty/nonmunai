@@ -35,7 +35,7 @@ export default function tools({ T, guides = [] }) {
   ];
   const hubGuides = ['choosing-thesis-topic', 'survey-sample-size', 'thesis-table-of-contents', 'apa7-references', 'research-proposal-guide', 'how-to-make-questionnaire'].map((s) => guides.find((g) => g.slug === s)).filter(Boolean);
   pages.push({
-    path: '/tools/', kind: 'tools', navTitle: '무료 도구', h1: '논문 무료 도구',
+    path: '/tools/', pageType: 'CollectionPage', kind: 'tools', navTitle: '무료 도구', h1: '논문 무료 도구',
     title: '논문 무료 도구 | 논문 설계·목차 생성기·표본 수 계산기·참고문헌 생성기 논문AI',
     description: '회원가입 없이 바로 쓰는 논문 무료 도구 모음입니다. 주제로 연구모형과 가설을 만드는 무료 논문 설계, 논문 목차 생성기, G*Power 방식 표본 수 계산기, APA 7판 참고문헌 생성기를 논문 쓰는 순서대로 써 보세요.',
     keywords: ['논문 무료 도구', '논문 작성 AI 무료', '논문 작성 도구', '논문 목차 생성기', '표본 수 계산기', 'G*Power 표본 수', 'APA 참고문헌 생성기', '연구모형 만들기'],
