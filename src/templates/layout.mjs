@@ -143,7 +143,7 @@ ${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/proce
     const cfg = { siteUrl: site.siteUrl, basePath: base, apiUrl: site.apiUrl || '', version: assetVersion, brand: site.brand };
     const styles = (page.styles || ['site']).map((s) => `<link rel="stylesheet" href="${v(`/assets/css/${s}.css`)}">`).join('');
     const scripts = ['site', ...(page.scripts || [])].map((s) => `<script type="module" src="${v(`/assets/js/${s}.js`)}"></script>`).join('');
-    const verify = [site.verification.naver ? `<meta name="naver-site-verification" content="${esc(site.verification.naver)}">` : '', site.verification.google ? `<meta name="google-site-verification" content="${esc(site.verification.google)}">` : ''].join('');
+    const verify = [site.verification.naver ? `<meta name="naver-site-verification" content="${esc(site.verification.naver)}">` : '', site.verification.naver2 ? `<meta name="naver-site-verification" content="${esc(site.verification.naver2)}">` : '', site.verification.google ? `<meta name="google-site-verification" content="${esc(site.verification.google)}">` : ''].join('');
     const robots = page.noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
     return `<!doctype html>
 <html lang="ko">
