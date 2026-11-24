@@ -3,7 +3,7 @@
 // 논문 완성·연구계획서는 연락처를 받지 않는다(결제 화면에서 받음). 상품이 하나로 맞으면 결제 화면을 바로 연다.
 // 원고 첨삭·피드백 반영은 원고 파일이 필요해 기존처럼 주문서를 먼저 접수한다.
 import { submitOrder, uploader, ICON } from './wizard.js';
-import { loadConfig, peekConfig } from './api.js';
+import { loadConfig, peekConfig, api } from './api.js';
 import { computeQuote, findItem, paperItemCode, etaDate, includesFor, listPriceFor, offText, PROMO_NAME, pageLabel } from '../core/pricing.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPTS } from '../core/preview.js';
 import { PAPER_TYPES, FIELDS, guessField } from '../core/kb.js';
@@ -14,7 +14,7 @@ import { $, $$, esc, store, debounce, url, toast } from '../ui/dom.js';
 import { won } from '../core/render.js';
 import { putBlob, delBlob, checkFile, MAX_FILES, extOf } from './files.js';
 import { productLinks } from './pay-plan.js';
-import { shopUrl } from './shop-link.js';
+import { fitShopUrl } from './shop-link.js';
 
 const KEY = 'draft:quick';
 const TASKS = [
@@ -42,6 +42,14 @@ const MAJORS = ['간호학', '사회복지학', '상담심리학', '교육학', 
 
 // 연구 방법: 기본은 연구진이 알아서, 원하면 한 번 눌러 바꾼다(가격은 그대로)
 const METHODS = [['auto', '알아서 정해 주세요'], ['survey', '설문·통계'], ['literature', '문헌연구'], ['qualitative', '면담·사례'], ['experiment', '실험·개발']];
+
+// 요청 사항: 접지 않고 바로 보이는 자유 입력 칸. 결제하면 주문서와 함께 담당자에게 그대로 전달된다(2026-11-24)
+// 자주 적는 항목은 눌러서 한 줄씩 넣는다(서버는 3,000자까지 받는다)
+const REQ_MAX = 3000;
+const REQ_CHIPS = {
+  write: ['학교·학과', '분량·형식 기준', '원하는 연구 방법', '꼭 다룰 내용', '지도교수님 의견', '참고할 논문·자료'],
+  edit: ['학교·학과', '분량·형식 기준', '특히 봐 줄 부분', '지도교수님 의견'],
+};
 
 const DEF = {
   v: 4, task: 'full', topic: '', major: '', pkg: 'master80',
@@ -121,6 +129,7 @@ function shell(root) {
 <div class="qo-tabs" role="tablist" aria-label="필요한 작업" hidden>${TASKS.map(([v, t, d]) => `<button type="button" role="tab" class="qo-tab" data-task="${v}" aria-selected="false"><b>${t}</b><small>${d}</small></button>`).join('')}</div>
 <section class="qo-sec" id="qoS1"></section>
 <section class="qo-sec" id="qoS2"></section>
+<section class="qo-sec qo-sec-req" id="qoReqSec"></section>
 <section class="qo-sec qo-sec-more" id="qoMore"></section>
 <section class="qo-sec" id="qoS4"></section>
 <input type="text" name="hp" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" data-k="hp">
@@ -205,7 +214,7 @@ ${S.task === 'edit' ? `<div class="field qo-pages"><label class="label" for="qoE
   }
   return `<h2 class="qo-h"><span class="qo-n">2</span>${S.task === 'proposal' ? '어떤 계획서가 필요하세요?' : '어떤 논문이 필요하세요?'}<span class="qo-h-tag">${PROMO_NAME}</span></h2>
 <div class="qo-pkgs">${pkgList().map(pkgCard).join('')}</div>
-<p class="hint qo-pkg-note">학교 기준 분량이 다르면 요청 사항에 적어 주세요. 확인하고 맞춰 드려요.</p>`;
+<p class="hint qo-pkg-note">학교 기준 분량이 다르면 아래 요청 사항에 적어 주세요. 확인하고 맞춰 드려요.</p>`;
 }
 
 // 양식 단계는 두지 않는다: 기본은 일반 학위논문 양식(APA 7판), 학교 양식은 결제 후 주문 페이지나 요청 사항으로 받는다
@@ -218,9 +227,11 @@ function moreHtml() {
   const prOff = CONFIG.settings && String(CONFIG.settings.priorityEnabled) === 'false';
   const box = (key, title, price, desc, off = false) => `<label class="qo-add${S.addons[key] ? ' is-on' : ''}${off ? ' is-off' : ''}"><input type="checkbox" data-add="${key}"${S.addons[key] ? ' checked' : ''}${off ? ' disabled' : ''}><span class="qo-add-mk" aria-hidden="true">${ICON.check}</span><span class="qo-add-t"><b>${title}</b><small>${desc}</small></span><span class="qo-add-p num">+${won(price)}</span></label>`;
   const paid = direct ? 0 : Object.entries(S.addons).filter(([k, v]) => v && k !== 'revisions').length + (Number(S.addons.revisions) ? 1 : 0);
-  const on = paid + (S.files || []).filter((f) => f.slot === 'materials').length + (S.request.trim() ? 1 : 0);
-  const sub = direct ? '학교 양식, 원하는 연구 방법, 받을 파일, 제출 일정' : '심사 발표 PPT, 우선 처리, 참고 자료, 요청 사항';
-  return `<details class="qo-more"${on ? ' open' : ''}><summary><span><b>더 알려 주실 것이 있나요?</b><small>${sub}</small></span><em>선택</em></summary>
+  // 요청 사항은 이 접힌 칸 밖(qoReqSec)으로 옮겼다: 여기에는 받을 파일·제출 일정(바로 결제가 아니면 옵션·참고 자료도)만 둔다
+  const on = paid + (S.files || []).filter((f) => f.slot === 'materials').length + (S.due ? 1 : 0) + (S.outputFormat && S.outputFormat !== 'docx' ? 1 : 0);
+  const head = direct ? '받을 파일과 제출 일정' : '더 알려 주실 것이 있나요?';
+  const sub = direct ? '기본은 워드(docx) 파일이에요. 한글(hwp)이나 PDF가 필요하면 바꿔 주세요' : '심사 발표 PPT, 우선 처리, 참고 자료, 받을 파일';
+  return `<details class="qo-more"${on ? ' open' : ''}><summary><span><b>${head}</b><small>${sub}</small></span><em>선택</em></summary>
 <div class="qo-more-in">
 ${direct ? '' : `<div class="qo-adds">
 ${ppt ? box('ppt', '심사 발표 PPT·PDF', ppt.price, '발표 자료 15~20장(PPT·PDF)과 장표별 스크립트') : ''}
@@ -232,14 +243,62 @@ ${rv ? `<label class="qo-add qo-add-sel"><span class="qo-add-t"><b>추가 수정
 <div class="row-2 qo-row"><div class="field"><label class="label" for="qoOut">받을 파일</label><select class="select" id="qoOut" data-k="outputFormat"><option value="docx"${S.outputFormat === 'docx' ? ' selected' : ''}>워드(docx)</option><option value="hwp"${S.outputFormat === 'hwp' ? ' selected' : ''}>한글(hwp)</option><option value="pdf"${S.outputFormat === 'pdf' ? ' selected' : ''}>PDF</option></select></div>
 <div class="field"><label class="label" for="qoDue">제출 일정 (선택)</label><input class="input" id="qoDue" type="date" data-k="due" value="${esc(S.due)}"></div></div>
 ${!direct && writeLike() ? uploader(S, 'materials', { label: '참고할 자료', hint: '선행연구, 메모, 설문지, 데이터 등이 있으면 올려 주세요' }) : ''}
-<div class="field"><label class="label" for="qoReq">요청 사항</label><textarea class="textarea" id="qoReq" rows="3" data-k="request" maxlength="1500" placeholder="예: 설문 연구로 해 주세요. ○○대학교 양식이에요. 최근 5년 국내 논문 위주로 부탁드려요.">${esc(S.request)}</textarea>${writeLike() ? `<p class="hint">원하는 연구 방법이나 학교 이름을 적어 주세요. 비워 두시면 주제에 맞춰 정해 드려요.${direct ? ' 학교 양식 파일과 참고 자료는 결제 후 주문 페이지에서 올리시면 돼요.' : ''}</p>` : ''}</div>
 </div></details>`;
+}
+
+// 요청 사항(자유 입력): 결제하면 주문서와 함께 담당 박사에게 그대로 간다. 운영자 알림 메일·작업지시문 맨 위에 원문으로 실린다
+function reqHtml() {
+  const write = writeLike();
+  const chips = REQ_CHIPS[write ? 'write' : 'edit'];
+  const ph = write
+    ? '예: ○○대학교 간호학과예요. 학교 기준은 공백 포함 16,000자 이상이고, 설문 연구로 해 주세요. 최근 5년 국내 논문 위주로 부탁드려요.'
+    : '예: 2장 이론적 배경의 흐름이 어색하다는 의견을 받았어요. 참고문헌은 APA 7판으로 맞춰 주세요.';
+  return `<h2 class="qo-h"><span class="qo-n">3</span>${write ? '원하시는 내용을 편하게 적어 주세요' : '더 전하실 내용이 있나요?'}<span class="qo-h-opt">선택</span></h2>
+<p class="qo-help">${write ? '학교 기준, 원하는 방향, 교수님 요청처럼 알려 주실 것을 말하듯 적어 주세요.' : '특히 봐 줬으면 하는 부분이나 학교 기준을 말하듯 적어 주세요.'} 적은 내용은 주문서와 함께 담당 박사에게 그대로 전달돼요.</p>
+<div class="qo-req-chips" role="group" aria-label="자주 적는 내용 한 줄 넣기">${chips.map((c) => `<button type="button" class="qo-req-chip${S.request.includes(`${c}:`) ? ' is-on' : ''}" data-req="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+<div class="field qo-req"><textarea class="textarea qo-req-ta" id="qoReq" rows="5" data-k="request" maxlength="${REQ_MAX}" aria-label="요청 사항" placeholder="${esc(ph)}">${esc(S.request)}</textarea>
+<p class="qo-req-foot"><span id="qoReqHint">${reqHint()}</span><span class="qo-req-n num${S.request.length > REQ_MAX * 0.9 ? ' is-near' : ''}" id="qoReqN">${reqCount()}</span></p></div>`;
+}
+const reqCount = () => `${S.request.length.toLocaleString('ko-KR')} / ${REQ_MAX.toLocaleString('ko-KR')}자`;
+function reqHint() {
+  if (isDirect()) return '학교 양식이나 참고 파일은 결제 후 주문 페이지에서 올리시면 돼요. 결제 뒤에 생각난 내용은 안내 메일에 답장해 주세요.';
+  return '결제 뒤에 생각난 내용은 주문 페이지 메시지나 안내 메일 답장으로 보내 주세요.';
+}
+// 글자 수·항목 버튼 표시만 고친다(입력 중인 칸은 다시 그리지 않는다)
+function reqMeta() {
+  const n = $('#qoReqN', ROOT);
+  if (n) { n.textContent = reqCount(); n.classList.toggle('is-near', S.request.length > REQ_MAX * 0.9); }
+  for (const b of $$('.qo-req-chip', ROOT)) b.classList.toggle('is-on', S.request.includes(`${b.dataset.req}:`));
+}
+// 항목 버튼: 그 항목 줄이 없으면 맨 끝에 '항목: '을 새 줄로 넣고, 있으면 그 줄 끝으로 커서를 옮긴다
+function addReqLine(label) {
+  const ta = $('#qoReq', ROOT);
+  if (!ta) return;
+  let v = ta.value;
+  const at = v.indexOf(`${label}:`);
+  let pos;
+  if (at >= 0) {
+    const end = v.indexOf('\n', at);
+    pos = end < 0 ? v.length : end;
+  } else {
+    const base = v.replace(/\s+$/, '');
+    const next = `${base ? `${base}\n` : ''}${label}: `;
+    if (next.length > REQ_MAX) { toast(`요청 사항은 ${REQ_MAX.toLocaleString('ko-KR')}자까지 적을 수 있어요.`, { error: true }); return; }
+    v = next;
+    ta.value = v;
+    pos = v.length;
+    S.request = v;
+    save();
+  }
+  ta.focus();
+  try { ta.setSelectionRange(pos, pos); } catch { /* 무시 */ }
+  reqMeta();
 }
 
 function s4Html() {
   const terms = `<p class="consent-note">의뢰하면 <a href="${url('/terms/')}" target="_blank">이용약관</a>, <a href="${url('/privacy/')}" target="_blank">개인정보 처리방침</a>, <a href="${url('/refund/')}" target="_blank">환불 규정</a>에 동의한 것으로 봐요. 나만을 위한 맞춤 제작이라 결제가 확인되면 바로 작업이 시작되고, 완성본 발송 전 취소는 결제 금액의 20%를 환불하며 발송 후에는 환불되지 않아요.</p>`;
   if (isDirect()) return terms;
-  return `<h2 class="qo-h"><span class="qo-n">3</span>결과물은 어디로 보내 드릴까요?</h2>
+  return `<h2 class="qo-h"><span class="qo-n">4</span>결과물은 어디로 보내 드릴까요?</h2>
 <div class="qo-contact">
 <div class="field"><label class="label" for="qoName">이름<span class="req">*</span></label><input class="input" id="qoName" data-k="contact.name" maxlength="40" autocomplete="name" value="${esc(S.contact.name)}" placeholder="홍길동"></div>
 <div class="field"><label class="label" for="qoPhone">휴대전화<span class="req">*</span></label><input class="input" id="qoPhone" data-k="contact.phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc(S.contact.phone)}" placeholder="010-0000-0000"></div>
@@ -320,6 +379,8 @@ function refreshFlow(force = false) {
   $('#qoMore', ROOT).innerHTML = moreHtml();
   if (open && $('.qo-more', ROOT)) $('.qo-more', ROOT).open = true;
   $('#qoS4', ROOT).innerHTML = s4Html();
+  const hint = $('#qoReqHint', ROOT);
+  if (hint) hint.textContent = reqHint();
   ROOT.classList.toggle('is-direct', d);
 }
 
@@ -337,6 +398,7 @@ function renderTask() {
   taskTabs(ROOT);
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
+  $('#qoReqSec', ROOT).innerHTML = reqHtml();
   refreshFlow(true);
   const editLike = !writeLike();
   ROOT.classList.toggle('is-edit', editLike);
@@ -434,7 +496,20 @@ function buildInput() {
   };
 }
 
+// 결제 화면 주소: 요청 사항이 길어 주소 한도(SHOP_URL_MAX)를 넘으면 전문을 서버에 6시간 맡겨 두고
+// 주소에는 열쇠(requestKey)와 앞부분만 담는다. 맡기지 못하면 앞부분만 보낸다(requestCut 표시로 운영자가 알 수 있게).
+async function payHref(link, payload) {
+  const first = fitShopUrl(link, payload);
+  if (!first.cut) return first.href;
+  try {
+    const r = await api('stashRequest', { text: payload.input.common.request }, { retries: 0, timeoutMs: 10000 });
+    if (r && r.key) return fitShopUrl(link, { ...payload, input: { ...payload.input, common: { ...payload.input.common, requestKey: r.key } } }).href;
+  } catch { /* 앞부분만 보낸다 */ }
+  return first.href;
+}
+
 // 바로 결제: 진행 순서를 보여 주며 결제 화면을 연다(연락처는 결제 화면에서 받는다)
+// href는 주소 또는 주소를 돌려주는 Promise(긴 요청 사항을 서버에 맡기는 동안 이 창을 띄워 둔다)
 function goPay(href, q) {
   const code = q.lines[0] ? q.lines[0].code : '';
   const list = listPriceFor(code, q.total);
@@ -442,6 +517,7 @@ function goPay(href, q) {
   host.className = 'modal-back';
   host.innerHTML = `<div class="modal go-modal" role="dialog" aria-modal="true" aria-label="논문 의뢰 접수">
 <div class="go-hd"><p class="go-kick">논문 의뢰 접수</p><h2>${esc(orderLabel())}</h2><p class="go-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, q.total, { short: true })}</em>` : ''}<b class="num">${won(q.total)}</b></p></div>
+${S.request.trim() ? `<p class="go-req">${ICON.check}<span>적어 주신 요청 사항 ${S.request.trim().length.toLocaleString('ko-KR')}자도 주문서와 함께 전달돼요</span></p>` : ''}
 <ol class="go-steps">
 <li><b>주제 분석과 연구 설계</b><span>결제가 확인되면 바로 시작해요</span></li>
 <li><b>실존 문헌 검증과 AI 집필</b><span>장별 본문을 쓰고 인용을 하나하나 연결해요</span></li>
@@ -451,7 +527,8 @@ function goPay(href, q) {
 <p class="go-foot" role="status"><span class="spin" aria-hidden="true"></span><span>결제 화면을 여는 중이에요</span></p>
 </div>`;
   document.body.appendChild(host);
-  setTimeout(() => { location.href = href; }, 1000);
+  const t0 = Date.now();
+  Promise.resolve(href).then((h) => { setTimeout(() => { location.href = h; }, Math.max(0, 1000 - (Date.now() - t0))); });
   // 결제 화면에서 뒤로 오면 창을 닫는다
   window.addEventListener('pageshow', () => host.remove(), { once: true });
 }
@@ -478,12 +555,12 @@ function submit() {
   const link = directLink();
   if (link) {
     const code = q.lines[0] ? q.lines[0].code : '';
-    const href = shopUrl(link, {
+    const payload = {
       kind: 'new', service: 'paper', input: buildInput(), code, price: q.total, list: listPriceFor(code, q.total),
       label: orderLabel(), topic: S.topic.trim().slice(0, 120),
-    });
+    };
     store.set(KEY, { ...S, sentAt: Date.now() });
-    goPay(href, q);
+    goPay(payHref(link, payload), q);
     return;
   }
   const slots = activeSlots();
@@ -584,6 +661,7 @@ function bind() {
     t.classList.remove('is-invalid');
     save();
     if (k === 'topic') { onTopic(); refreshPreview(); }
+    if (k === 'request') reqMeta();
     if (k === 'major') refreshPreview();
     if (k === 'feedbackText') { const h = $('#qoFbCount', ROOT); if (h) h.textContent = fbCountText(); refreshPrice(); }
     if (k === 'epages') refreshPrice();
@@ -607,6 +685,8 @@ function bind() {
     }
   });
   form.addEventListener('click', async (e) => {
+    const chip = e.target.closest('[data-req]');
+    if (chip) { e.preventDefault(); addReqLine(chip.dataset.req); return; }
     const tab = e.target.closest('[data-task]');
     if (tab) {
       if (tab.dataset.task === S.task) return;

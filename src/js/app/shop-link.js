@@ -26,3 +26,23 @@ export function shopUrl(link, payload) {
   u.searchParams.set('nm', encodeOrder({ v: 1, ...payload }));
   return u.toString();
 }
+
+// skkc.co.kr(CloudFront)는 주소가 8,192바이트를 넘으면 414 오류를 낸다(2026-11-24 확인: 8,021자 통과, 8,321자 414).
+// 결제 화면 주소는 이 한도보다 넉넉히 짧게 만든다.
+export const SHOP_URL_MAX = 7600;
+
+// 요청 사항이 길어 주소에 다 담지 못하면 담을 수 있는 앞부분만 남긴다(requestCut 표시).
+// 전문은 서버에 6시간 맡겨 두고 requestKey로 찾아 쓴다(quick-order.js payHref).
+export function fitShopUrl(link, payload, max = SHOP_URL_MAX) {
+  const href = shopUrl(link, payload);
+  const common = (payload && payload.input && payload.input.common) || null;
+  const text = common ? String(common.request || '') : '';
+  if (!href || href.length <= max || !text) return { href, cut: false, kept: text.length };
+  const at = (n) => shopUrl(link, { ...payload, input: { ...payload.input, common: { ...common, request: text.slice(0, n).replace(/\s+$/, '') + '…', requestCut: true } } });
+  let lo = 0, hi = text.length - 1;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (at(mid).length <= max) lo = mid; else hi = mid - 1;
+  }
+  return { href: at(lo), cut: true, kept: lo };
+}

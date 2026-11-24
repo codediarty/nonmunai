@@ -248,6 +248,38 @@ function api_config() {
   return { catalog: catalog_(), settings: pub, serverTime: iso_(now_()), version: APP_VERSION };
 }
 
+// 긴 요청 사항: 바로 결제 때 결제 화면 주소(skkc.co.kr 8KB 한도)에 다 담지 못한 전문을 6시간 맡아 두었다가
+// 주문을 만들 때(createOrder의 input.common.requestKey) 붙인다. 주소에는 앞부분만 담겨 온다(requestCut). 2026-11-24
+var REQUEST_MAX = 3000;
+var STASH_TTL = 21600;
+
+function api_stashRequest(req) {
+  if (req.hp) throw appError_('bad_request', '요청을 처리할 수 없습니다.');
+  var text = str_(req.text, REQUEST_MAX);
+  if (!text) throw appError_('invalid', '내용을 입력해 주세요.');
+  rateLimit_('stash:all', 300, 3600);
+  var key = randomString_(24);
+  CacheService.getScriptCache().put('rq:' + key, text, STASH_TTL);
+  return { key: key };
+}
+
+function stashedRequest_(key) {
+  key = String(key || '');
+  if (!/^[A-Z0-9]{16,40}$/.test(key)) return '';
+  try { return clean_(CacheService.getScriptCache().get('rq:' + key) || '', REQUEST_MAX); } catch (e) { return ''; }
+}
+
+// 맡겨 둔 전문이 있으면 그것으로, 없고 앞부분만 왔으면 그렇다고 적어 둔다
+function fillLongRequest_(input, rawCommon) {
+  rawCommon = rawCommon || {};
+  var key = str_(rawCommon.requestKey, 40);
+  var full = key ? stashedRequest_(key) : '';
+  if (full) { input.common.request = full; return key; }
+  if (key) log_('stash_miss', key);
+  if (bool_(rawCommon.requestCut) && input.common.request) input.common.request = clean_(input.common.request, REQUEST_MAX) + '\n(요청 사항이 길어 앞부분만 전달됨)';
+  return '';
+}
+
 function api_createOrder(req) {
   if (req.hp) throw appError_('bad_request', '요청을 처리할 수 없습니다.');
   var service = str_(req.service, 20);
@@ -267,6 +299,7 @@ function api_createOrder(req) {
   rateLimit_('create:all', 120, 3600);
 
   var input = normalizeInput_(service, req.input);
+  var stashKey = fillLongRequest_(input, (req.input || {}).common);
   if (service === 'statistics' && input.statistics.hasData === false && input.statistics.noDataPath !== 'survey' && !bool_(consents.simulation)) {
     throw appError_('invalid', '학습용 시뮬레이션은 가상 데이터라는 안내에 동의해야 신청할 수 있습니다.');
   }
@@ -295,6 +328,7 @@ function api_createOrder(req) {
     addHistory_(o.orderNo, 'draft', '', 'system', '주문서 작성 시작');
   } finally { lock.releaseLock(); }
   if (Number((req.clientQuote || {}).total || 0) && Number(req.clientQuote.total) !== quote.total) log_('price_mismatch', o.orderNo + ' client=' + req.clientQuote.total + ' server=' + quote.total);
+  if (stashKey) { try { CacheService.getScriptCache().remove('rq:' + stashKey); } catch (e) { } }
   return { orderNo: o.orderNo, token: makeOrderToken_(o.orderNo, o.tokenKey), quote: quote };
 }
 
@@ -543,7 +577,7 @@ function api_addMessage(req) {
     o.status = 'revision';
     saveOrder_(o);
     addHistory_(o.orderNo, 'revision', over ? '수정 요청이 접수되었습니다. 포함된 수정 횟수를 넘어 추가 수정 비용이 안내될 수 있습니다.' : '수정 요청이 접수되었습니다. 요청 내용을 반영해 다시 전달드립니다.', 'customer');
-    notifyOperator_(o, '수정 요청', text.slice(0, 80) + (over ? ' (포함 횟수 초과)' : ''));
+    notifyOperator_(o, '수정 요청', text.slice(0, 80) + (over ? ' (포함 횟수 초과)' : ''), { text: text + (over ? '\n\n(포함된 수정 횟수를 넘은 요청입니다)' : '') });
   } else if (type === 'materials_done') {
     if (o.status === 'needs_materials') {
       var missing = missingMaterials_(o);
@@ -552,9 +586,9 @@ function api_addMessage(req) {
       saveOrder_(o);
       addHistory_(o.orderNo, o.status, '보완 자료가 제출되었습니다. 확인 후 이어서 진행합니다.', 'customer');
     }
-    notifyOperator_(o, '보완 자료 제출', text.slice(0, 80));
+    notifyOperator_(o, '보완 자료 제출', text.slice(0, 80), { text: text });
   } else {
-    notifyOperator_(o, '고객 문의', text.slice(0, 80));
+    notifyOperator_(o, '고객 문의', text.slice(0, 80), { text: text });
   }
   return { order: orderView_(findOrder_(o.orderNo)) };
 }

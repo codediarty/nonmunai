@@ -452,6 +452,67 @@ t('운영자 알림 메일: 받는 주소 여러 개, 고객 정보(이름·이�
   for (const s of must) assert.ok(dg.htmlBody.includes(s), `브리핑 본문에 '${s}' 없음`);
 });
 
+t('긴 요청 사항: 맡겨 둔 전문을 주문에 붙이고(한 번 쓰면 지움), 못 찾으면 앞부분만 왔다고 적음', () => {
+  const x = makeEnv();
+  const full = `${'가'.repeat(2990)}\n끝`;
+  x.fail('stashRequest', { text: '   ' }, 'invalid');
+  const k = x.ok('stashRequest', { text: full }).key;
+  assert.match(k, /^[A-Z0-9]{24}$/);
+  const input = (common) => ({ common: { fieldId: 'edu', title: '긴 요청 사항 확인 주제', keywords: [], method: 'auto', due: '', request: `${full.slice(0, 900)}…`, requestCut: true, ...common }, paper: { typeId: 'master', task: 'full' }, addons: {} });
+  const make = (common) => { const r = x.ok('createOrder', { service: 'paper', input: input(common), contact: CONTACT, pin: '2468', consents: CONSENTS }); return x.ok('getOrder', { orderNo: r.orderNo, token: r.token }).order; };
+  const o = make({ requestKey: k });
+  assert.equal(o.input.common.request, full);
+  assert.equal(o.input.common.requestKey, undefined);
+  const o2 = make({ requestKey: k });
+  assert.ok(o2.input.common.request.startsWith(full.slice(0, 900)));
+  assert.ok(o2.input.common.request.endsWith('(요청 사항이 길어 앞부분만 전달됨)'), o2.input.common.request.slice(-40));
+  const o3 = make({});
+  assert.ok(o3.input.common.request.endsWith('(요청 사항이 길어 앞부분만 전달됨)'));
+  const k4 = x.ok('stashRequest', { text: 'ㄱ'.repeat(3500) }).key;
+  assert.equal(make({ requestKey: k4, requestCut: false }).input.common.request.length, 3000);
+});
+
+t('운영자 알림 메일은 답장하면 고객에게 가고, 고객 메시지는 전문과 주문 정보를 함께 보냄', () => {
+  const x = makeEnv({ now: '2026-11-24T16:40:00+09:00' });
+  const r = paperOrder(x);
+  x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
+  x.ok('claimPayment', { orderNo: r.orderNo, token: r.token, method: 'skkc', payerName: CONTACT.name });
+  const paid = x.env.state.mails.find((m) => /결제 확인 요청/.test(m.subject));
+  assert.ok(paid, '결제 확인 요청 메일 없음');
+  assert.equal(paid.replyTo, CONTACT.email);
+  assert.ok(paid.htmlBody.includes(`주문자(${CONTACT.email})에게 바로 갑니다`));
+  assert.ok(!/AI 프롬프트/.test(paid.htmlBody), '답장에 따라갈 본문에 내부용 표현');
+  const cust = x.env.state.mails.find((m) => m.to.includes(CONTACT.email) && /작업 순서에 배정/.test(m.subject));
+  assert.ok(cust, '고객 안내 메일 없음');
+  assert.equal(cust.replyTo, 'contact@skkc.co.kr');
+  assert.ok(cust.htmlBody.includes('이 메일에 답장해 주세요'));
+  const long = `3장 연구 방법은 설문 대신 문헌연구로 바꿔 주세요.\n${'참고문헌은 최근 5년 국내 학술지 위주로 넣어 주시고, 표 번호는 장별로 매겨 주세요. '.repeat(4)}\n마지막 줄입니다.`;
+  x.ok('addMessage', { orderNo: r.orderNo, token: r.token, type: 'question', text: long });
+  const q = x.env.state.mails.find((m) => /고객 문의/.test(m.subject));
+  assert.ok(q, '고객 문의 메일 없음');
+  assert.equal(q.replyTo, CONTACT.email);
+  assert.ok(q.subject.includes(CONTACT.name), q.subject);
+  assert.ok(q.htmlBody.includes('마지막 줄입니다.'), '문의 전문이 실리지 않음');
+  for (const s of ['고객 정보', '의뢰 내용', '요청 사항', '주문·결제']) assert.ok(q.htmlBody.includes(s), `문의 메일에 '${s}' 없음`);
+});
+
+t('대기열에 쌓인 운영자 알림도 보낼 때 답장 주소(고객)를 지킴', () => {
+  const x = makeEnv();
+  const r = paperOrder(x);
+  x.env.state.mailQuota.used = 100;
+  x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
+  const ssId = x.env.findSpreadsheetByName('논문AI 운영 시트').getId();
+  const row = x.env.sheetValues(ssId, '메일대기').slice(1).find((v) => /신규 주문/.test(v[2]));
+  assert.ok(row && row[4] === 'queued', '운영자 알림이 대기열에 없음');
+  const before = x.env.state.mails.length;
+  x.env.clock.advance(25 * 3600 * 1000);
+  x.env.call('hourlyJob');
+  const sent = x.env.state.mails.slice(before).find((m) => /신규 주문/.test(m.subject));
+  assert.ok(sent, '대기열 운영자 알림이 발송되지 않음');
+  assert.equal(sent.replyTo, CONTACT.email);
+  assert.ok(!sent.htmlBody.includes('nm-reply'), '답장 주소 표시가 본문에 남음');
+});
+
 t('메일 할당량이 바닥나면 대기열에 쌓았다가 다음 날 보냄', () => {
   const x = makeEnv();
   const used = x.env.state.mails.length;

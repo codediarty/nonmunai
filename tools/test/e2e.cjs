@@ -2033,6 +2033,75 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       ok(!lk.error, `휴대전화 뒤 4자리로 조회가 안 됨: ${lk.error && lk.error.message}`);
     } finally { await c.close().catch(() => {}); }
   }, { direct: true }));
+  await check(41, '바로 결제: 요청 사항 칸은 바로 보이고, 3,000자 가까이 적어도 결제 화면 주소가 한도(8KB) 안이며 결제하면 전문이 주문에 담김', async () => withShop(async () => {
+    const SNIP = fs.readFileSync(path.join(__dirname, '../imweb/skkc-connect.html'), 'utf8');
+    const shopPage = (body, extra = '') => `<!doctype html><html><head><meta charset="utf-8"></head><body><header>skkc</header><main>${body}</main>${extra}${SNIP}</body></html>`;
+    const VIEW = shopPage('<h1>상품 상세</h1>', '<script>window.SITE_SHOP_DETAIL = { confirmOrderWithCartItems: function () { setTimeout(function () { location.href = "/shop_payment/?order_code=o1&order_no=1"; }, 150); } };</script>');
+    const PAY = shopPage('<div id="host"></div><h2>주문 상품 정보</h2>', `<script>var h = document.getElementById('host').attachShadow({ mode: 'open' });
+h.innerHTML = '<input name="ordererName"><input name="ordererCall"><input name="ordererEmail"><button type="button" id="pay">결제하기</button>';
+h.getElementById('pay').addEventListener('click', function () { setTimeout(function () { location.href = '/shop_payment_complete/?order_code=o1'; }, 1500); });</script>`);
+    const DONE = shopPage('<h1>주문 완료</h1>');
+    const LONG = `${Array.from({ length: 120 }, (_, i) => `${i + 1}. 학교 기준은 공백 포함 16,000자 이상이고 표와 그림은 APA 7판으로 맞춰 주세요.`).join('\n').slice(0, 2980)}\n마지막 요청입니다.`;
+    const c = await newCtx();
+    try {
+      const views = [];
+      await c.route('https://skkc.co.kr/**', (r) => {
+        const u = new URL(r.request().url());
+        if (u.pathname.startsWith('/shop_view')) views.push(r.request().url());
+        const html = u.pathname.startsWith('/shop_view') ? VIEW : u.pathname.startsWith('/shop_payment_complete') ? DONE : u.pathname.startsWith('/shop_payment') ? PAY : '<html><body>other</body></html>';
+        r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
+      });
+      await c.route('https://script.google.com/**', async (r) => {
+        const res = await fetch(`${BASE}/api`, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: r.request().postData() || '{}' });
+        r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: await res.text() });
+      });
+      const p = await c.newPage();
+      await p.goto(`${BASE}/paper/new/`);
+      await p.evaluate(() => { try { localStorage.removeItem('nm:draft:quick'); } catch (e) { /* 무시 */ } });
+      await p.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
+      await p.waitForSelector('#qoTopic');
+      await p.waitForFunction(() => !document.querySelector('#qoName'), null, { timeout: 10000 });
+      ok(await p.isVisible('#qoReq'), '요청 사항 칸이 접혀 있음');
+      await p.click('.qo-req-chip[data-req="학교·학과"]');
+      eq(await p.inputValue('#qoReq'), '학교·학과: ', '항목 버튼으로 넣은 줄');
+      ok(await p.$('.qo-req-chip.is-on[data-req="학교·학과"]'), '넣은 항목 버튼 표시');
+      await p.fill('#qoReq', LONG);
+      has(await text(p, '#qoReqN'), `${LONG.length.toLocaleString('ko-KR')} / 3,000자`, '글자 수');
+      await p.click('#qoSubmit');
+      await p.waitForSelector('.go-modal');
+      has(await text(p, '.go-modal'), `요청 사항 ${LONG.length.toLocaleString('ko-KR')}자도`, '안내 창의 요청 사항');
+      await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+      ok(views[0] && views[0].length <= 7600, `결제 화면 주소 길이: ${views[0] && views[0].length}`);
+      const nm = decodeNm(views[0]);
+      ok(nm.input.common.requestCut === true && /^[A-Z0-9]{24}$/.test(nm.input.common.requestKey || ''), `주소에 맡긴 열쇠·잘림 표시가 없음: ${JSON.stringify({ cut: nm.input.common.requestCut, key: nm.input.common.requestKey })}`);
+      await p.waitForSelector('#nmBanner', { timeout: 8000 });
+      await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', '정요청'); set('ordererCall', '010-4321-8765'); set('ordererEmail', 'e2e-longreq@example.com'); });
+      await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
+      await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });
+      await p.waitForFunction(() => document.getElementById('nmBanner') && /접수 완료/.test(document.getElementById('nmBanner').textContent), null, { timeout: 20000 });
+      const saved = JSON.parse(await p.evaluate(() => sessionStorage.getItem('nmOrder')));
+      const o = (await api('getOrder', { orderNo: saved.orderNo, token: saved.token })).order;
+      eq(o.input.common.request, LONG, '주문에 담긴 요청 사항 전문');
+      eq(o.payStatus, 'claimed', '결제 확인 요청');
+      // 서버에 맡기지 못해도 결제 화면은 열리고, 담을 수 있는 앞부분과 잘림 표시만 간다
+      const p2 = await c.newPage();
+      await p2.route(`${BASE}/api`, async (r) => {
+        const body = JSON.parse(r.request().postData() || '{}');
+        if (body.action === 'stashRequest') return r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: false, error: 'server', message: 'x' }) });
+        return r.continue();
+      });
+      await p2.goto(`${BASE}/paper/new/?${new URLSearchParams({ prompt })}`);
+      await p2.waitForSelector('#qoReq');
+      await p2.waitForFunction(() => !document.querySelector('#qoName'), null, { timeout: 10000 });
+      await p2.fill('#qoReq', LONG);
+      await p2.click('#qoSubmit');
+      await p2.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+      const v2 = views[views.length - 1];
+      ok(v2 && v2 !== views[0] && v2.length <= 7600, `맡기지 못했을 때 주소 길이: ${v2 && v2.length}`);
+      const c2 = decodeNm(v2).input.common;
+      ok(c2.requestCut === true && !c2.requestKey && LONG.startsWith(c2.request.slice(0, 200)), '맡기지 못했을 때 앞부분·잘림 표시');
+    } finally { await c.close().catch(() => {}); }
+  }, { direct: true }));
   await check(41, '처음 화면은 논문 완성 한 길: 작업 탭·양식·연구 방법 고르기 없이 주제와 종류만, 전공은 선택이고 요청 사항은 주문에 남음', async () => withShop(() => withCtx({}, async (p) => {
     await catchShop(p);
     await p.goto(`${BASE}/paper/new/`);
@@ -2044,7 +2113,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
     ok(!(await p.$('input[name="qoFmt"], input[name="qoMethod"]')), '양식·연구 방법 고르기 칸이 보임');
     eq(await p.$eval('input[name="qoPkg"]:checked', (e) => e.value), 'bachelor30', '적은 문장에서 읽은 논문 종류');
     eq(await p.inputValue('#qoMajor'), '', '전공 칸(비어 있어도 됨)');
-    await p.click('.qo-more > summary');
+    ok(await p.isVisible('#qoReq'), '요청 사항 칸이 접혀 있음');
     await p.fill('#qoReq', '설문 연구로 해 주세요. 학교 양식은 결제 후에 보낼게요.');
     await p.fill('#qoName', '박학사');
     await p.fill('#qoPhone', '010-1111-2222');

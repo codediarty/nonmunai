@@ -6,6 +6,7 @@ var ROUTES = {
   ping: api_ping,
   config: api_config,
   createOrder: api_createOrder,
+  stashRequest: api_stashRequest,
   uploadFile: api_uploadFile,
   deleteFile: api_deleteFile,
   submitOrder: api_submitOrder,

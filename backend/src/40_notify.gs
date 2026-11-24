@@ -24,22 +24,27 @@ function mailLayout_(title, body, opts) {
     (opts.footnote ? '<br>' + escHtml_(opts.footnote) : '') + '</td></tr></table></td></tr></table></body></html>';
 }
 
-function sendMail_(to, subject, html, isOperator) {
+// replyTo: 이 메일에 답장하면 갈 주소(운영자 알림은 고객 이메일). 없으면 설정의 replyTo.
+// 대기열에 쌓을 때는 본문 앞에 <!--nm-reply:주소-->를 붙여 두었다가 보낼 때 떼어 쓴다(시트 열은 그대로)
+var REPLY_MARK = /^<!--nm-reply:([^>]*?)-->/;
+function sendMail_(to, subject, html, isOperator, replyTo) {
   if (!to) return false;
   var recipients = String(to).split(/[,;\s]+/).filter(isEmail_);
   if (!recipients.length) return false;
+  var own = replyTo && isEmail_(String(replyTo)) ? String(replyTo) : '';
+  var queued = (own ? '<!--nm-reply:' + own + '-->' : '') + html;
   var quota = safeQuota_();
   var reserve = isOperator ? 1 : 3;
   if (quota !== null && quota < recipients.length + reserve) {
-    sheet_('mailq').appendRow([now_(), recipients.join(','), subject, html, 'queued', 0, '']);
+    sheet_('mailq').appendRow([now_(), recipients.join(','), subject, queued, 'queued', 0, '']);
     log_('mail_queued', subject + ' → ' + recipients.join(','));
     return false;
   }
   try {
-    MailApp.sendEmail({ to: recipients.join(','), subject: subject, htmlBody: html, body: htmlToText_(html), name: setting_('siteName') || '논문AI', replyTo: setting_('replyTo') || undefined });
+    MailApp.sendEmail({ to: recipients.join(','), subject: subject, htmlBody: html, body: htmlToText_(html), name: setting_('siteName') || '논문AI', replyTo: own || setting_('replyTo') || undefined });
     return true;
   } catch (e) {
-    sheet_('mailq').appendRow([now_(), recipients.join(','), subject, html, 'retry', 1, '']);
+    sheet_('mailq').appendRow([now_(), recipients.join(','), subject, queued, 'retry', 1, '']);
     log_('mail_error', subject + ' ' + e.message);
     return false;
   }
@@ -57,8 +62,12 @@ function processMailQueue_() {
     if (st !== 'queued' && st !== 'retry') continue;
     var quota = safeQuota_();
     if (quota !== null && quota < 4) break;
+    var html = String(rows[i][3]);
+    var mark = html.match(REPLY_MARK);
+    var own = mark && isEmail_(mark[1]) ? mark[1] : '';
+    if (mark) html = html.slice(mark[0].length);
     try {
-      MailApp.sendEmail({ to: String(rows[i][1]), subject: String(rows[i][2]), htmlBody: String(rows[i][3]), body: htmlToText_(rows[i][3]), name: setting_('siteName') || '논문AI', replyTo: setting_('replyTo') || undefined });
+      MailApp.sendEmail({ to: String(rows[i][1]), subject: String(rows[i][2]), htmlBody: html, body: htmlToText_(html), name: setting_('siteName') || '논문AI', replyTo: own || setting_('replyTo') || undefined });
       sh.getRange(i + 2, 5, 1, 3).setValues([['sent', Number(rows[i][5] || 0) + 1, now_()]]);
     } catch (e) {
       var tries = Number(rows[i][5] || 0) + 1;
@@ -74,6 +83,9 @@ function orderCard_(o, extraRows) {
   (extraRows || []).forEach(function (r) { rows.push(r); });
   return rows;
 }
+
+// 고객 안내 메일: 더 알려 줄 내용은 답장으로(답장은 설정의 replyTo, 운영 메일로 간다)
+var REPLY_INVITE = '<p style="color:#4A5468;font-size:14px">학교 양식, 교수님 의견처럼 더 알려 주실 내용이 생기면 이 메일에 답장해 주세요. 담당자에게 바로 전달됩니다.</p>';
 
 function mailCustomer_(o, kind, extra) {
   extra = extra || {};
@@ -92,7 +104,7 @@ function mailCustomer_(o, kind, extra) {
       } else {
         subject = '[논문AI] 주문서가 접수되었습니다 (' + o.orderNo + ')';
         title = '주문서가 접수되었습니다';
-        body = '<p>' + name + '님, 논문AI에 맡겨 주셔서 감사합니다.</p><p>결제가 확인되면 작업 순서에 배정되고, 예상 전달일을 바로 알려 드립니다. 주문 페이지에서 결제와 진행 상황을 확인하실 수 있습니다.</p>';
+        body = '<p>' + name + '님, 논문AI에 맡겨 주셔서 감사합니다.</p><p>결제가 확인되면 작업 순서에 배정되고, 예상 전달일을 바로 알려 드립니다. 주문 페이지에서 결제와 진행 상황을 확인하실 수 있습니다.</p>' + REPLY_INVITE;
         card = orderCard_(o, [['결제 금액', '<span style="color:#2346E8">' + won(q.total || o.amount) + '</span>'], ['상태', '결제 대기']]);
         button = { label: '결제하고 작업 시작하기', url: link };
       }
@@ -109,11 +121,11 @@ function mailCustomer_(o, kind, extra) {
         // 고객이 '결제를 마쳤어요'만 누른 단계: 담당자 확인 전이므로 결제 확인이라고 쓰지 않는다
         subject = '[논문AI] 작업 순서에 배정되었습니다 (' + o.orderNo + ')';
         title = '작업 순서에 배정되었습니다';
-        body = '<p>' + name + '님, 결제 완료 알림을 받아 작업 순서에 배정했습니다. 결제 내역은 담당자가 확인하며, 확인되면 메일로 다시 알려 드립니다.</p><p>진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+        body = '<p>' + name + '님, 결제 완료 알림을 받아 작업 순서에 배정했습니다. 결제 내역은 담당자가 확인하며, 확인되면 메일로 다시 알려 드립니다.</p><p>진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>' + REPLY_INVITE;
       } else {
         subject = '[논문AI] 결제가 확인되어 작업이 시작되었습니다 (' + o.orderNo + ')';
         title = '작업이 시작되었습니다';
-        body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>';
+        body = '<p>' + name + '님, 결제가 확인되어 작업 순서에 배정되었습니다. 진행 단계가 바뀔 때마다 주문 페이지에서 바로 확인하실 수 있습니다.</p>' + REPLY_INVITE;
       }
       card = orderCard_(o, [['진행 단계', escHtml_(STATUS[o.status])], ['예상 전달일', '<span style="color:#2346E8">' + (o.eta ? korDate_(o.eta) : '안내 예정') + '</span>']]);
       break;
@@ -236,7 +248,7 @@ function orderDetailHtml_(o) {
     put(job, '데이터 정보', t.dataInfo, 1000);
   }
   var req = [];
-  put(req, '요청 사항', c.request || '(따로 적은 요청 사항 없음)', 3000);
+  put(req, '요청 사항', c.request || '(따로 적은 요청 사항 없음)', 3200);
   put(req, '희망 마감일', c.due);
   if (p.task === 'edit') put(req, '첨삭 범위', p.editScope, 300);
   if (p.task === 'feedback') put(req, '교수님 피드백', p.feedbackText, 3000);
@@ -255,17 +267,28 @@ function orderDetailHtml_(o) {
   return mailSection_('고객 정보', who) + mailSection_('의뢰 내용', job) + mailSection_('요청 사항', req) + mailSection_('주문·결제', ord);
 }
 
-function notifyOperator_(o, event, detail) {
+// 고객이 주문 페이지에서 보낸 메시지: 전문을 맨 위에 싣고 주문 정보 전체를 함께 보낸다(2026-11-24)
+var MESSAGE_EVENTS = { '고객 문의': 1, '보완 자료 제출': 1, '수정 요청': 1 };
+
+// 운영자 메일의 답장 주소는 고객 이메일: 받은 메일에 바로 답장하면(결과물 첨부 등) 고객에게 간다(2026-11-24)
+function notifyOperator_(o, event, detail, opts) {
+  opts = opts || {};
   var amount = o.amount ? won(o.amount) : '';
-  var full = !!REQUEST_EVENTS[event];
+  var msg = !!MESSAGE_EVENTS[event];
+  var full = !!REQUEST_EVENTS[event] || msg;
+  var reply = o.email && isEmail_(String(o.email)) && !o.deletedState ? String(o.email) : '';
   var subject = full
-    ? '[논문AI] ' + event + ' · ' + (o.name || '고객') + ' · ' + String(o.productName || o.summary || '').slice(0, 40) + (amount ? ' · ' + amount : '')
+    ? '[논문AI] ' + event + ' · ' + (o.name || '고객') + ' · ' + String(o.productName || o.summary || '').slice(0, 40) + (amount && !msg ? ' · ' + amount : '')
     : '[논문AI] ' + event + (amount ? ' ' + amount : '') + ' · ' + (o.summary || o.productName || '').slice(0, 40);
-  var html = mailLayout_(event, '<p>' + escHtml_(detail || '') + '</p>' + (full ? orderDetailHtml_(o) + '<p style="margin-top:18px;font-size:13px;color:#6B7487">연구 설계·목차·장별 AI 프롬프트가 담긴 작업지시문은 관리자 화면에서 볼 수 있습니다.</p>' : ''), {
+  var said = msg && opts.text
+    ? '<p style="margin:0 0 6px;font-size:13px;font-weight:800;color:#2346E8">고객이 보낸 내용</p><div style="padding:14px 16px;border-left:3px solid #2346E8;border-radius:8px;background:#F4F6FE;color:#0F1B3D;font-size:15px;line-height:1.75">' + escHtml_(String(opts.text)).replace(/\n/g, '<br>') + '</div>'
+    : '<p>' + escHtml_(detail || '') + '</p>';
+  var replyNote = reply ? '<p style="margin:0 0 14px;padding:10px 14px;border-radius:10px;background:#F2F4F8;font-size:13px;line-height:1.6;color:#4A5468">이 메일에 답장하면 주문자(' + escHtml_(reply) + ')에게 바로 갑니다. 결과물 파일을 첨부해 답장으로 보내도 됩니다.</p>' : '';
+  var html = mailLayout_(event, replyNote + said + (full ? orderDetailHtml_(o) + '<p style="margin-top:18px;font-size:13px;color:#6B7487">연구 설계와 목차 초안이 담긴 작업지시문은 관리자 화면에서 볼 수 있습니다.</p>' : ''), {
     card: full ? null : [['주문번호', escHtml_(o.orderNo)], ['고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + (o.email ? ' · ' + escHtml_(o.email) : '')], ['상품', escHtml_(o.productName)], ['금액', amount || '견적 전'], ['상태', escHtml_(STATUS[o.status] || '')]],
     button: { label: '관리자 화면에서 보기', url: adminLink_(o) },
   });
-  sendMail_(operatorEmails_().join(','), subject, html, true);
+  sendMail_(operatorEmails_().join(','), subject, html, true, reply);
   pushNtfy_('논문AI ' + event, (amount ? amount + ' · ' : '') + (o.summary || o.productName) + ' · ' + o.orderNo, adminLink_(o));
 }
 
