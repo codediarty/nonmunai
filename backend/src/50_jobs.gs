@@ -133,9 +133,14 @@ function dailyDigest() {
   var c = d.counts;
   var rows = d.queue.slice(0, 25).map(function (o) {
     var late = o.eta && o.eta < d.today;
-    return '<tr><td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap">' + (o.priority ? '<b style="color:#E07B12">우선</b> ' : '') + escHtml_(o.orderNo) + '</td>' +
-      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px">' + escHtml_(o.summary || o.productName) + '</td>' +
-      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap;color:' + (late ? '#D92D20' : '#0F1B3D') + '">' + escHtml_(o.eta || '-') + '</td></tr>';
+    // 고객이 적은 주제와 요청 사항도 함께 보여 준다(2026-11-24)
+    var c = {};
+    try { var full = findOrder_(o.orderNo); c = (((full ? orderData_(full) : {}) || {}).input || {}).common || {}; } catch (e) { c = {}; }
+    var more = (c.title ? '<div style="margin-top:4px;color:#3A4560;font-size:12.5px">주제: ' + escHtml_(String(c.title).slice(0, 160)) + '</div>' : '') +
+      (c.request ? '<div style="margin-top:2px;color:#6B7487;font-size:12.5px">요청: ' + escHtml_(String(c.request).slice(0, 300)).replace(/\n/g, '<br>') + '</div>' : '');
+    return '<tr><td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap;vertical-align:top">' + (o.priority ? '<b style="color:#E07B12">우선</b> ' : '') + escHtml_(o.orderNo) + '</td>' +
+      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px">' + escHtml_(o.summary || o.productName) + more + '</td>' +
+      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap;vertical-align:top;color:' + (late ? '#D92D20' : '#0F1B3D') + '">' + escHtml_(o.eta || '-') + '</td></tr>';
   }).join('');
   var lines = [
     ['결제 확인', c.payment], ['견적 작성', c.quote], ['자료 보완 대기', c.materials], ['작업 대기·진행', c.working], ['검토', c.review], ['수정 요청', c.revision], ['오늘 마감', c.dueToday], ['지연', c.overdue],

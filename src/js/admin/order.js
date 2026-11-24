@@ -96,7 +96,10 @@ ${this.statusCard()}
     }
     if (this.tab === 'design') {
       const d = o.service === 'paper' ? designOf(o) : null;
-      return d ? `<div class="ad-card"><p class="hint">주문할 때 고객에게 보여 준 자동 설계안입니다. 고객 원고·목차와 다르면 작업지시문의 고객 자료를 우선합니다.</p><div class="sheet">${designReportHtml(d)}</div></div>` : `<div class="ad-card">${factsTable(orderFacts(o))}<p class="muted small" style="margin-top:12px">연구 설계 리포트는 논문 주문에만 있습니다.</p></div>`;
+      const hint = d && d.draft
+        ? '고객이 적은 관심 주제로 만든 자동 설계 초안입니다(고객에게 보여 준 설계가 아닙니다). 고객 데이터가 없는 실증 주제라면 작업지시문의 A안(문헌연구)을 따릅니다.'
+        : '주문할 때 고객에게 보여 준 자동 설계안입니다. 고객 원고·목차와 다르면 작업지시문의 고객 자료를 우선합니다.';
+      return d ? `<div class="ad-card"><p class="hint">${hint}</p><div class="sheet">${designReportHtml(d)}</div></div>` : `<div class="ad-card">${factsTable(orderFacts(o))}<p class="muted small" style="margin-top:12px">연구 설계 리포트는 논문 주문에만 있습니다.</p></div>`;
     }
     if (this.tab === 'files') {
       const cf = o.files.customer;

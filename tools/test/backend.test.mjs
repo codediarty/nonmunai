@@ -427,6 +427,28 @@ t('예약 작업: 일일 브리핑 메일과 매시간 작업이 오류 없이 �
   assert.ok(x.env.state.mails.slice(before).some((m) => /오늘의 작업/.test(m.subject)), '브리핑 메일 없음');
 });
 
+t('운영자 알림 메일: 받는 주소 여러 개, 고객이 적은 관심 주제·전공·요청 사항이 본문에, 브리핑에도 주제·요청', () => {
+  const x = makeEnv({ now: '2026-11-24T14:00:00+09:00' });
+  const token = x.login();
+  x.ok('adminSaveSettings', { adminToken: token, settings: { operatorEmails: 'contact@skkc.co.kr, owner@example.com' } });
+  const input = { service: 'paper', common: { fieldId: 'media', fieldText: '미디어커뮤니케이션', school: '', dept: '', purpose: '', topicKnown: 'free', title: '숏폼 콘텐츠의 협찬 고지 방식이 브랜드 진정성 인식에 미치는 영향', keywords: ['숏폼 콘텐츠의 협찬 고지 방식', '브랜드 진정성 인식'], due: '', outputFormat: 'docx', request: '졸업 논문은 공백 포함 16,000자 이상\n학과 양식은 따로 보낼게요', method: 'auto' }, paper: { typeId: 'bachelor', task: 'full', pages: 30, hasToc: 'no', tocText: '', hasFormat: 'no', formatName: '', feedbackText: '', editScope: '', needsData: false }, addons: {} };
+  const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: input.paper, addons: input.addons });
+  const r = x.ok('createOrder', { service: 'paper', input, contact: CONTACT, pin: '5678', consents: CONSENTS, design: null, clientQuote: { total: q.total } });
+  x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
+  x.ok('claimPayment', { orderNo: r.orderNo, token: r.token, method: 'skkc', payerName: CONTACT.name });
+  for (const ev of ['신규 주문', '결제 확인 요청']) {
+    const m = x.env.state.mails.find((k) => new RegExp(ev).test(k.subject) && k.to.includes('owner@example.com'));
+    assert.ok(m, `${ev} 메일이 두 번째 주소로 가지 않음`);
+    assert.ok(m.to.includes('contact@skkc.co.kr'), `${ev} 메일이 첫 번째 주소로 가지 않음`);
+    for (const s of ['관심 주제', '숏폼 콘텐츠의 협찬 고지 방식이 브랜드 진정성 인식에 미치는 영향', '미디어커뮤니케이션', '요청 사항', '졸업 논문은 공백 포함 16,000자 이상<br>학과 양식은 따로 보낼게요', '워드(docx)', CONTACT.email]) assert.ok(m.htmlBody.includes(s), `${ev} 메일 본문에 '${s}' 없음`);
+  }
+  const before = x.env.state.mails.length;
+  x.env.call('dailyDigest');
+  const dg = x.env.state.mails.slice(before).find((m) => /오늘의 작업/.test(m.subject));
+  assert.ok(dg, '브리핑 메일 없음');
+  assert.ok(dg.htmlBody.includes('주제: 숏폼 콘텐츠의 협찬 고지 방식') && dg.htmlBody.includes('요청: 졸업 논문은 공백 포함 16,000자 이상'), '브리핑에 주제·요청 없음');
+});
+
 t('메일 할당량이 바닥나면 대기열에 쌓았다가 다음 날 보냄', () => {
   const x = makeEnv();
   const used = x.env.state.mails.length;

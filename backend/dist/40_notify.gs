@@ -177,11 +177,56 @@ function mailAccessLinks_(email, orders) {
   sendMail_(email, '[논문AI] 주문 조회 링크', mailLayout_('주문 조회 링크', '<p>요청하신 주문 조회 링크입니다. 링크를 누르면 바로 주문 페이지가 열립니다.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + list + '</table>', { footnote: '본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.' }), false);
 }
 
+// 고객이 주문서에 적은 내용(주제·전공·요청 사항 등)을 운영자 메일에 그대로 싣는다(2026-11-24)
+var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1 };
+var OUT_FMT_LABEL = { docx: '워드(docx)', hwp: '한글(hwp)', pdf: 'PDF' };
+var METHOD_LABEL_KO = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' };
+var TARGET_LABEL_KO = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
+function requestRows_(o) {
+  var data = {};
+  try { data = orderData_(o) || {}; } catch (e) { return []; }
+  var i = data.input || {};
+  var c = i.common || {};
+  var p = i.paper || {};
+  var rows = [];
+  var add = function (k, v, max) {
+    var s = v === undefined || v === null ? '' : String(v).trim();
+    if (!s) return;
+    if (max && s.length > max) s = s.slice(0, max) + '…';
+    rows.push([k, '<span style="font-weight:500">' + escHtml_(s).replace(/\n/g, '<br>') + '</span>']);
+  };
+  add(c.topicKnown === 'free' ? '관심 주제' : '연구 주제', c.title, 300);
+  add('전공', c.fieldText, 80);
+  add('키워드', (c.keywords || []).join(', '), 200);
+  add('학교·학과', [c.school, c.dept].filter(function (x) { return !!x; }).join(' '), 120);
+  if (METHOD_LABEL_KO[c.method]) add('연구 방법', METHOD_LABEL_KO[c.method]);
+  add('요청 사항', c.request, 2000);
+  add('희망 마감일', c.due);
+  add('받을 파일', OUT_FMT_LABEL[c.outputFormat] || c.outputFormat);
+  if (p.task === 'edit') add('첨삭 범위', p.editScope, 300);
+  if (p.task === 'feedback') add('교수님 피드백', p.feedbackText, 2000);
+  var s = i.survey || {};
+  if (o.service === 'survey') {
+    add('응답 대상', s.target === 'other' ? s.targetOther : (TARGET_LABEL_KO[s.target] || s.target));
+    add('목표 응답 수', s.targetN);
+    add('피드백', s.feedbackText, 2000);
+  }
+  var t = i.statistics || {};
+  if (o.service === 'statistics') {
+    add('변수 설명', t.variables, 1000);
+    add('데이터 정보', t.dataInfo, 1000);
+    add('교수님 의견', t.feedbackText, 2000);
+  }
+  return rows;
+}
+
 function notifyOperator_(o, event, detail) {
   var amount = o.amount ? won(o.amount) : '';
   var subject = '[논문AI] ' + event + (amount ? ' ' + amount : '') + ' · ' + (o.summary || o.productName || '').slice(0, 40);
+  var card = [['주문번호', escHtml_(o.orderNo)], ['고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + (o.email ? ' · ' + escHtml_(o.email) : '')], ['상품', escHtml_(o.productName)], ['금액', amount || '견적 전'], ['상태', escHtml_(STATUS[o.status] || '')]];
+  if (REQUEST_EVENTS[event]) card = card.concat(requestRows_(o));
   var html = mailLayout_(event, '<p>' + escHtml_(detail || '') + '</p>', {
-    card: [['주문번호', escHtml_(o.orderNo)], ['고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone)], ['상품', escHtml_(o.productName)], ['금액', amount || '견적 전'], ['상태', escHtml_(STATUS[o.status] || '')]],
+    card: card,
     button: { label: '관리자 화면에서 보기', url: adminLink_(o) },
   });
   sendMail_(operatorEmails_().join(','), subject, html, true);
