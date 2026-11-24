@@ -131,27 +131,26 @@ function dailyDigest() {
   invalidate_(); __settings = null;
   var d = api_adminDashboard({ adminToken: makeAdminToken_() });
   var c = d.counts;
-  var rows = d.queue.slice(0, 25).map(function (o) {
-    var late = o.eta && o.eta < d.today;
-    // 고객이 적은 주제와 요청 사항도 함께 보여 준다(2026-11-24)
-    var c = {};
-    try { var full = findOrder_(o.orderNo); c = (((full ? orderData_(full) : {}) || {}).input || {}).common || {}; } catch (e) { c = {}; }
-    var more = (c.title ? '<div style="margin-top:4px;color:#3A4560;font-size:12.5px">주제: ' + escHtml_(String(c.title).slice(0, 160)) + '</div>' : '') +
-      (c.request ? '<div style="margin-top:2px;color:#6B7487;font-size:12.5px">요청: ' + escHtml_(String(c.request).slice(0, 300)).replace(/\n/g, '<br>') + '</div>' : '');
-    return '<tr><td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap;vertical-align:top">' + (o.priority ? '<b style="color:#E07B12">우선</b> ' : '') + escHtml_(o.orderNo) + '</td>' +
-      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px">' + escHtml_(o.summary || o.productName) + more + '</td>' +
-      '<td style="padding:8px 6px;border-bottom:1px solid #EEF1F6;font-size:13px;white-space:nowrap;vertical-align:top;color:' + (late ? '#D92D20' : '#0F1B3D') + '">' + escHtml_(o.eta || '-') + '</td></tr>';
-  }).join('');
-  var lines = [
-    ['결제 확인', c.payment], ['견적 작성', c.quote], ['자료 보완 대기', c.materials], ['작업 대기·진행', c.working], ['검토', c.review], ['수정 요청', c.revision], ['오늘 마감', c.dueToday], ['지연', c.overdue],
-  ].map(function (r) { return '<td style="padding:10px;text-align:center;border:1px solid #EEF1F6"><div style="font-size:12px;color:#6B7487">' + r[0] + '</div><div style="font-size:20px;font-weight:800;color:' + (r[0] === '지연' && r[1] ? '#D92D20' : '#0F1B3D') + '">' + r[1] + '</div></td>'; });
   var todo = c.payment + c.quote + c.working + c.review + c.revision + d.unread.length;
   if (!todo && !c.materials) return;
-  var body = '<p>오늘 처리할 주문을 정리했습니다. 관리자 화면의 [오늘의 작업]에서 작업지시문을 바로 복사할 수 있습니다.</p>' +
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:14px 0"><tr>' + lines.slice(0, 4).join('') + '</tr><tr>' + lines.slice(4).join('') + '</tr></table>' +
-    (rows ? '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:8px"><tr><th align="left" style="font-size:12px;color:#6B7487;padding:6px">주문</th><th align="left" style="font-size:12px;color:#6B7487;padding:6px">내용</th><th align="left" style="font-size:12px;color:#6B7487;padding:6px">예정일</th></tr>' + rows + '</table>' : '') +
-    (d.unread.length ? '<p style="margin-top:16px"><b>확인하지 않은 고객 메시지 ' + d.unread.length + '건</b></p>' : '');
-  sendMail_(operatorEmails_().join(','), '[논문AI] 오늘의 작업 ' + todo + '건 · ' + Utilities.formatDate(now_(), TZ, 'M/d'), mailLayout_('오늘의 작업 브리핑', body, { button: { label: '관리자 화면 열기', url: siteUrl_() + '/admin/' } }), true);
+  // 처리할 주문마다 고객 정보·의뢰 내용·요청 사항을 그대로 보여 준다(2026-11-24)
+  var seen = {}, list = [];
+  d.queue.concat(d.claims, d.quotes).forEach(function (x) { if (!seen[x.orderNo]) { seen[x.orderNo] = 1; list.push(x); } });
+  var blocks = list.slice(0, 15).map(function (x, k) {
+    var o = null;
+    try { o = findOrder_(x.orderNo); } catch (e) { o = null; }
+    if (!o) return '';
+    var late = o.eta && ymd_(o.eta) < d.today;
+    return '<div style="margin-top:26px;padding-top:16px;border-top:2px solid #0F1B3D">' +
+      '<p style="margin:0;font-size:16px;font-weight:800;color:#0F1B3D;letter-spacing:-.02em">' + (k + 1) + '. ' + escHtml_(o.name || '고객') + ' · ' + escHtml_(o.productName || '') + '</p>' +
+      '<p style="margin:4px 0 0;font-size:13px;color:' + (late ? '#D92D20' : '#6B7487') + '">' + escHtml_(o.orderNo) + ' · ' + escHtml_(STATUS[o.status] || o.status) + (o.eta ? ' · ' + escHtml_(korDate_(o.eta)) + '까지' + (late ? '(지남)' : '') : '') + (o.priority ? ' · 우선 처리' : '') + '</p>' +
+      orderDetailHtml_(o) + '</div>';
+  }).join('');
+  var counts = [['결제 확인', c.payment], ['견적 작성', c.quote], ['작업', c.working], ['검토', c.review], ['수정 요청', c.revision], ['오늘 마감', c.dueToday], ['지연', c.overdue]]
+    .filter(function (r) { return r[1]; }).map(function (r) { return r[0] + ' ' + r[1]; }).join(' · ');
+  var body = '<p>처리할 주문 <b>' + list.length + '건</b>의 고객 정보, 의뢰 내용, 요청 사항입니다.' + (counts ? ' (' + escHtml_(counts) + ')' : '') + '</p>' + blocks +
+    (d.unread.length ? '<p style="margin-top:20px"><b>확인하지 않은 고객 메시지 ' + d.unread.length + '건</b>이 있습니다. 관리자 화면의 주문 상세에서 답해 주세요.</p>' : '');
+  sendMail_(operatorEmails_().join(','), '[논문AI] 오늘의 작업 · 주문 ' + list.length + '건 · ' + Utilities.formatDate(now_(), TZ, 'M/d'), mailLayout_('오늘의 작업', body, { button: { label: '관리자 화면 열기', url: siteUrl_() + '/admin/' } }), true);
 }
 
 /* ------------------------------------------------------------------ 매시간 작업 */

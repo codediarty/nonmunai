@@ -177,56 +177,92 @@ function mailAccessLinks_(email, orders) {
   sendMail_(email, '[논문AI] 주문 조회 링크', mailLayout_('주문 조회 링크', '<p>요청하신 주문 조회 링크입니다. 링크를 누르면 바로 주문 페이지가 열립니다.</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + list + '</table>', { footnote: '본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.' }), false);
 }
 
-// 고객이 주문서에 적은 내용(주제·전공·요청 사항 등)을 운영자 메일에 그대로 싣는다(2026-11-24)
+// 운영자 메일: 논문을 쓰는 데 필요한 정보(고객 정보, 의뢰 내용, 요청 사항, 주문·결제)를 한 번에 보여 준다(2026-11-24)
 var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1 };
 var OUT_FMT_LABEL = { docx: '워드(docx)', hwp: '한글(hwp)', pdf: 'PDF' };
 var METHOD_LABEL_KO = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' };
 var TARGET_LABEL_KO = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
-function requestRows_(o) {
+var PAY_LABEL_KO = { unpaid: '결제 전', quote: '견적 전', claimed: '결제 확인 요청(결제 완료 알림 받음)', partial: '일부 결제', paid: '결제 확인됨' };
+
+function mailSection_(title, rows) {
+  if (!rows.length) return '';
+  return '<p style="margin:22px 0 8px;font-size:13px;font-weight:800;color:#2346E8;letter-spacing:-.01em">' + escHtml_(title) + '</p>' +
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #E3E7F0;border-radius:12px;background:#F8F9FC">' +
+    rows.map(function (r) {
+      return '<tr><td style="padding:9px 14px;color:#6B7487;font-size:13px;width:88px;vertical-align:top;white-space:nowrap">' + escHtml_(r[0]) + '</td>' +
+        '<td style="padding:9px 14px 9px 0;color:#0F1B3D;font-size:14px;line-height:1.65">' + r[1] + '</td></tr>';
+    }).join('') + '</table>';
+}
+
+// 주문 한 건의 고객 정보·의뢰 내용·요청 사항·주문 정보(운영자에게만 보내는 메일용)
+function orderDetailHtml_(o) {
   var data = {};
-  try { data = orderData_(o) || {}; } catch (e) { return []; }
+  try { data = orderData_(o) || {}; } catch (e) { data = {}; }
   var i = data.input || {};
   var c = i.common || {};
   var p = i.paper || {};
-  var rows = [];
-  var add = function (k, v, max) {
-    var s = v === undefined || v === null ? '' : String(v).trim();
-    if (!s) return;
-    if (max && s.length > max) s = s.slice(0, max) + '…';
-    rows.push([k, '<span style="font-weight:500">' + escHtml_(s).replace(/\n/g, '<br>') + '</span>']);
-  };
-  add(c.topicKnown === 'free' ? '관심 주제' : '연구 주제', c.title, 300);
-  add('전공', c.fieldText, 80);
-  add('키워드', (c.keywords || []).join(', '), 200);
-  add('학교·학과', [c.school, c.dept].filter(function (x) { return !!x; }).join(' '), 120);
-  if (METHOD_LABEL_KO[c.method]) add('연구 방법', METHOD_LABEL_KO[c.method]);
-  add('요청 사항', c.request, 2000);
-  add('희망 마감일', c.due);
-  add('받을 파일', OUT_FMT_LABEL[c.outputFormat] || c.outputFormat);
-  if (p.task === 'edit') add('첨삭 범위', p.editScope, 300);
-  if (p.task === 'feedback') add('교수님 피드백', p.feedbackText, 2000);
   var s = i.survey || {};
-  if (o.service === 'survey') {
-    add('응답 대상', s.target === 'other' ? s.targetOther : (TARGET_LABEL_KO[s.target] || s.target));
-    add('목표 응답 수', s.targetN);
-    add('피드백', s.feedbackText, 2000);
-  }
   var t = i.statistics || {};
-  if (o.service === 'statistics') {
-    add('변수 설명', t.variables, 1000);
-    add('데이터 정보', t.dataInfo, 1000);
-    add('교수님 의견', t.feedbackText, 2000);
+  var q = data.quote || {};
+  var text = function (v, max) {
+    var x = v === undefined || v === null ? '' : String(v).trim();
+    if (max && x.length > max) x = x.slice(0, max) + '…';
+    return x;
+  };
+  var put = function (rows, k, v, max, strong) {
+    var x = text(v, max);
+    if (x) rows.push([k, (strong ? '<b>' : '') + escHtml_(x).replace(/\n/g, '<br>') + (strong ? '</b>' : '')]);
+  };
+  var who = [];
+  put(who, '이름', o.name, 60, true);
+  put(who, '이메일', o.email, 120);
+  put(who, '연락처', o.phone, 40);
+  var job = [];
+  put(job, '상품', o.productName, 120, true);
+  if (o.service === 'paper' && p.pages) put(job, '분량', p.pages + '쪽(Page)');
+  put(job, c.topicKnown === 'free' ? '관심 주제' : '연구 주제', c.title, 400, true);
+  put(job, '전공', c.fieldText, 80);
+  put(job, '키워드', (c.keywords || []).join(', '), 200);
+  put(job, '학교·학과', [c.school, c.dept].filter(function (x) { return !!x; }).join(' '), 120);
+  if (METHOD_LABEL_KO[c.method]) put(job, '연구 방법', METHOD_LABEL_KO[c.method]);
+  put(job, '받을 파일', OUT_FMT_LABEL[c.outputFormat] || c.outputFormat);
+  if (o.eta) put(job, '전달 예정일', korDate_(o.eta));
+  if (o.service === 'survey') {
+    put(job, '응답 대상', s.target === 'other' ? s.targetOther : (TARGET_LABEL_KO[s.target] || s.target));
+    put(job, '목표 응답 수', s.targetN);
   }
-  return rows;
+  if (o.service === 'statistics') {
+    put(job, '변수 설명', t.variables, 1000);
+    put(job, '데이터 정보', t.dataInfo, 1000);
+  }
+  var req = [];
+  put(req, '요청 사항', c.request || '(따로 적은 요청 사항 없음)', 3000);
+  put(req, '희망 마감일', c.due);
+  if (p.task === 'edit') put(req, '첨삭 범위', p.editScope, 300);
+  if (p.task === 'feedback') put(req, '교수님 피드백', p.feedbackText, 3000);
+  if (o.service === 'survey') put(req, '피드백', s.feedbackText, 3000);
+  if (o.service === 'statistics') put(req, '교수님 의견', t.feedbackText, 3000);
+  var files = [];
+  try { files = filesFor_(o.orderNo).filter(function (f) { return f.kind !== 'result'; }); } catch (e) { files = []; }
+  if (files.length) req.push(['고객 자료', files.map(function (f) { return escHtml_((SLOT_LABEL[f.slot] || f.slot || '자료') + ' · ' + f.name); }).join('<br>')]);
+  var ord = [];
+  put(ord, '주문번호', o.orderNo);
+  if (o.amount) put(ord, '금액', won(o.amount));
+  put(ord, '결제', PAY_LABEL_KO[o.payStatus] || o.payStatus);
+  put(ord, '상태', STATUS[o.status] || o.status);
+  if (o.createdAt) put(ord, '접수', Utilities.formatDate(o.createdAt instanceof Date ? o.createdAt : new Date(o.createdAt), TZ, 'yyyy-MM-dd HH:mm'));
+  if ((q.lines || []).length > 1) ord.push(['견적', (q.lines || []).map(function (l) { return escHtml_(l.name + (l.note ? ' (' + l.note + ')' : '') + ': ' + (l.pending ? '견적' : won(l.amount))); }).join('<br>')]);
+  return mailSection_('고객 정보', who) + mailSection_('의뢰 내용', job) + mailSection_('요청 사항', req) + mailSection_('주문·결제', ord);
 }
 
 function notifyOperator_(o, event, detail) {
   var amount = o.amount ? won(o.amount) : '';
-  var subject = '[논문AI] ' + event + (amount ? ' ' + amount : '') + ' · ' + (o.summary || o.productName || '').slice(0, 40);
-  var card = [['주문번호', escHtml_(o.orderNo)], ['고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + (o.email ? ' · ' + escHtml_(o.email) : '')], ['상품', escHtml_(o.productName)], ['금액', amount || '견적 전'], ['상태', escHtml_(STATUS[o.status] || '')]];
-  if (REQUEST_EVENTS[event]) card = card.concat(requestRows_(o));
-  var html = mailLayout_(event, '<p>' + escHtml_(detail || '') + '</p>', {
-    card: card,
+  var full = !!REQUEST_EVENTS[event];
+  var subject = full
+    ? '[논문AI] ' + event + ' · ' + (o.name || '고객') + ' · ' + String(o.productName || o.summary || '').slice(0, 40) + (amount ? ' · ' + amount : '')
+    : '[논문AI] ' + event + (amount ? ' ' + amount : '') + ' · ' + (o.summary || o.productName || '').slice(0, 40);
+  var html = mailLayout_(event, '<p>' + escHtml_(detail || '') + '</p>' + (full ? orderDetailHtml_(o) + '<p style="margin-top:18px;font-size:13px;color:#6B7487">연구 설계·목차·장별 AI 프롬프트가 담긴 작업지시문은 관리자 화면에서 볼 수 있습니다.</p>' : ''), {
+    card: full ? null : [['주문번호', escHtml_(o.orderNo)], ['고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + (o.email ? ' · ' + escHtml_(o.email) : '')], ['상품', escHtml_(o.productName)], ['금액', amount || '견적 전'], ['상태', escHtml_(STATUS[o.status] || '')]],
     button: { label: '관리자 화면에서 보기', url: adminLink_(o) },
   });
   sendMail_(operatorEmails_().join(','), subject, html, true);
