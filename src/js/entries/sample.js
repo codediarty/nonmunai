@@ -48,11 +48,20 @@ function calc() {
   $('#ssN').textContent = n.toLocaleString('ko-KR');
   $('#ssRecruit').textContent = `${recruit.toLocaleString('ko-KR')}명${r.perGroup ? ` (집단당 ${Math.ceil(recruit / (r.n / r.perGroup)).toLocaleString('ko-KR')}명)` : ''}`;
   $('#ssAssume').textContent = r.assumptions + (r.perGroup ? ` · 집단당 최소 ${r.perGroup}명` : '');
-  const per = r.perGroup ? `(집단당 ${r.perGroup}명) ` : '';
-  const dropTxt = drop ? `, 탈락률 ${Math.round(drop * 100)}%를 고려하여 ${recruit}명을 모집하였다` : '';
+  const per = r.perGroup ? `(집단당 ${r.perGroup}명)` : '';
+  // 목적격 조사: 끝 글자를 읽는 소리로 받침을 본다(0.8 → 팔 → 을, 5개 → 를, 95% → 퍼센트 → 를)
+  const eul = (str) => {
+    const ch = String(str).trim().slice(-1);
+    if (/[0-9]/.test(ch)) return '013678'.includes(ch) ? '을' : '를';
+    const code = ch.charCodeAt(0) - 0xac00;
+    if (code >= 0 && code <= 11171) return code % 28 ? '을' : '를';
+    return '를';
+  };
+  // 논문에 그대로 붙여 쓰는 문장: '나타났다'에서 끊고 탈락률은 다음 문장으로(2026-11-25)
+  const dropTxt = drop ? `탈락률 ${Math.round(drop * 100)}%를 고려하여 ${recruit}명을 모집하였다` : '';
   $('#ssSentence').textContent = t === 'prop'
-    ? `${r.assumptions}을(를) 기준으로 산출한 표본 수는 ${n}명이며${dropTxt ? dropTxt.replace(/^,/, '') : ', 이를 충족하도록 자료를 수집하였다'}.`
-    : `${NAMES[t]}을 위한 표본 수는 ${r.assumptions.replace(/, /g, ', ')}를 기준으로 산출하였으며, 최소 표본 수는 ${n}명${per}으로 나타났다${dropTxt}.`;
+    ? `${r.assumptions}${eul(r.assumptions)} 기준으로 산출한 표본 수는 ${n}명이며${dropTxt ? ` ${dropTxt}` : ', 이를 충족하도록 자료를 수집하였다'}.`
+    : `${NAMES[t]}을 위한 표본 수는 ${r.assumptions}${eul(r.assumptions)} 기준으로 산출하였으며, 최소 표본 수는 ${n}명${per}으로 나타났다.${dropTxt ? ` ${dropTxt}.` : ''}`;
 }
 
 if ($('#ssForm')) {
