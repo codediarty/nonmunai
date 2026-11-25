@@ -2,14 +2,14 @@
 import { aapi, esc, won, toast, busy, confirmBox, authLost } from './core.js';
 
 const GROUPS = [
-  { title: '알림', keys: ['operatorEmails', 'replyTo', 'ntfyTopic', 'digestHour', 'notifyStatusMail'] },
+  { title: '알림', keys: ['operatorEmails', 'replyTo', 'ntfyTopic', 'digestHour', 'dailyBriefing', 'notifyStatusMail'] },
   { title: '결제 연결', keys: ['skkcEnabled', 'skkcProducts', 'skkcCustomUrl', 'skkcLinks', 'bankEnabled', 'bankName', 'bankAccount', 'bankHolder', 'tossEnabled', 'tossClientKey'] },
   { title: '작업 운영', keys: ['advanceOnPayment', 'advanceOnClaim', 'dailyCapacity', 'holidays', 'maxFileMB', 'noticeBanner'] },
   { title: '보관·정리', keys: ['retentionDays', 'revisionDays', 'draftExpireDays', 'unpaidExpireDays'] },
   { title: '후속 서비스', keys: ['addonServices'] },
   { title: '사이트·사업자 정보', keys: ['siteName', 'siteUrl', 'bizName', 'bizCeo', 'bizNo', 'bizMailOrder', 'bizAddress', 'bizPhone', 'bizEmail'] },
 ];
-const BOOL = ['skkcEnabled', 'bankEnabled', 'tossEnabled', 'notifyStatusMail'];
+const BOOL = ['skkcEnabled', 'bankEnabled', 'tossEnabled', 'notifyStatusMail', 'dailyBriefing'];
 const NUM = ['digestHour', 'dailyCapacity', 'maxFileMB', 'retentionDays', 'revisionDays', 'draftExpireDays', 'unpaidExpireDays'];
 
 const LABEL = {

@@ -79,7 +79,8 @@ var DEFAULT_SETTINGS = {
   draftExpireDays: ['3', '제출하지 않은 작성 중 주문 자동 정리 일수'],
   unpaidExpireDays: ['30', '결제하지 않은 주문 자동 취소 일수'],
   maxFileMB: ['20', '파일 1개 최대 용량(MB)'],
-  digestHour: ['8', '일일 브리핑 메일 보낼 시각(0~23)'],
+  digestHour: ['8', '아침 알림 메일 보낼 시각(0~23): 전달 예정일이 오늘인 주문을 알려 줌'],
+  dailyBriefing: ['false', '매일 아침 "오늘의 작업" 브리핑 메일도 보내기(끄면 주문할 때와 전달 예정일에만 메일)'],
   notifyStatusMail: ['true', '상태가 바뀌면 고객에게 메일 보내기'],
   bizName: ['성균관컨설팅', '상호'],
   bizCeo: ['이채연', '대표자'],
@@ -2205,7 +2206,7 @@ function mailAccessLinks_(email, orders) {
 }
 
 // 운영자 메일: 논문을 쓰는 데 필요한 정보(고객 정보, 의뢰 내용, 요청 사항, 주문·결제)를 한 번에 보여 준다(2026-11-24)
-var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1 };
+var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1, '오늘 전달 예정': 1 };
 var OUT_FMT_LABEL = { docx: '워드(docx)', hwp: '한글(hwp)', pdf: 'PDF' };
 var METHOD_LABEL_KO = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' };
 var TARGET_LABEL_KO = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
@@ -2329,7 +2330,7 @@ function pushNtfy_(title, message, click) {
 
 // ===== 50_jobs.gs =====
 /**
- * 50_jobs: 최초 설정, 예약 작업(일일 브리핑·정리), 보관 기간 관리
+ * 50_jobs: 최초 설정, 예약 작업(전달 예정일 알림·정리), 보관 기간 관리
  */
 
 function ensureSheets_(ss) {
@@ -2456,9 +2457,39 @@ function installTriggers_() {
   ScriptApp.newTrigger('hourlyJob').timeBased().everyHours(1).create();
 }
 
-/* ------------------------------------------------------------------ 일일 브리핑 */
+/* ------------------------------------------------------------------ 아침 알림(전달 예정일) */
+// 운영자 메일은 주문할 때와 전달 예정일에만 보낸다(2026-11-25 운영자 요청).
+// 매일 아침 트리거(digestHour)는 전달 예정일이 오늘인 진행 중 주문만 주문마다 한 통씩 알린다
+// (고객 정보·의뢰 내용·요청 사항 전체, 답장하면 고객에게 감). 오늘 마감이 없으면 메일이 가지 않는다.
+// 예전 '오늘의 작업' 브리핑은 설정 dailyBriefing을 켜면 함께 보낸다(기본 끔).
+var DUE_STATUSES = ['received', 'checking', 'preparing', 'in_progress', 'needs_materials', 'review', 'revision'];
+
 function dailyDigest() {
   invalidate_(); __settings = null;
+  try { dueTodayAlerts_(); } catch (e) { log_('job_due', e.message); }
+  if (settingBool_('dailyBriefing')) dailyBriefing_();
+}
+
+function dueTodayAlerts_() {
+  var today = ymd_(now_());
+  if (prop_('LAST_DUE_ALERT') === today) return 0;
+  props_().setProperty('LAST_DUE_ALERT', today);
+  var sent = 0;
+  allOrders_().forEach(function (row) {
+    if (!row.eta || ymd_(row.eta) !== today || DUE_STATUSES.indexOf(row.status) < 0) return;
+    try {
+      var o = findOrder_(row.orderNo);
+      if (!o) return;
+      notifyOperator_(o, '오늘 전달 예정', '오늘(' + korDate_(o.eta) + ') 전달하기로 한 주문입니다. 지금 단계: ' + (STATUS[o.status] || o.status) + '.');
+      sent++;
+    } catch (e) { log_('job_due', row.orderNo + ' ' + e.message); }
+  });
+  if (sent) log_('due_today', today + ' ' + sent + '건');
+  return sent;
+}
+
+/* ------------------------------------------------------------------ 오늘의 작업 브리핑(기본 끔) */
+function dailyBriefing_() {
   var d = api_adminDashboard({ adminToken: makeAdminToken_() });
   var c = d.counts;
   var todo = c.payment + c.quote + c.working + c.review + c.revision + d.unread.length;

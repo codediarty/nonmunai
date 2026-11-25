@@ -1,5 +1,5 @@
 /**
- * 50_jobs: 최초 설정, 예약 작업(일일 브리핑·정리), 보관 기간 관리
+ * 50_jobs: 최초 설정, 예약 작업(전달 예정일 알림·정리), 보관 기간 관리
  */
 
 function ensureSheets_(ss) {
@@ -126,9 +126,39 @@ function installTriggers_() {
   ScriptApp.newTrigger('hourlyJob').timeBased().everyHours(1).create();
 }
 
-/* ------------------------------------------------------------------ 일일 브리핑 */
+/* ------------------------------------------------------------------ 아침 알림(전달 예정일) */
+// 운영자 메일은 주문할 때와 전달 예정일에만 보낸다(2026-11-25 운영자 요청).
+// 매일 아침 트리거(digestHour)는 전달 예정일이 오늘인 진행 중 주문만 주문마다 한 통씩 알린다
+// (고객 정보·의뢰 내용·요청 사항 전체, 답장하면 고객에게 감). 오늘 마감이 없으면 메일이 가지 않는다.
+// 예전 '오늘의 작업' 브리핑은 설정 dailyBriefing을 켜면 함께 보낸다(기본 끔).
+var DUE_STATUSES = ['received', 'checking', 'preparing', 'in_progress', 'needs_materials', 'review', 'revision'];
+
 function dailyDigest() {
   invalidate_(); __settings = null;
+  try { dueTodayAlerts_(); } catch (e) { log_('job_due', e.message); }
+  if (settingBool_('dailyBriefing')) dailyBriefing_();
+}
+
+function dueTodayAlerts_() {
+  var today = ymd_(now_());
+  if (prop_('LAST_DUE_ALERT') === today) return 0;
+  props_().setProperty('LAST_DUE_ALERT', today);
+  var sent = 0;
+  allOrders_().forEach(function (row) {
+    if (!row.eta || ymd_(row.eta) !== today || DUE_STATUSES.indexOf(row.status) < 0) return;
+    try {
+      var o = findOrder_(row.orderNo);
+      if (!o) return;
+      notifyOperator_(o, '오늘 전달 예정', '오늘(' + korDate_(o.eta) + ') 전달하기로 한 주문입니다. 지금 단계: ' + (STATUS[o.status] || o.status) + '.');
+      sent++;
+    } catch (e) { log_('job_due', row.orderNo + ' ' + e.message); }
+  });
+  if (sent) log_('due_today', today + ' ' + sent + '건');
+  return sent;
+}
+
+/* ------------------------------------------------------------------ 오늘의 작업 브리핑(기본 끔) */
+function dailyBriefing_() {
   var d = api_adminDashboard({ adminToken: makeAdminToken_() });
   var c = d.counts;
   var todo = c.payment + c.quote + c.working + c.review + c.revision + d.unread.length;

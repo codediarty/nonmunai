@@ -414,7 +414,7 @@ t('토스페이먼츠: 승인 성공 시 결제 확정, 금액 위조 거부', (
   assert.equal(ok.status, 'in_progress');
 });
 
-t('예약 작업: 일일 브리핑 메일과 매시간 작업이 오류 없이 실행', () => {
+t('예약 작업: 아침 작업과 매시간 작업이 오류 없이 실행, 오늘의 작업 브리핑은 기본으로 보내지 않고 켜면 보냄', () => {
   const x = makeEnv({ now: '2026-11-02T07:30:00+09:00' });
   const r = paperOrder(x);
   x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
@@ -424,7 +424,54 @@ t('예약 작업: 일일 브리핑 메일과 매시간 작업이 오류 없이 �
   const ran = x.env.runTriggers();
   assert.ok(ran.includes('dailyDigest') || ran.includes('hourlyJob'));
   x.env.call('dailyDigest');
-  assert.ok(x.env.state.mails.slice(before).some((m) => /오늘의 작업/.test(m.subject)), '브리핑 메일 없음');
+  assert.ok(!x.env.state.mails.slice(before).some((m) => /오늘의 작업/.test(m.subject)), '끈 브리핑 메일이 감');
+  x.ok('adminSaveSettings', { adminToken: x.login(), settings: { dailyBriefing: 'true' } });
+  x.env.call('dailyDigest');
+  assert.ok(x.env.state.mails.slice(before).some((m) => /오늘의 작업/.test(m.subject)), '켠 브리핑 메일 없음');
+});
+
+t('아침 메일은 전달 예정일에만: 오늘이 예정일인 진행 중 주문만 주문마다 알림(내용 전체, 답장은 고객에게), 같은 날 다시 보내지 않음', () => {
+  const x = makeEnv({ now: '2026-11-24T14:00:00+09:00' });
+  const token = x.login();
+  const make = () => {
+    const r = paperOrder(x);
+    x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
+    x.ok('claimPayment', { orderNo: r.orderNo, token: r.token, method: 'skkc', payerName: CONTACT.name });
+    return { ...r, eta: x.ok('getOrder', { orderNo: r.orderNo, token: r.token }).order.eta };
+  };
+  const a = make(), b = make(), c = make();
+  assert.ok(a.eta && a.eta === b.eta && a.eta === c.eta, `예정일: ${a.eta} ${b.eta} ${c.eta}`);
+  x.ok('adminUpdateStatus', { adminToken: token, orderNo: b.orderNo, status: 'completed', notify: false });
+  x.ok('adminUpdateStatus', { adminToken: token, orderNo: c.orderNo, status: 'review' });
+  const due = (m) => /오늘 전달 예정/.test(m.subject);
+  const morning = (ymd) => x.env.clock.set(`${ymd}T08:00:00+09:00`);
+  // 예정일 전날 아침: 아무 메일도 없음
+  const prev = new Date(new Date(`${a.eta}T00:00:00+09:00`).getTime() - 86400000);
+  morning(new Date(prev.getTime() + 9 * 3600000).toISOString().slice(0, 10));
+  let before = x.env.state.mails.length;
+  x.env.call('dailyDigest');
+  assert.equal(x.env.state.mails.slice(before).filter((m) => m.to.includes('contact@skkc.co.kr')).length, 0, '예정일 전날 운영자 메일이 감');
+  // 예정일 아침: 진행 중인 a와 검토 중인 c만, 주문마다 한 통
+  morning(a.eta);
+  before = x.env.state.mails.length;
+  x.env.call('dailyDigest');
+  const sent = x.env.state.mails.slice(before).filter(due);
+  assert.equal(sent.length, 2, sent.map((m) => m.subject).join(' / '));
+  for (const r of [a, c]) {
+    const m = sent.find((k) => k.htmlBody.includes(r.orderNo));
+    assert.ok(m, `${r.orderNo} 알림 없음`);
+    assert.ok(m.subject.includes(CONTACT.name), m.subject);
+    assert.equal(m.replyTo, CONTACT.email);
+    for (const s of ['고객 정보', '의뢰 내용', '요청 사항', '주문·결제', '오늘(']) assert.ok(m.htmlBody.includes(s), `알림 본문에 '${s}' 없음`);
+  }
+  assert.ok(!sent.some((m) => m.htmlBody.includes(b.orderNo)), '완료한 주문도 알림');
+  assert.ok(!x.env.state.mails.slice(before).some((m) => /오늘의 작업/.test(m.subject)), '브리핑 메일이 감');
+  // 같은 날 다시 돌려도 또 보내지 않음, 다음 날도 보내지 않음(예정일에만)
+  before = x.env.state.mails.length;
+  x.env.call('dailyDigest');
+  x.env.clock.advance(86400000);
+  x.env.call('dailyDigest');
+  assert.equal(x.env.state.mails.slice(before).filter(due).length, 0, '같은 날 또는 다음 날 다시 보냄');
 });
 
 t('운영자 알림 메일: 받는 주소 여러 개, 고객 정보(이름·이메일·연락처)와 의뢰 내용·요청 사항을 한 번에, 브리핑도 주문마다 같은 내용', () => {
@@ -445,9 +492,10 @@ t('운영자 알림 메일: 받는 주소 여러 개, 고객 정보(이름·이�
     for (const s of must) assert.ok(m.htmlBody.includes(s), `${ev} 메일 본문에 '${s}' 없음`);
   }
   const before = x.env.state.mails.length;
+  x.ok('adminSaveSettings', { adminToken: token, settings: { dailyBriefing: 'true' } });
   x.env.call('dailyDigest');
   const dg = x.env.state.mails.slice(before).find((m) => /오늘의 작업/.test(m.subject));
-  assert.ok(dg, '브리핑 메일 없음');
+  assert.ok(dg, '켠 브리핑 메일 없음');
   assert.ok(/주문 1건/.test(dg.subject), `브리핑 제목의 주문 수: ${dg.subject}`);
   for (const s of must) assert.ok(dg.htmlBody.includes(s), `브리핑 본문에 '${s}' 없음`);
 });

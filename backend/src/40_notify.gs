@@ -190,7 +190,7 @@ function mailAccessLinks_(email, orders) {
 }
 
 // 운영자 메일: 논문을 쓰는 데 필요한 정보(고객 정보, 의뢰 내용, 요청 사항, 주문·결제)를 한 번에 보여 준다(2026-11-24)
-var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1 };
+var REQUEST_EVENTS = { '신규 주문': 1, '견적 요청': 1, '결제 확인 요청': 1, '결제 확인됨': 1, '오늘 전달 예정': 1 };
 var OUT_FMT_LABEL = { docx: '워드(docx)', hwp: '한글(hwp)', pdf: 'PDF' };
 var METHOD_LABEL_KO = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' };
 var TARGET_LABEL_KO = { auto: '추천 필요', student: '대학생', worker: '직장인', teacher: '교사', parent: '학부모', adult: '성인' };
