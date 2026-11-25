@@ -54,6 +54,11 @@
   --nm-pill: #FFFFFF;
   --nm-pill-line: #CBD3E1;
   --nm-muted: var(--muted);
+
+  /* 원고지 결(2026-11-25): 26px 정사각 칸과 칸 줄 사이 8px 여백으로 된 원고지 무늬. 흰 바탕엔 파란 선을 아주 옅게, 남색 띠엔 흰 선을 옅게 */
+  --wgj: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='34'%3E%3Cpath d='M0 .5H26M0 26.5H26M.5 0V27' fill='none' stroke='%232346E8' stroke-opacity='.11'/%3E%3C/svg%3E");
+  --wgj-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='34'%3E%3Cpath d='M0 .5H26M0 26.5H26M.5 0V27' fill='none' stroke='%23FFFFFF' stroke-opacity='.07'/%3E%3C/svg%3E");
+  --wgj-size: 26px 34px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -198,6 +203,22 @@ em.st, .st { font-family: var(--stat); font-style: italic; letter-spacing: 0; }
 .sec { padding: 112px 0; }
 .sec-tight { padding: 72px 0; }
 .sec-alt { background: var(--paper-2); }
+/* 흰 바탕 섹션: 위쪽 양 귀퉁이에 원고지 결을 깔고 가운데와 아래로 사라지게(본문 쪽은 비워 둔다) */
+.sec:not(.sec-alt):not(.sec-ink) { position: relative; }
+.sec:not(.sec-alt):not(.sec-ink)::before {
+  content: ''; position: absolute; inset: 0 0 auto; height: min(620px, 100%); z-index: -1; pointer-events: none;
+  background: var(--wgj) 50% 0 / var(--wgj-size);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 110px, #000 55%, transparent), radial-gradient(ellipse 30% 95% at 0% 12%, #000 10%, transparent 72%), radial-gradient(ellipse 30% 95% at 100% 12%, #000 10%, transparent 72%);
+  -webkit-mask-composite: source-in, source-over, source-over;
+  mask-image: linear-gradient(180deg, transparent, #000 110px, #000 55%, transparent), radial-gradient(ellipse 30% 95% at 0% 12%, #000 10%, transparent 72%), radial-gradient(ellipse 30% 95% at 100% 12%, #000 10%, transparent 72%);
+  mask-composite: intersect, add, add;
+}
+@media (max-width: 720px) {
+  .sec:not(.sec-alt):not(.sec-ink)::before {
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 80px, #000 50%, transparent), radial-gradient(ellipse 46% 80% at 0% 10%, #000 10%, transparent 74%), radial-gradient(ellipse 46% 80% at 100% 10%, #000 10%, transparent 74%);
+    mask-image: linear-gradient(180deg, transparent, #000 80px, #000 50%, transparent), radial-gradient(ellipse 46% 80% at 0% 10%, #000 10%, transparent 74%), radial-gradient(ellipse 46% 80% at 100% 10%, #000 10%, transparent 74%);
+  }
+}
 .sec-ink { background: var(--navy); color: #fff; }
 .sec-head { max-width: 780px; margin-bottom: 52px; }
 .sec-head p { margin-top: 16px; color: var(--muted); font-size: 18px; line-height: 1.7; }

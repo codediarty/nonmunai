@@ -4,8 +4,7 @@
 .hx { position: relative; isolation: isolate; overflow: hidden; padding-top: 8px; }
 .hx::before {
   content: ''; position: absolute; inset: 0 0 auto; height: 880px; z-index: -2;
-  background-image: linear-gradient(rgba(35, 70, 232, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(35, 70, 232, .055) 1px, transparent 1px);
-  background-size: 48px 48px; background-position: -1px -1px;
+  background-image: var(--wgj); background-size: var(--wgj-size); background-position: 0 0;
   -webkit-mask-image: radial-gradient(ellipse 62% 78% at 72% 34%, #000 28%, transparent 74%);
   mask-image: radial-gradient(ellipse 62% 78% at 72% 34%, #000 28%, transparent 74%);
 }

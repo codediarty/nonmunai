@@ -150,7 +150,11 @@
 .trust-more { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 30px; font-weight: 700; }
 
 /* CTA 띠 */
-.cta-band { position: relative; background: radial-gradient(ellipse 55% 130% at 88% 0%, rgba(35, 70, 232, .5), rgba(35, 70, 232, 0) 62%), var(--navy-2); color: #fff; padding: 84px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.cta-band { position: relative; background: radial-gradient(ellipse 55% 130% at 88% 0%, rgba(35, 70, 232, .5), rgba(35, 70, 232, 0) 62%), var(--navy-2); color: #fff; padding: 84px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); isolation: isolate; }
+.cta-band::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--wgj-ink) 0 0 / var(--wgj-size);
+  -webkit-mask-image: radial-gradient(ellipse 60% 140% at 92% 0%, #000 8%, transparent 70%); mask-image: radial-gradient(ellipse 60% 140% at 92% 0%, #000 8%, transparent 70%);
+}
 .cta-in { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
 .cta-copy p { color: #B8C1D9; margin: 14px 0 0; font-size: 16.5px; }
 .cta-form { display: flex; gap: 10px; }
@@ -163,7 +167,11 @@
 .crumbs ol { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; font-size: 13.5px; color: var(--muted); }
 .crumbs li + li::before { content: '/'; margin-right: 6px; color: #B4BED1; }
 .crumbs a { color: var(--muted); }
-.phero { padding: 40px 0 64px; border-bottom: 1px solid var(--rule-2); background: linear-gradient(180deg, var(--paper-2), #fff 70%); }
+.phero { padding: 40px 0 64px; border-bottom: 1px solid var(--rule-2); background: linear-gradient(180deg, var(--paper-2), #fff 70%); position: relative; isolation: isolate; }
+.phero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--wgj) 0 0 / var(--wgj-size);
+  -webkit-mask-image: radial-gradient(ellipse 52% 130% at 100% 0%, #000 12%, transparent 72%); mask-image: radial-gradient(ellipse 52% 130% at 100% 0%, #000 12%, transparent 72%);
+}
 .phero-in { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 56px; align-items: center; margin-top: 22px; }
 .phero .h-1 { margin-bottom: 18px; }
 .phero .lead { max-width: 34em; }

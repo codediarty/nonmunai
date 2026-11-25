@@ -388,7 +388,11 @@
 
 /* ------------------------------------------------------------------ 한 화면 논문 주문 */
 .qo { min-height: 100vh; padding-bottom: 72px; background: var(--paper-2); }
-.qo-hero { padding: 40px 0 96px; background: radial-gradient(120% 150% at 0% 0%, #1E3170 0%, var(--navy) 62%); color: #fff; }
+.qo-hero { padding: 40px 0 96px; background: radial-gradient(120% 150% at 0% 0%, #1E3170 0%, var(--navy) 62%); color: #fff; position: relative; isolation: isolate; }
+.qo-hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--wgj-ink) 0 0 / var(--wgj-size);
+  -webkit-mask-image: radial-gradient(ellipse 55% 150% at 100% 0%, #000 10%, transparent 72%); mask-image: radial-gradient(ellipse 55% 150% at 100% 0%, #000 10%, transparent 72%);
+}
 .qo-eyebrow { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: 14px; font-weight: 800; color: #A9B9FF; letter-spacing: -0.02em; }
 .qo-eyebrow::before { content: ''; width: 22px; height: 2px; border-radius: 2px; background: currentColor; }
 .qo-eyebrow .i { width: 15px; height: 15px; }
