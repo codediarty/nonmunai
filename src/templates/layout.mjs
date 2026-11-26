@@ -16,7 +16,7 @@ export const NAV = [
       { label: '박사학위논문', href: '/dissertation/', desc: '130 Page · 전공 박사 최종 검수' },
       { label: '학술지 논문', href: '/journal-paper/', desc: '20 Page · 투고 규정 맞춤과 박사 검수' },
       { label: '연구계획서', href: '/research-proposal/', desc: '심사 전 첫 단계' },
-      { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '문장·논리·형식 점검' },
+      { label: '논문 첨삭·교정', href: '/thesis-editing/', desc: '기본 교정부터 완성도 보완까지' },
       { label: '교수님 피드백 반영', href: '/professor-feedback/', desc: '수정표와 파란색 반영 표시' },
       { label: '논문 컨설팅', href: '/consulting/', desc: '단계별 1:1 지원' },
     ],

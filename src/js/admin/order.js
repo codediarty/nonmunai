@@ -195,7 +195,7 @@ ${((o.quote && o.quote.changes) || []).length ? `<p class="hint am-last">마지�
         const cfg = await loadConfig();
         tiers = EDIT_LEVELS.map((lv) => {
           const r = computeQuote(cfg.catalog, { service: 'paper', paper: { typeId: p.typeId, task: 'edit', pages: p.pages, editLevel: lv.id } });
-          return r.mainCode && editLevelOfCode(r.mainCode) && editLevelOfCode(r.mainCode).id === lv.id && !r.quoteRequired ? { ...lv, total: r.total, includes: includesFor(r.includes, p.pages) } : null;
+          return r.mainCode && editLevelOfCode(r.mainCode) && editLevelOfCode(r.mainCode).id === lv.id && !r.quoteRequired ? { ...lv, total: r.total, days: r.days, includes: includesFor(r.includes, p.pages) } : null;
         }).filter(Boolean);
       } catch { tiers = []; }
     }
@@ -241,6 +241,8 @@ ${tiers.length ? `<div class="field"><span class="label">첨삭 단계 <small>�
           amt.value = paid ? Math.max(0, t.total - paid) : t.total;
           amt.dispatchEvent(new Event('input'));
           box.querySelector('#amS').value = t.includes.join('\n');
+          // 단계를 바꾸면 작업 기간도 그 단계 기준으로(완성도 보완은 기본 교정보다 오래 걸림)
+          if (t.days) box.querySelector('#amD').value = t.days;
           if (!reason.value.trim() && t.id !== cur) reason.value = `요청하신 작업이 ${editLevelOf(cur).label} 범위를 넘어서 ${t.label} 단계로 진행하려고 해요. ${t.label}에는 아래 작업이 모두 들어 있어요.`;
         }));
       },

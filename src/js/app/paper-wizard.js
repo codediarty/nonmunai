@@ -16,7 +16,7 @@ const UL = (l) => (l === '쪽' ? ' Page' : (l || ''));
 
 const TASKS = [
   { v: 'full', t: '논문 완성', d: '주제·설계부터 장별 본문까지 완성해 드려요. 기존 자료가 있으면 함께 올려 주세요.' },
-  { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장·논리·형식을 다듬습니다. 원고가 필요합니다.' },
+  { v: 'edit', t: '논문 첨삭·교정', d: '이미 쓴 원고의 문장을 다듬습니다(기본 교정). 원고가 필요합니다.' },
   { v: 'feedback', t: '교수님 피드백 반영·수정 보완·첨삭', d: '받은 피드백을 항목 수와 관계없이 한 번에 모두 반영하고, 부족한 내용은 수정 보완, 고친 원고는 첨삭해 드려요. 수정표가 포함되고 반영 부분은 파란색으로 표시합니다. 원고와 피드백이 필요합니다.' },
   { v: 'proposal', t: '연구계획서 작성', d: '본 논문 전에 연구 목적·방법·분석 계획을 먼저 세웁니다.' },
 ];
@@ -228,7 +228,7 @@ function addonsHtml(s) {
   return `<div class="addons">
 ${ppt ? box('ppt', '심사 발표 PPT·PDF 제작', ppt.price, '논문 핵심을 담은 발표 자료 15~20장(PPT·PDF)과 장표별 발표 스크립트를 함께 드립니다.') : ''}
 ${en && task === 'full' ? box('english', '영문 논문 작성', en.unitPrice * enBlocks, `원고를 학술 영어로 작성해 드려요. ${en.unitSize} Page마다 ${won(en.unitPrice)}, 지금 분량 기준 ${enBlocks}단위입니다.`) : ''}
-${ed ? box('editing', '논문 전체 첨삭·교정', ed.price, `피드백 반영과 함께 원고 전체의 문장·논리를 다듬습니다(기준 ${ed.baseUnits}${ed.unitLabel}).`) : ''}
+${ed ? box('editing', '논문 전체 첨삭·교정', ed.price, `피드백 반영과 함께 원고 전체의 문장을 다듬습니다(기본 교정, 기준 ${ed.baseUnits}${ed.unitLabel}).`) : ''}
 ${fm ? box('format', '학교·학술지 양식 상세 적용', fm.price, '여백, 글꼴, 제목 위계, 표·그림 서식, 목차 서식까지 제출 양식에 맞춥니다.') : ''}
 ${pr ? box('priority', '우선 처리', pr.price, prOff ? '현재 작업 일정상 우선 처리를 받을 수 없습니다.' : '작업 순서를 앞당겨 기본 납기를 줄입니다. 일정상 가능한 경우에만 선택할 수 있습니다.', prOff ? ' is-off' : '') : ''}
 ${rv ? `<div class="addon addon-row"><span><b>추가 수정</b><small>기본 포함 수정 외에 1회 ${won(rv.price)}씩 더할 수 있습니다.</small></span>${selectField('addons.revisions', s.addons.revisions, [{ v: 0, t: '추가 안 함' }, { v: 1, t: '1회 추가' }, { v: 2, t: '2회 추가' }])}</div>` : ''}

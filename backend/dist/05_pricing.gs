@@ -295,8 +295,8 @@ function computeQuote(catalog, input) {
     if (ed) {
       lines.push(line(ed, { name: ed.name + ' (추가)', note: '기준 ' + ed.baseUnits + ed.unitLabel }));
       days += 1;
-      includes = includes.concat(['논문 원고 문장·논리 첨삭(기준 ' + ed.baseUnits + ed.unitLabel + ')']);
-      notes.push('논문 첨삭은 기준 ' + ed.baseUnits + ed.unitLabel + '으로 계산했습니다. 원고가 더 길면 확인한 뒤 추가 금액을 안내드립니다.');
+      includes = includes.concat(['논문 원고 문장 교정(기본 교정, 기준 ' + ed.baseUnits + ed.unitLabel + ')']);
+      notes.push('논문 기본 교정은 기준 ' + ed.baseUnits + ed.unitLabel + '으로 계산했습니다. 원고가 더 길면 확인한 뒤 추가 금액을 안내드립니다.');
     }
   }
 

@@ -2261,6 +2261,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       has(await text(ap, '.modal [data-pay-hint]'), "맞춤 견적 결제 300,000원' 상품으로 고객이 바로 결제", '결제 상품 안내');
       has(await ap.inputValue('.modal [name="scope"]'), '보완 집필', '포함 작업');
       has(await ap.inputValue('.modal [name="reason"]'), '완성도 보완 단계로', '자동으로 넣은 이유');
+      eq(await ap.inputValue('.modal [name="days"]'), '5', '단계를 고르면 작업 기간도 그 단계 기준(학사 20 Page 완성도 보완 5일)');
       await ap.click('.modal .am-chip[data-amt="400000"]');
       eq(await ap.inputValue('.modal [name="amount"]'), '400000', '금액 단추');
       await ap.click('.modal .am-chip[data-amt="300000"]');
