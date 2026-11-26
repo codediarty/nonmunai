@@ -480,38 +480,10 @@
 .qo-custom-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-top: 12px; padding: 16px; border-radius: 14px; background: var(--paper-2); }
 .qo-custom-in .field, .qo-pages { margin: 0; }
 .qo-pages { margin-top: 12px; max-width: 260px; }
-/* 첨삭 단계(2026-11-26): 기본 교정 · 심화 첨삭 · 완성도 보완 */
-.qo-lvs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 6px; }
-.qo-lv { position: relative; display: grid; align-content: start; gap: 6px; min-width: 0; padding: 16px 15px 14px; border: 1.5px solid var(--rule); border-radius: 16px; background: #fff; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
-.qo-lv input { position: absolute; opacity: 0; pointer-events: none; }
-.qo-lv:hover { border-color: var(--blue-line); }
-.qo-lv.is-on { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(35, 70, 232, .12), 0 14px 30px -18px rgba(35, 70, 232, .55); }
-.qo-lv:focus-within { box-shadow: var(--focus); }
-.qo-lv.is-pop::before { content: '추천'; position: absolute; top: -10px; left: 14px; padding: 2px 8px; border-radius: 6px; background: var(--ink); font-size: 11px; font-weight: 800; color: #fff; }
-.qo-lv-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.qo-lv-hd b { font-size: 15.5px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
-.qo-lv-mk { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border: 1.5px solid #C9D1E0; border-radius: 50%; background: #fff; box-sizing: border-box; }
-.qo-lv-mk .i { width: 13px; height: 13px; color: #fff; opacity: 0; }
-.qo-lv.is-on .qo-lv-mk { border-color: var(--blue); background: var(--blue); }
-.qo-lv.is-on .qo-lv-mk .i { opacity: 1; }
-.qo-lv-p { font-size: 21px; font-weight: 850; line-height: 1.2; color: var(--ink); letter-spacing: -0.035em; }
-.qo-lv.is-on .qo-lv-p { color: var(--blue-2); }
-.qo-lv-pitch { font-size: 13px; line-height: 1.5; font-weight: 700; color: var(--ink-2); }
-.qo-lv-pts { display: grid; gap: 5px; margin: 4px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--rule); list-style: none; }
-.qo-lv-pts li { display: flex; gap: 6px; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
-.qo-lv-pts .i { flex: none; width: 13px; height: 13px; margin-top: 2px; color: var(--blue); }
-.qo-lv-d { font-size: 12px; font-weight: 700; color: var(--muted); }
-.qo-lv-guide { display: grid; gap: 3px; margin: 12px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--paper-2); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
-.qo-lv-guide b { font-size: 12.5px; color: var(--ink); }
-.qo-lv-guide em { font-style: normal; font-weight: 800; color: var(--blue-2); }
-.qo-nudge { display: grid; gap: 10px; margin: 12px 0 0; padding: 14px 16px; border: 1px solid #F3D48A; border-radius: 14px; background: #FFF8E6; }
+/* 첨삭 요청에 기본 교정 밖의 작업이 있을 때: 고르게 하지 않고, 금액을 먼저 알려 드린다는 안내만(2026-11-26) */
+.qo-nudge { display: grid; gap: 10px; margin: 12px 0 0; padding: 14px 16px; border: 1px solid var(--blue-line); border-radius: 14px; background: #F4F7FF; }
 .qo-nudge p { margin: 0; font-size: 13.5px; line-height: 1.65; color: var(--ink-2); }
 .qo-nudge p b { color: var(--ink); }
-.qo-nudge-act { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
-.qo-nudge.is-flash { animation: qoFlash 1.2s ease 2; }
-@keyframes qoFlash { 50% { box-shadow: 0 0 0 4px rgba(243, 180, 40, .35); } }
-@media (max-width: 720px) { .qo-lvs { grid-template-columns: 1fr; } .qo-lv-pts { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .qo-nudge.is-flash { animation: none; } }
 .qo-seg { display: flex; flex-wrap: wrap; gap: 8px; }
 .qo-seg-i { position: relative; padding: 10px 16px; border: 1.5px solid var(--rule); border-radius: 12px; background: #fff; font-size: 14.5px; font-weight: 700; color: var(--ink-2); cursor: pointer; }
 .qo-seg-i input { position: absolute; opacity: 0; }

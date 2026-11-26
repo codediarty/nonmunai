@@ -1,5 +1,6 @@
-// 첨삭 요청 사항 읽기(2026-11-26): 고객이 적은 요청에 고른 첨삭 단계보다 높은 단계의 작업이 있으면 알려 준다.
-// 예) 기본 교정(문장 교정)을 고르고 '내용 보완, 구조 검토'를 적으면 완성도 보완을 권한다. 강제로 바꾸지는 않는다.
+// 첨삭 요청 사항 읽기(2026-11-26): 고객이 적은 요청에 기본 교정(문장 교정)에 없는 작업이 있는지 본다.
+// 고객에게 단계를 고르게 하지 않는다. 주문서는 '원고를 보고 추가 금액을 먼저 알려 드린다'고만 알리고,
+// 운영자 화면은 요청에 맞는 '자주 쓰는 추가 작업' 단추를 먼저 보여 준다.
 const RULES = [
   { level: 'complete', label: '내용 보완', re: /내용\s*(을|를|도|까지)?\s*(보완|보강|추가|채워|늘려)|보완\s*(집필|작성)|(내용|분량)\s*(이|을|를)?\s*(부족|모자|늘려|채워)|추가\s*(집필|작성)|더\s*(써|채워)/ },
   { level: 'complete', label: '구조·목차 재구성', re: /(구조|구성|목차|장\s*구성|체계)\s*(을|를|도|까지|의|및)?\s*(검토|점검|수정|변경|재구성|다시|바꿔|손봐|정리|개선)|재구성|재배치/ },
@@ -22,14 +23,24 @@ export function neededLevel(text) {
   const hits = scopeHits(text);
   return hits.some((h) => h.level === 'complete') ? 'complete' : hits.some((h) => h.level === 'deep') ? 'deep' : 'basic';
 }
-// 고른 단계(picked)보다 높은 단계가 필요하면 { level, labels } , 아니면 null
-export function scopeNudge(text, picked) {
-  const need = neededLevel(text);
-  if ((RANK[need] || 0) <= (RANK[picked] || 0)) return null;
-  // 필요한 단계의 작업을 앞에(높은 단계 먼저)
-  const hits = scopeHits(text).filter((h) => RANK[h.level] > (RANK[picked] || 0)).sort((a, b) => RANK[b.level] - RANK[a.level]);
-  return { level: need, labels: hits.map((h) => h.label) };
+// 기본 교정에 없는 작업 이름(일이 많은 것부터): ['내용 보완', 'AI 문체 교정', ...]
+export function extraWork(text) {
+  return scopeHits(text).filter((h) => (RANK[h.level] || 0) > 0).sort((a, b) => RANK[b.level] - RANK[a.level]).map((h) => h.label);
 }
+
+// 운영자 '추가 결제 요청'의 자주 쓰는 추가 작업 두 가지. 금액은 가격표의 같은 유형 EDIT2·EDIT3(10만 원 단위) 금액을 쓴다
+export const EXTRA_WORK = [
+  {
+    level: 'deep', label: 'AI 문체·흐름·인용 맞추기',
+    work: ['AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트'],
+    reason: '적어 주신 AI 문체 교정과 흐름·인용 정리는 문장만 다듬는 기본 교정에 없는 작업이라, 추가 작업으로 함께 진행하려고 해요.',
+  },
+  {
+    level: 'complete', label: '내용 보완·구성 다시 잡기',
+    work: ['AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필(실존 문헌만)', '논리 비약과 사실·수치 확인', '수정 1회'],
+    reason: '적어 주신 내용 보완과 구성 검토까지 하려면 문단을 새로 쓰고 근거를 찾아 넣어야 해서, 추가 작업으로 함께 진행하려고 해요.',
+  },
+];
 
 // 받침에 맞는 조사: josa('완성도 보완', '을/를') → '완성도 보완을'
 export function josa(word, pair) {

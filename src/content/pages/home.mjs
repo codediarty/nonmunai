@@ -208,7 +208,7 @@ ${pageTiers(T)}
 <div class="sec-head"><h2 class="h-2" id="svc-h">필요한 것만 따로 맡길 수도 있어요</h2><p>이미 쓴 원고가 있거나 한 단계만 막혔다면 그 부분만 맡기세요. 어디서부터 맡길지 모르겠다면 <a href="${T.u('/consulting/')}">논문 컨설팅</a>으로 막힌 단계부터 정리해 드려요.</p></div>
 <div class="svc2">
 ${[
-    ['file-pen-line', '논문 첨삭·교정', '문장 교정부터 AI 문체·인용, 내용 보완까지 손볼 범위로 골라요.', `${FROM('edit')}부터`, '/thesis-editing/'],
+    ['file-pen-line', '논문 첨삭·교정', '맞춤법과 문장을 다듬고, 더 손볼 곳은 금액을 먼저 알려 드려요.', `${FROM('edit')}부터`, '/thesis-editing/'],
     ['message-square-text', '교수님 피드백 반영', '피드백 항목 수와 관계없이 한 번에 반영하고 수정표까지 드려요.', `${FROM('feedback')}부터`, '/professor-feedback/'],
     ['clipboard-list', '연구계획서 작성', '연구 목적, 이론, 방법, 참고문헌까지 심사용으로 써 드려요.', `${FROM('proposal')}부터`, '/research-proposal/'],
     ['list-checks', '설문조사 원스톱', '설문지 작성부터 설문 진행, 결과 정리와 통계 해석까지 맡겨요.', price('S-FULL'), '/survey/'],

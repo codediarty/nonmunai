@@ -319,6 +319,8 @@
 .steps-sm li::before { width: 26px; height: 26px; font-size: 13px; }
 .steps-sm b { font-size: 15px; }
 .steps-sm span { font-size: 13.5px; line-height: 1.55; }
+/* 옆 상자(.keybox) 안의 진행 순서: .keybox li(flex)에 밀려 제목이 좁은 칸에서 줄바꿈되던 것을 바로잡는다(번호 · 제목 / 설명 두 줄) */
+.keybox .steps li { display: grid; gap: 2px 0; align-items: start; }
 .biz-list li { display: grid !important; grid-template-columns: 1fr; gap: 0 !important; }
 .biz-list li span { font-size: 12.5px; color: var(--muted); }
 .biz-list li b { font-size: 14.5px; font-weight: 600; }

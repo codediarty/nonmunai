@@ -76,7 +76,7 @@ export function cartPlan(o, settings, catalog) {
   let rows = mergeBundle(lines.map((l) => ({ code: l.code, name: l.name, qty: Number(l.qty) || 1, unitPrice: Number(l.unitPrice) || Number(l.amount), amount: Number(l.amount), url: linkForLine(l, links, catalog) })), links, catalog);
   const has = (r) => /^https?:\/\//.test(r.url);
   if (rows.some((r) => !has(r))) {
-    // 상품이 따로 없는 줄(심화 첨삭·완성도 보완과 그 추가 분량, 맞춤 견적)은 합쳐서 맞춤 견적 결제 상품으로 결제한다(합이 10만 원 단위일 때만)
+    // 상품이 따로 없는 줄(첨삭 추가 작업, 맞춤 견적 등)은 합쳐서 맞춤 견적 결제 상품으로 결제한다(합이 10만 원 단위일 때만)
     const miss = rows.filter((r) => !has(r));
     const sum = miss.reduce((a, r) => a + r.amount, 0);
     const name = String(miss[0].name || '맞춤 견적 결제').replace(/^\[논문AI\]\s*/, '');

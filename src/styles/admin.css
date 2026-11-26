@@ -229,4 +229,10 @@ body.chrome-admin { background: var(--paper-2); }
 .am-lv-b i { position: absolute; top: 8px; right: 10px; font-style: normal; font-size: 11px; font-weight: 800; color: var(--muted); }
 .am-lv-b.is-on { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(35, 70, 232, .12); }
 .am-last { margin: 8px 0 0; }
-@media (max-width: 560px) { .am-now, .am-lv { grid-template-columns: 1fr; } }
+.am-x { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.am-x .am-lv-b { padding-right: 84px; }
+.am-x .am-lv-b i { color: var(--blue-2); }
+.am-more { margin: 4px 0 12px; border: 1px solid var(--rule); border-radius: 12px; padding: 0 12px; }
+.am-more summary { padding: 10px 0; font-size: 13px; font-weight: 700; color: var(--ink-2); cursor: pointer; }
+.am-more[open] summary { border-bottom: 1px solid var(--rule); margin-bottom: 10px; }
+@media (max-width: 560px) { .am-now, .am-lv, .am-x { grid-template-columns: 1fr; } }

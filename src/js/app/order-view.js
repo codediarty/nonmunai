@@ -102,7 +102,9 @@ export function orderFacts(o) {
     const pt = PAPER_TYPES.find((t) => t.id === i.paper.typeId);
     if (c.topicKnown === 'free' && c.title) rows.push(['관심 주제', c.title]);
     rows.push(['논문 유형', pt ? pt.label : i.paper.typeId], ['요청 작업', TASK_LABEL[i.paper.task] || i.paper.task]);
-    if (i.paper.task === 'edit') rows.push(['첨삭 단계', editLevelOf(i.paper.editLevel || ((o.quote && editLevelOfCode(o.quote.mainCode)) || {}).id || 'basic').label]);
+    // 첨삭은 한 가지 금액으로 받는다(2026-11-26 단순화). 예전에 단계를 골라 들어온 주문만 그 단계를 보여 준다
+    const lv = i.paper.task === 'edit' ? editLevelOf(i.paper.editLevel || ((o.quote && editLevelOfCode(o.quote.mainCode)) || {}).id || 'basic') : null;
+    if (lv && lv.id !== 'basic') rows.push(['첨삭 단계', lv.label]);
     if (i.paper.pages) rows.push(['분량', `약 ${i.paper.pages} Page`]);
     if (i.paper.feedbackItems) rows.push(['피드백 항목', `${i.paper.feedbackItems}개`]);
     const mt = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' }[c.method];

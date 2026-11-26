@@ -37,7 +37,7 @@ function paperTitle(it) {
 const products = [];
 for (const it of items) {
   if (it.quoteOnly || !it.price) continue;
-  // 첨삭 심화·완성도 보완(EDIT2·EDIT3)은 10만 원 단위라 '맞춤 견적 결제' 상품으로 결제한다(따로 만들지 않음)
+  // 가격표의 첨삭 EDIT2·EDIT3은 추가 작업 금액(10만 원 단위)의 기준이라 상품을 따로 만들지 않는다('맞춤 견적 결제'로 받음)
   if (/-EDIT[23]$/.test(it.code)) continue;
   let family, lines, meta, applies = '';
   if (it.service === 'paper') {
@@ -80,7 +80,7 @@ for (const price of QUOTE_AMOUNTS) {
     code: `Q-${price}`, kind: 'quote', service: 'addon', family: '맞춤 견적 결제', lines: ['맞춤 견적 결제', won(price)],
     name: `[논문AI] 맞춤 견적 결제 (${won(price)})`, price, days: 0,
     meta: '논문AI에서 안내받은 금액 그대로 결제',
-    includes: ['첨삭 심화 첨삭·완성도 보완처럼 범위와 분량으로 정해진 금액', '상담에서 정한 맞춤 견적(응답자 모집, 심화 분석 등)', '진행 중 범위가 늘어 안내받은 추가 결제'],
+    includes: ['첨삭 추가 작업(AI 문체 고쳐 쓰기, 인용 대조, 내용 보완 등)처럼 원고를 보고 정한 금액', '상담에서 정한 맞춤 견적(응답자 모집, 심화 분석 등)', '진행 중 범위가 늘어 안내받은 추가 결제'],
     excludes: [], unit: null, applies: '논문AI 주문 결제',
   });
 }
@@ -125,7 +125,7 @@ function pitch(p) {
     const n = TYPE_SHORT[t];
     return {
       full: { head: `관심 주제 한 줄이면, ${n} 완성본을 보내 드려요`, who: [`주제는 정했지만 어디서부터 써야 할지 막막한 분`, `연구모형, 가설, 목차를 한 번에 제대로 잡고 싶은 분`, `일정이 빠듯해서 완성도 높은 원고가 빨리 필요한 분`] },
-      // 이 상품은 첨삭 세 단계 가운데 기본 교정(문장)이다. 심화 첨삭·완성도 보완은 맞춤 견적 결제 상품으로 결제한다(2026-11-26)
+      // 첨삭 상품은 맞춤법·문장·용어를 다듬는 금액이다. 더 드는 작업은 원고를 보고 맞춤 견적 결제 상품(10만 원 단위)으로 추가 결제한다(2026-11-26)
       edit: { head: `${n}의 문장을 다듬어, 읽기 편한 원고로 만들어 드려요`, who: [`내용과 흐름은 괜찮고 문장만 다듬으면 되는 분`, `맞춤법·띄어쓰기·비문을 한 번에 바로잡고 싶은 분`, `원고 전체의 용어와 표기를 통일하고 싶은 분`] },
       feedback: /교수님/.test(FEEDBACK_TASK[t] || '')
         ? { head: `교수님 피드백이 몇 개든 한 번에 반영하고, 수정 보완·첨삭에 수정표까지 드려요`, who: [`교수님 의견을 받았는데 어떻게 고쳐야 할지 막막한 분`, `의견이 많아서 비용과 일정이 걱정되는 분`, `고친 부분의 문장과 논리까지 매끄럽게 다듬고 싶은 분`] }
@@ -163,20 +163,14 @@ const optionRows = (p) => {
   o.push(['우선 처리', `<b>${won(find('A-PRIORITY').price)}</b> · 작업 순서를 앞당겨 더 빨리 보내 드려요`]);
   return o;
 };
-// 기본 교정 상품: 심화 첨삭·완성도 보완이 무엇이 다른지와 결제 방법(맞춤 견적 결제)을 함께 보여 준다
-const editTiers = (p) => {
-  const d = find(p.code + '2'), c = find(p.code + '3');
-  const rows = [];
-  if (d) rows.push(['심화 첨삭', `<b>${won(d.price)}부터</b> · 기본 교정 전부와 AI 문체·번역투 고쳐 쓰기, 문단 흐름과 논리 연결, 본문 인용과 참고문헌 대조`]);
-  if (c) rows.push(['완성도 보완', `<b>${won(c.price)}부터</b> · 심화 첨삭 전부와 목차·구성 재배치, 부족한 근거 보완 집필, 논리·사실·수치 확인`]);
-  return rows.length ? spec(rows) + `<p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">이 상품은 문장을 다듬는 기본 교정이에요. 논문AI 주문서에서 단계를 고르면 금액이 바로 계산되고, 심화 첨삭과 완성도 보완은 맞춤 견적 결제 상품으로 결제해요.</p>` : '';
-};
+// 첨삭 상품: 기본 금액 밖의 작업은 원고를 보고 추가 금액(10만 원 단위)을 먼저 알려 드린다는 안내(2026-11-26)
+const editMore = () => `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">AI 문체 고쳐 쓰기, 본문 인용과 참고문헌 대조, 부족한 내용 보완처럼 일이 더 드는 작업은 원고를 확인한 뒤 <b>추가 금액을 10만 원 단위로 먼저</b> 알려 드려요. 동의하신 것만 진행하고, 결제는 메일에 있는 버튼 하나로 끝나요.</p>`;
 const SITE_A = '<a href="https://nonmunai.kr" target="_blank" style="color:#2346E8;font-weight:700;text-decoration:underline">nonmunai.kr</a>';
 // 진행 순서: 첫 단계만 상품에 따라 다르고 나머지는 같다
 const FIRST_STEP = {
   full: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에 관심 주제와 전공, 논문 종류만 적어 주세요. 제목은 전공 박사가 다듬어 정해 드려요.`,
   prop: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에 관심 주제와 전공만 적어 주세요. 제목과 연구 방향은 전공 박사가 다듬어 정해 드려요.`,
-  edit: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 원고를 올리고 첨삭 단계를 고르면 분량에 맞춰 금액이 바로 나와요.`,
+  edit: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 원고를 올리면 분량이 자동으로 계산되고 금액이 바로 나와요.`,
   fb: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 원고와 받은 피드백(파일이나 글)을 올려 주세요. 피드백이 몇 개든 금액은 같아요.`,
   other: `<b>논문AI에서 주문서 작성</b><br>${SITE_A}에서 필요한 작업을 고르고 자료를 올리면 금액이 바로 계산돼요.`,
 };
@@ -252,7 +246,7 @@ for (const p of products) {
     body = hero(KICK(p), esc(pt.head).replace(/, /, ',<br>'), `${p.name.replace('[논문AI] ', '')} · ${p.meta}`) + priceBox(p) + TRUST + SECRET
       + (pt.who.length ? sec('이런 분께 맞습니다', checks(pt.who)) : '')
       + sec('받는 결과물', checks(inc)) + (SAMPLE[p.service] ? img(SAMPLE[p.service][0], SAMPLE[p.service][1]) : '')
-      + (p.service === 'paper' && /-EDIT$/.test(p.code) && editTiers(p) ? sec('더 손봐야 한다면', editTiers(p)) : '')
+      + (p.service === 'paper' && /-EDIT$/.test(p.code) ? sec('더 손봐야 한다면', editMore()) : '')
       + (p.code === 'T-SIM' ? `<p style="margin:14px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">교육과 연습을 위한 가상 데이터로 진행해요.</p>` : '')
       + sec('함께 고르면 좋은 옵션', spec(optionRows(p)))
       + sec('진행 순서', cards(STEPS(p)))
