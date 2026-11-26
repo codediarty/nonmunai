@@ -6,7 +6,7 @@ import { buildDesign } from '../core/engine.js';
 import { designReportHtml } from '../ui/report.js';
 import { esc, won } from '../core/render.js';
 import { $, toast, url, modal, cfg } from '../ui/dom.js';
-import { cartPlan, productLinks } from './pay-plan.js';
+import { cartPlan, productLinks, amountLinks, amountRows } from './pay-plan.js';
 import { includesFor, listPriceFor, offText } from '../core/pricing.js';
 import { shopUrl } from './shop-link.js';
 
@@ -18,12 +18,25 @@ function tokenFor(no) {
 }
 
 // 상품 하나로 결제하는 주소는 결제 화면을 바로 여는 주소로 바꾼다(skkc.co.kr 공통 코드가 처리)
-function directUrl(o, link) {
+// pt: 결제 연결표(6시간). 아임웹 결제 완료 화면이 이 표로 '결제를 마쳤다'는 알림을 이 주문에 보낸다(조회 키는 싣지 않음)
+function directUrl(o, link, pt) {
   const single = link.cart ? link.cart.length === 1 && link.cart[0].qty === 1 : link.exact && !link.unit && !link.chat;
   if (!single || !/^https?:\/\/(www\.)?skkc\.co\.kr\/shop_view/.test(link.url || '')) return '';
   const code = link.cart ? link.cart[0].code : ((o.quote || {}).mainCode || '');
-  return shopUrl(link.url, { kind: 'order', o: o.orderNo, code, price: o.amountDue, list: listPriceFor(code, o.amountDue), label: payLabel(o, link) });
+  return shopUrl(link.url, { kind: 'order', o: o.orderNo, code, price: o.amountDue, list: listPriceFor(code, o.amountDue), label: payLabel(o, link), ...(pt ? { pt } : {}) });
 }
+function payTicket(o, token) {
+  return api('payTicket', { orderNo: o.orderNo, token }, { retries: 0, timeoutMs: 8000 }).then((r) => (r && r.ticket) || '').catch(() => '');
+}
+// 결제할 금액의 이름: 추가 결제만 남았으면 '○○ 추가 결제', 아니면 상품 이름
+function dueName(o) {
+  const ps = (o.payments || []).filter((p) => p.status === 'requested');
+  const name = String(o.productName || '논문AI 주문').replace(/^\[논문AI\]\s*/, '');
+  return ps.length && ps.every((p) => p.kind === 'extra') ? `${name} 추가 결제` : name;
+}
+// 금액이 바뀌었거나 추가 결제만 남은 주문(처음 접수가 아님)
+function lastChange(o) { return ((o.quote && o.quote.changes) || []).slice(-1)[0] || null; }
+const isRepay = (o) => !!lastChange(o) || (o.payments || []).some((p) => p.status === 'requested' && p.kind === 'extra');
 function payLabel(o, link) {
   return (link && link.cart && link.cart[0] ? link.cart[0].name : (o.productName || '논문AI 주문')).replace(/^\[논문AI\]\s*/, '');
 }
@@ -37,6 +50,9 @@ function skkcLink(o, settings, catalog) {
   // 2) 남은 금액과 값이 같은 상품(추가 결제 등): 추가 분량 단가 상품을 먼저 본다
   const pl = productLinks(settings);
   if (pl[`X-${due}`]) return { url: pl[`X-${due}`], exact: true };
+  // 3) 맞춤 견적 결제 상품(10만~100만 원, 10만 원 단위). 100만 원이 넘으면 100만 원 상품과 나머지를 함께 담는다
+  const ar = amountRows(due, amountLinks(settings), dueName(o));
+  if (ar) return { url: ar[0].url, exact: ar.length === 1 && ar[0].qty === 1, cart: ar };
   const same = (catalog.items || []).find((i) => i.price === due && (i.payUrl || pl[i.code]));
   if (same) return { url: same.payUrl || pl[same.code], exact: true };
   const item = (catalog.items || []).find((i) => i.code === (o.quote || {}).mainCode);
@@ -104,31 +120,38 @@ export async function startCheckout(root) {
     const s = cfg.settings || {};
     if (o.amountDue > 0 && o.allow && o.allow.pay && String(s.skkcEnabled) !== 'false' && !(String(s.tossEnabled) === 'true' && s.tossClientKey)) {
       const link = skkcLink(o, s, cfg.catalog || { items: [] });
-      const go = directUrl(o, link);
-      if (go) { renderHandoff(root, o, link, go); return; }
+      if (directUrl(o, link)) { renderHandoff(root, o, link, payTicket(o, token).then((pt) => directUrl(o, link, pt))); return; }
     }
   }
   render(root, o, cfg, token);
 }
 
-// 결제 화면으로 넘어가는 화면(잠깐 보여 주고 이동)
-function renderHandoff(root, o, link, go) {
+// 결제 화면으로 넘어가는 화면(잠깐 보여 주고 이동). goP: 결제 화면 주소(결제 연결표를 받는 동안 기다리는 Promise)
+function renderHandoff(root, o, link, goP) {
   const item = payLabel(o, link);
   const code = link.cart && link.cart[0] ? link.cart[0].code : ((o.quote || {}).mainCode || '');
   const list = listPriceFor(code, o.amountDue);
   const mail = (o.contact && o.contact.email) || '';
+  const again = isRepay(o);
+  const ch = lastChange(o);
   root.innerHTML = `<div class="wrap handoff"><div class="handoff-card">
-<p class="handoff-ok">${ICON.check}<span>의뢰 접수 완료 · 주문번호 ${esc(o.orderNo)}</span></p>
+<p class="handoff-ok">${ICON.check}<span>${again ? '결제 안내' : '의뢰 접수 완료'} · 주문번호 ${esc(o.orderNo)}</span></p>
 <h1 class="handoff-h">결제 화면을 여는 중이에요</h1>
-<div class="handoff-item"><span>${esc(item)}</span><span class="handoff-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, o.amountDue, { short: true })}</em>` : ''}<b class="num">${won(o.amountDue)}</b></span></div>
+<div class="handoff-item"><span>${esc(item)}</span><span class="handoff-price">${list ? `<s class="num">${won(list)}</s><em>${offText(list, o.amountDue, { short: true })}</em>` : ch && ch.before && !ch.paid ? `<s class="num">${won(ch.before)}</s>` : ''}<b class="num">${won(o.amountDue)}</b></span></div>
+${ch && ch.reason ? `<p class="handoff-why"><b>${ch.paid ? '추가 결제 사유' : ch.quote ? '견적 설명' : '금액이 바뀐 이유'}</b>${esc(ch.reason)}</p>` : ''}
 <div class="handoff-bar" aria-hidden="true"><i></i></div>
-<ul class="handoff-list"><li>${ICON.check}<span>결제가 확인되면 바로 작업을 시작해요.</span></li><li>${ICON.check}<span>진행 안내와 결과물은 ${mail ? `<b>${esc(mail)}</b>로` : '메일로'} 보내 드려요.</span></li><li>${ICON.check}<span>결제할 때 주문자 이름과 연락처를 주문서와 같게 적어 주세요.</span></li></ul>
-<a class="btn btn-primary btn-lg btn-block" id="handoffGo" href="${esc(go)}">결제 화면 바로 열기</a>
+<ul class="handoff-list"><li>${ICON.check}<span>${again ? '결제가 확인되면 바로 이어서 진행해요.' : '결제가 확인되면 바로 작업을 시작해요.'}</span></li><li>${ICON.check}<span>진행 안내와 결과물은 ${mail ? `<b>${esc(mail)}</b>로` : '메일로'} 보내 드려요.</span></li><li>${ICON.check}<span>결제할 때 주문자 이름과 연락처를 주문서와 같게 적어 주세요.</span></li></ul>
+<a class="btn btn-primary btn-lg btn-block" id="handoffGo" href="${esc(directUrl(o, link))}">결제 화면 바로 열기</a>
 <a class="handoff-later" href="${url('/checkout/')}?o=${encodeURIComponent(o.orderNo)}">나중에 결제할게요</a>
 </div></div>`;
-  const move = () => { location.href = go; };
-  const timer = setTimeout(move, 1800);
-  root.querySelector('.handoff-later').addEventListener('click', () => clearTimeout(timer));
+  const btn = root.querySelector('#handoffGo');
+  let go = btn.getAttribute('href');
+  let stop = false;
+  const t0 = Date.now();
+  // 결제 연결표는 3초까지만 기다린다(못 받으면 연결표 없이 연다)
+  const ready = Promise.race([Promise.resolve(goP).then((h) => { if (h) { go = h; btn.setAttribute('href', h); } }), new Promise((r) => setTimeout(r, 3000))]);
+  ready.then(() => { if (!stop) setTimeout(() => { if (!stop) location.href = go; }, Math.max(0, 1800 - (Date.now() - t0))); });
+  root.querySelector('.handoff-later').addEventListener('click', () => { stop = true; });
   // 결제 화면에서 뒤로 돌아오면 다시 넘기지 않고 결제 화면을 보여 준다
   window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 }
@@ -146,6 +169,9 @@ function afterPayHtml(o) {
 }
 
 function headNote(o) {
+  // 금액이 바뀌었으면(관리자 결제 금액 바꾸기) 바뀐 금액과 이유를 맨 먼저 보여 준다
+  const ch = lastChange(o);
+  if (ch && o.amountDue > 0) return note(`<b>${ch.paid ? `추가 결제 ${won(ch.pay)}을 부탁드려요.` : ch.quote ? `확정 견적은 ${won(ch.pay)}이에요.` : `결제 금액이 ${ch.before ? `${won(ch.before)}에서 ` : ''}${won(ch.pay)}으로 바뀌었어요.`}</b> ${esc(ch.reason || '')}`, 'amber');
   if (['pending_payment', 'quote_requested'].includes(o.status) && !o.paidAmount) {
     return note(`주문서가 접수되었습니다. 주문 내용은 등록하신 메일(${esc(o.contact.email)})로도 보내 드렸습니다. 이 기기에서는 주문 조회 화면에 바로 표시되고, 다른 기기에서는 주문번호와 조회 비밀번호${o.input && o.input.common && o.input.common.topicKnown === 'free' ? '(휴대전화 뒤 4자리)' : ''}로 확인할 수 있습니다.`, 'green');
   }
@@ -182,7 +208,7 @@ function render(root, o, cfg, token) {
       blocks.push(`<div class="pay-m${methods[0] === 'skkc' ? ' is-main' : ''}"><h3>안전결제</h3>
 <p class="pay-lead">카드, 간편결제, 계좌이체로 결제합니다. 카드 명세서와 영수증에는 운영사 <b>성균관컨설팅</b>으로 표시됩니다.</p>
 ${what}
-<div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(directUrl(o, link) || link.url)}"${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
+<div class="pay-go"><a class="btn btn-primary btn-lg" id="skkcGo" href="${esc(directUrl(o, link) || link.url)}"${directUrl(o, link) ? ' data-direct="1"' : ''}${multi || link.chat ? ' target="_blank" rel="noopener"' : ''}>${goLabel}</a><button type="button" class="btn btn-ghost btn-lg" id="skkcDone">결제를 마쳤어요</button></div>
 <ol class="pay-steps"><li>결제 화면에서 결제를 마칩니다. 주문자 이름과 연락처는 주문서와 같게 적어 주세요.</li><li>결제가 확인되면 작업이 시작되고 메일로 알려 드립니다. 이 화면에서 <b>결제를 마쳤어요</b>를 누르면 더 빨리 시작합니다.</li></ol>
 <div class="copy-row"><span class="muted small">주문번호</span><span class="copy-chip">${esc(o.orderNo)}</span><button type="button" class="link-btn" id="copyNo">복사</button></div>
 <ul class="trust-chips"><li>성균관대학교 RISE사업 지원 기업</li><li>통신판매업 신고 사업자</li><li>전공 분야 박사 검수</li><li>철저한 보안 관리</li><li>전달 후 자료 삭제</li></ul></div>`);
@@ -212,6 +238,11 @@ ${headNote(o)}</div>`;
 }
 
 function bind(root, o, cfg, token) {
+  const go = $('#skkcGo', root);
+  if (go && go.dataset.direct === '1') {
+    const link = skkcLink(o, cfg.settings || {}, cfg.catalog || { items: [] });
+    payTicket(o, token).then((pt) => { const h = pt && directUrl(o, link, pt); if (h) go.setAttribute('href', h); });
+  }
   const copy = $('#copyNo', root);
   if (copy) copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(o.orderNo); toast('주문번호를 복사했습니다.'); } catch { toast('복사하지 못했습니다.', { error: true }); } });
   const claim = async (method, payerName) => {

@@ -5,6 +5,8 @@
 function siteUrl_() { return String(setting_('siteUrl') || '').replace(/\/+$/, ''); }
 function orderLink_(o) { return siteUrl_() + '/orders/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(makeOrderToken_(o.orderNo, o.tokenKey)); }
 function adminLink_(o) { return siteUrl_() + '/admin/#order=' + encodeURIComponent(o.orderNo); }
+// 결제 바로 가기: 주문 결제 화면이 잠깐 금액을 보여 주고 아임웹(성균관컨설팅) 결제 화면을 바로 연다(2026-11-26)
+function checkoutLink_(o) { return siteUrl_() + '/checkout/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(makeOrderToken_(o.orderNo, o.tokenKey)) + '&pay=1'; }
 
 function mailLayout_(title, body, opts) {
   opts = opts || {};
@@ -106,7 +108,7 @@ function mailCustomer_(o, kind, extra) {
         title = '주문서가 접수되었습니다';
         body = '<p>' + name + '님, 논문AI에 맡겨 주셔서 감사합니다.</p><p>결제가 확인되면 작업 순서에 배정되고, 예상 전달일을 바로 알려 드립니다. 주문 페이지에서 결제와 진행 상황을 확인하실 수 있습니다.</p>' + REPLY_INVITE;
         card = orderCard_(o, [['결제 금액', '<span style="color:#2346E8">' + won(q.total || o.amount) + '</span>'], ['상태', '결제 대기']]);
-        button = { label: '결제하고 작업 시작하기', url: link };
+        button = { label: '결제하고 작업 시작하기', url: checkoutLink_(o) };
       }
       break;
     case 'quote':
@@ -114,7 +116,7 @@ function mailCustomer_(o, kind, extra) {
       title = '확정 견적이 준비되었습니다';
       body = '<p>' + name + '님, 요청하신 작업의 확정 견적을 안내드립니다.</p>' + (extra.message ? '<p>' + escHtml_(extra.message).replace(/\n/g, '<br>') + '</p>' : '');
       card = orderCard_(o, [['확정 금액', '<span style="color:#2346E8">' + won(q.total || o.amount) + '</span>']].concat(o.eta ? [['예상 전달일', korDate_(o.eta)]] : []));
-      button = { label: '견적 확인하고 결제하기', url: link };
+      button = { label: won(q.total || o.amount) + ' 결제하기', url: checkoutLink_(o) };
       break;
     case 'started':
       if (extra.claimed) {
@@ -162,7 +164,25 @@ function mailCustomer_(o, kind, extra) {
       title = '추가 결제 안내';
       body = '<p>' + name + '님, 아래 사유로 추가 결제를 요청드립니다. 결제가 확인되면 이어서 진행합니다.</p>';
       card = orderCard_(o, [['사유', escHtml_(extra.reason || '')], ['금액', '<span style="color:#2346E8">' + won(extra.amount) + '</span>']]);
-      button = { label: '추가 결제하기', url: link };
+      button = { label: won(extra.amount) + ' 추가 결제하기', url: checkoutLink_(o) };
+      break;
+    case 'amount':
+      // 결제 금액 바꾸기(관리자): 바뀐 금액, 사유, 포함 범위, 바로 결제 버튼
+      var paidBefore = Number(extra.paid || 0);
+      var inc = (extra.scope && extra.scope.length ? extra.scope : includesFor(q.includes || [], ((orderData_(o).input || {}).paper || {}).pages)).slice(0, 12);
+      subject = '[논문AI] ' + (paidBefore ? '추가 결제 안내 ' : extra.quote ? '확정 견적 안내 ' : '결제 금액 안내 ') + won(extra.pay) + ' (' + o.orderNo + ')';
+      title = paidBefore ? '추가 결제를 부탁드려요' : extra.quote ? '확정 견적을 안내드려요' : '결제 금액을 다시 안내드려요';
+      body = '<p>' + name + '님, 보내 주신 ' + (o.service === 'paper' ? '원고와 ' : '자료와 ') + '요청 사항을 확인하고 ' + (paidBefore ? '추가로 필요한 금액을 안내드려요.' : extra.quote ? '확정 견적을 안내드려요.' : '작업 범위에 맞는 결제 금액을 다시 안내드려요.') + '</p>' +
+        '<p style="margin:18px 0 6px;font-size:13px;font-weight:800;color:#2346E8">' + (paidBefore ? '추가 결제 사유' : extra.quote ? '견적 설명' : '금액이 바뀐 이유') + '</p>' +
+        '<div style="padding:14px 16px;border-left:3px solid #2346E8;border-radius:8px;background:#F4F6FE;color:#0F1B3D;font-size:15px;line-height:1.75">' + escHtml_(extra.reason || '').replace(/\n/g, '<br>') + '</div>' +
+        (inc.length ? '<p style="margin:20px 0 6px;font-size:13px;font-weight:800;color:#2346E8">이 금액에 들어 있는 작업</p><ul style="margin:0;padding:0 0 0 18px;color:#2B3446;font-size:14.5px;line-height:1.8">' + inc.map(function (x) { return '<li>' + escHtml_(x) + '</li>'; }).join('') + '</ul>' : '') +
+        '<p style="margin-top:18px">아래 버튼을 누르면 성균관컨설팅 결제 화면이 바로 열려요. 결제가 확인되면 바로 ' + (paidBefore ? '이어서 진행' : '작업을 시작') + '할게요.</p>' +
+        '<p style="color:#4A5468;font-size:14px">금액이나 작업 범위가 궁금하시면 이 메일에 답장해 주세요. 담당자가 바로 답해 드려요.</p>';
+      card = orderCard_(o, (extra.before && !paidBefore ? [['변경 전', '<s style="color:#8A93A6">' + won(extra.before) + '</s>']] : [])
+        .concat([[paidBefore ? '추가 결제' : '결제할 금액', '<span style="color:#2346E8;font-size:17px">' + won(extra.pay) + '</span>']])
+        .concat(paidBefore ? [['결제 완료', won(paidBefore)], ['총 주문 금액', won(extra.total)]] : [])
+        .concat(o.eta ? [['예상 전달일', korDate_(o.eta)]] : []));
+      button = { label: won(extra.pay) + ' 결제하기', url: checkoutLink_(o) };
       break;
     case 'cancelled':
       subject = '[논문AI] 주문이 자동 취소되었습니다 (' + o.orderNo + ')';
@@ -232,6 +252,7 @@ function orderDetailHtml_(o) {
   var job = [];
   put(job, '상품', o.productName, 120, true);
   if (o.service === 'paper' && p.pages) put(job, '분량', p.pages + '쪽(Page)');
+  if (o.service === 'paper' && p.task === 'edit') put(job, '첨삭 단계', editLevelOf(p.editLevel || ((q.mainCode && editLevelOfCode(q.mainCode)) || {}).id || 'basic').label, 40, true);
   put(job, c.topicKnown === 'free' ? '관심 주제' : '연구 주제', c.title, 400, true);
   put(job, '전공', c.fieldText, 80);
   put(job, '키워드', (c.keywords || []).join(', '), 200);
@@ -290,6 +311,20 @@ function notifyOperator_(o, event, detail, opts) {
   });
   sendMail_(operatorEmails_().join(','), subject, html, true, reply);
   pushNtfy_('논문AI ' + event, (amount ? amount + ' · ' : '') + (o.summary || o.productName) + ' · ' + o.orderNo, adminLink_(o));
+}
+
+// 아임웹 맞춤 견적 결제 완료 알림 중 주문에 자동으로 연결하지 못한 것(주문번호 없음·못 찾음·연락처 다름)
+function notifyUnlinkedPayment_(orderNo, o, amount, label, payer) {
+  var why = o ? '적어 주신 주문번호의 연락처와 결제할 때 적은 연락처가 달라 주문에 자동으로 연결하지 않았습니다.'
+    : orderNo ? '적어 주신 주문번호(' + escHtml_(orderNo) + ')를 찾지 못했습니다.' : '주문번호 없이 결제했습니다.';
+  var rows = [['결제 금액', '<b>' + won(amount) + '</b>'], ['결제 상품', escHtml_(label)], ['결제자', escHtml_(payer.name || '-')], ['연락처', escHtml_(payer.phone || '-')], ['이메일', escHtml_(payer.email || '-')], ['적은 주문번호', escHtml_(orderNo || '없음')]];
+  if (o) rows.push(['주문 고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + ' · ' + escHtml_(o.productName || '')]);
+  var html = mailLayout_('결제 완료 알림(주문 연결 확인 필요)', '<p>' + why + ' 아임웹 주문 내역에서 결제를 확인한 뒤, 해당 주문의 관리자 화면에서 결제 확인 처리를 해 주세요.</p>', {
+    card: rows,
+    button: o ? { label: '관리자 화면에서 보기', url: adminLink_(o) } : { label: '관리자 화면 열기', url: siteUrl_() + '/admin/' },
+  });
+  sendMail_(operatorEmails_().join(','), '[논문AI] 결제 완료 알림(주문 연결 확인 필요) · ' + won(amount) + ' · ' + (payer.name || '결제자'), html, true, isEmail_(payer.email) ? payer.email : '');
+  pushNtfy_('논문AI 결제 완료 알림', won(amount) + ' · ' + (payer.name || '') + ' · 주문 연결 확인 필요', o ? adminLink_(o) : siteUrl_() + '/admin/');
 }
 
 function notifyOperatorDebounced_(o, event, detail) {

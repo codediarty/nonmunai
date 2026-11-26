@@ -32,6 +32,7 @@ export const NAV = [
     ],
   },
   { label: '가격', href: '/pricing/' },
+  { label: '요금 결제', href: '/pay/' },
   { label: '가이드', href: '/guide/' },
 ];
 
@@ -89,7 +90,7 @@ export function createTemplates({ site, root, assetVersion }) {
 <div class="ft-cols">${col('논문 작성', [['AI 논문 자동작성', '/ai-thesis/'], ['석사학위논문', '/master-thesis/'], ['박사학위논문', '/dissertation/'], ['학술지 논문', '/journal-paper/'], ['연구계획서', '/research-proposal/'], ['논문 작성 지원', '/thesis-writing/']])}
 ${col('논문 지원', [['논문 첨삭·교정', '/thesis-editing/'], ['교수님 피드백 반영', '/professor-feedback/'], ['논문 컨설팅', '/consulting/'], ['설문조사', '/survey/'], ['통계분석', '/statistics/'], ['가격 안내', '/pricing/']])}
 ${col('무료 도구·가이드', [['무료 도구 모음', '/tools/'], ['무료 논문 설계', '/free/'], ['논문 목차 생성기', '/tools/toc/'], ['표본 수 계산기', '/tools/sample-size/'], ['참고문헌 생성기', '/tools/references/'], ['논문 작성 가이드', '/guide/']])}
-${col('고객 지원', [['주문 조회', '/orders/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/'], ['서비스 소개', '/about/'], ['연구윤리 원칙', '/ethics/']])}</div></div>
+${col('고객 지원', [['주문 조회', '/orders/'], ['요금 결제', '/pay/'], ['진행 방식', '/process/'], ['자주 묻는 질문', '/faq/'], ['서비스 소개', '/about/'], ['연구윤리 원칙', '/ethics/']])}</div></div>
 <p class="ft-legal"><a href="${u('/terms/')}">이용약관</a><a href="${u('/privacy/')}"><b>개인정보처리방침</b></a><a href="${u('/refund/')}">환불 규정</a></p>
 <div class="ft-biz"><p><b>논문AI</b> 운영 ${esc(b.operator)} (성균관대학교 RISE사업 지원 기업) · 대표 ${esc(b.ceo)} · 사업자등록번호 ${esc(b.bizNo)} · 통신판매업신고 ${esc(b.mailOrderNo)}</p>
 <p>${esc(b.address)} · 전화 ${esc(b.phone)} · 이메일 ${esc(b.email)}</p>

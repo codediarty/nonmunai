@@ -4,6 +4,8 @@ import { workBrief, aiPrompts, customerTemplates, designOf } from './brief.js';
 import { designReportHtml } from '../ui/report.js';
 import { orderFacts, factsTable, orderTitle, isSimulation } from '../app/order-view.js';
 import { blobToBase64, base64ToBlob, saveBlob, fmtSize } from '../app/files.js';
+import { loadConfig } from '../app/api.js';
+import { computeQuote, EDIT_LEVELS, editLevelOf, editLevelOfCode, includesFor, QUOTE_AMOUNTS, QUOTE_MAX, isQuoteAmount } from '../core/pricing.js';
 
 const SLOT = { manuscript: '기존 원고', materials: '참고 자료', toc: '목차', format: '양식', feedback: '피드백', questionnaire: '설문지', proposal: '연구계획서', data: '데이터', prevResult: '기존 분석', codebook: '변수 설명', other: '기타', result: '결과물' };
 const STATUS_FLOW = ['quote_requested', 'pending_payment', 'payment_review', 'received', 'checking', 'needs_materials', 'preparing', 'in_progress', 'review', 'delivered', 'revision', 'completed', 'cancelled'];
@@ -15,6 +17,29 @@ export async function renderOrder(root, orderNo, go) {
   try { o = (await aapi('adminGetOrder', { orderNo })).order; } catch (e) { if (!authLost(e)) root.innerHTML = `<div class="ad-empty">${esc(e.message)} <a href="#orders">목록으로</a></div>`; return; }
   const view = new AdminOrder(root, o, go);
   view.render();
+}
+
+// 금액 단추(10만~100만 원)와 그 금액이 아임웹에서 어떻게 결제되는지 안내
+function amountChips() {
+  return `<div class="am-chips" role="group" aria-label="금액 빠르게 고르기">${QUOTE_AMOUNTS.map((a) => `<button type="button" class="am-chip" data-amt="${a}">${a / 10000}만</button>`).join('')}</div>`;
+}
+function payHint(n, paid) {
+  if (!(n > 0)) return '';
+  const total = paid ? ` · 총 주문 금액 ${won(paid + n)}` : '';
+  if (isQuoteAmount(n)) return `아임웹 '맞춤 견적 결제 ${won(n)}' 상품으로 고객이 바로 결제해요${total}`;
+  if (n > QUOTE_MAX && n % 100000 === 0) return `100만 원 상품 ${Math.floor(n / QUOTE_MAX)}개${n % QUOTE_MAX ? `와 ${won(n % QUOTE_MAX)} 상품` : ''}을 함께 담아 결제해요${total}`;
+  return `10만 원 단위가 아니면 같은 금액 상품이 있을 때만 바로 결제돼요. 없으면 고객이 상담 채널에서 결제 링크를 받아야 해요${total}`;
+}
+function bindAmount(box, input, paidOf) {
+  const hint = box.querySelector('[data-pay-hint]');
+  const sync = () => {
+    const n = Number(input.value) || 0;
+    if (hint) { hint.textContent = payHint(n, paidOf()); hint.classList.toggle('is-warn', n > 0 && !(n % 100000 === 0)); }
+    box.querySelectorAll('[data-amt]').forEach((c) => c.classList.toggle('is-on', Number(c.dataset.amt) === n));
+  };
+  box.querySelectorAll('[data-amt]').forEach((c) => c.addEventListener('click', () => { input.value = c.dataset.amt; sync(); input.focus(); }));
+  input.addEventListener('input', sync);
+  sync();
 }
 
 class AdminOrder {
@@ -139,7 +164,8 @@ ${(o.messagesAll || []).length ? `<ul class="msg-list ad-msglist">${o.messagesAl
 <ul class="pl">${(q.lines || []).map((l) => `<li><span>${esc(l.name)}${l.note ? `<small>${esc(l.note)}</small>` : ''}</span><b class="num">${l.pending ? '견적' : won(l.amount)}</b></li>`).join('')}</ul>
 <div class="pl-total"><span>합계</span><b class="num">${won(o.amount)}</b></div>
 ${(o.paymentsAll || []).length ? `<ul class="ad-pays">${o.paymentsAll.map((p) => `<li><span><b>${p.kind === 'extra' ? '추가' : '본 결제'}</b> ${won(p.amount)}<small>${esc(METHOD_LABEL[p.method] || p.method || '')}${p.ref ? ` · ${esc(p.ref)}` : ''} · ${fmtAt(p.confirmedAt || p.at)}</small></span><em class="ps ps-${esc(p.status)}">${esc(PAY_ST[p.status] || p.status)}</em>${['claimed', 'requested'].includes(p.status) ? `<button class="btn btn-ghost btn-xs" data-act="confirm" data-pay="${esc(p.id)}">확인 처리</button>` : ''}</li>`).join('')}</ul>` : ''}
-<div class="ad-btnrow"><button class="btn btn-ghost btn-xs" data-act="quote">${o.status === 'quote_requested' ? '견적 작성' : '금액 다시 정하기'}</button><button class="btn btn-ghost btn-xs" data-act="extra">추가 결제 요청</button></div></div>`;
+<div class="ad-btnrow"><button class="btn btn-dark btn-xs" data-act="quote">${o.status === 'quote_requested' ? '견적 작성' : '금액 바꿔 보내기'}</button><button class="btn btn-ghost btn-xs" data-act="extra">추가 결제 요청</button></div>
+${((o.quote && o.quote.changes) || []).length ? `<p class="hint am-last">마지막 변경 ${fmtAt(o.quote.changes.slice(-1)[0].at)} · ${esc(o.quote.changes.slice(-1)[0].reason.slice(0, 60))}</p>` : ''}</div>`;
   }
 
   statusCard() {
@@ -152,6 +178,79 @@ ${(o.paymentsAll || []).length ? `<ul class="ad-pays">${o.paymentsAll.map((p) =>
 <div class="field" style="margin-top:18px"><label class="label" for="etaIn">예상 전달일</label><input class="input" type="date" id="etaIn" value="${esc(o.eta || '')}"></div>
 <label class="check"><input type="checkbox" id="etaNotify"><span>바뀐 날짜를 고객에게 알리기</span></label>
 <button class="btn btn-ghost btn-sm btn-block" data-act="setEta">예정일 바꾸기</button></div>`;
+  }
+
+  /* ---------------------------------------------------------------- 결제 금액 바꾸기 */
+  // 금액(10만~100만 원 단추 또는 직접), 사유(고객 메일에 그대로), 포함 작업, 첨삭 단계를 정하면 고객에게 바로 결제 버튼이 담긴 메일이 간다
+  async amountBox() {
+    const o = this.o;
+    const paid = o.paidAmount || 0;
+    const due = o.amountDue || 0;
+    const q = o.quote || {};
+    const p = (o.input && o.input.paper) || {};
+    const edit = o.service === 'paper' && p.task === 'edit';
+    let tiers = [];
+    if (edit) {
+      try {
+        const cfg = await loadConfig();
+        tiers = EDIT_LEVELS.map((lv) => {
+          const r = computeQuote(cfg.catalog, { service: 'paper', paper: { typeId: p.typeId, task: 'edit', pages: p.pages, editLevel: lv.id } });
+          return r.mainCode && editLevelOfCode(r.mainCode) && editLevelOfCode(r.mainCode).id === lv.id && !r.quoteRequired ? { ...lv, total: r.total, includes: includesFor(r.includes, p.pages) } : null;
+        }).filter(Boolean);
+      } catch { tiers = []; }
+    }
+    const cur = edit ? (p.editLevel || (editLevelOfCode(q.mainCode) || {}).id || 'basic') : '';
+    const quoteReq = o.status === 'quote_requested';
+    const REASONS = [
+      ['범위', '요청하신 작업(내용 보완, 구조 검토 등)이 고르신 단계보다 넓어서 작업 범위에 맞게 금액을 다시 정했어요.'],
+      ['분량', '보내 주신 원고 분량이 주문서에 적은 분량보다 많아서 분량에 맞게 금액을 다시 정했어요.'],
+      ['일정', '요청하신 제출 일정에 맞추려면 우선 처리가 필요해서 금액을 다시 정했어요.'],
+      ['추가 요청', '주문 뒤에 요청하신 추가 작업을 함께 진행하려고 금액을 다시 정했어요.'],
+      ['상담 견적', '상담에서 말씀 나눈 작업 범위와 일정으로 견적을 정했어요.'],
+    ];
+    const curInc = includesFor(q.includes || [], p.pages);
+    const html = `<div class="am-now"><span>주문 금액<b class="num">${won(o.amount || 0)}</b></span><span>결제 완료<b class="num">${won(paid)}</b></span><span>결제 대기<b class="num">${won(due)}</b></span></div>
+${paid ? `<p class="hint am-note">이미 결제한 ${won(paid)}은 그대로 두고, 아래 금액을 <b>추가 결제</b>로 요청해요.</p>` : ''}
+${tiers.length ? `<div class="field"><span class="label">첨삭 단계 <small>고르면 금액과 포함 작업이 채워져요(${p.pages ? `${p.pages} Page 기준` : '기준 분량'})</small></span><div class="am-lv">${tiers.map((t) => `<button type="button" class="am-lv-b${t.id === cur ? ' is-cur' : ''}" data-lv="${t.id}"><b>${esc(t.label)}</b><span class="num">${won(t.total)}</span>${t.id === cur ? '<i>지금</i>' : ''}</button>`).join('')}</div></div>` : ''}
+<div class="field"><label class="label" for="amA">${paid ? '추가로 받을 금액(원)' : '고객이 결제할 금액(원)'}</label>${amountChips()}
+<input class="input" id="amA" name="amount" type="number" min="1000" step="1000" value="${paid ? '' : (due || o.amount || '')}"><p class="hint am-pay" data-pay-hint></p></div>
+<div class="field"><label class="label" for="amR">${quoteReq ? '견적 설명' : '바꾸는 이유'} <small>고객 메일에 그대로 실려요</small></label><div class="am-rs">${REASONS.map(([k, t]) => `<button type="button" class="am-r" data-r="${esc(t)}">${esc(k)}</button>`).join('')}</div>
+<textarea class="textarea" id="amR" name="reason" rows="3" placeholder="예: 요청하신 내용 보완과 구조 검토는 완성도 보완 단계라 금액을 다시 안내드려요."></textarea></div>
+<div class="field"><label class="label" for="amS">이 금액에 들어 있는 작업 <small>한 줄에 하나, 고객 메일과 주문 화면에 보여요</small></label><textarea class="textarea" id="amS" name="scope" rows="4">${esc(curInc.join('\n'))}</textarea></div>
+<div class="row-2"><div class="field"><label class="label" for="amD">작업 기간(영업일)</label><input class="input" id="amD" name="days" type="number" min="1" value="${q.days || ''}"></div><div class="field"><label class="label" for="amE">예상 전달일 <small>비우면 결제 시 계산</small></label><input class="input" id="amE" name="eta" type="date"></div></div>
+<input type="hidden" name="level" id="amL" value="">
+<label class="check"><input type="checkbox" name="notify" checked><span>고객에게 메일 보내기(바뀐 금액, 이유, 포함 작업, 바로 결제 버튼)</span></label>`;
+    const v = await confirmBox({
+      title: quoteReq ? '견적 보내기' : '결제 금액 바꿔 보내기',
+      html,
+      ok: quoteReq ? '견적 보내기' : '바꾸고 보내기',
+      wide: true,
+      onOpen: (box) => {
+        const amt = box.querySelector('#amA');
+        bindAmount(box, amt, () => paid);
+        const reason = box.querySelector('#amR');
+        box.querySelectorAll('[data-r]').forEach((btn) => btn.addEventListener('click', () => {
+          reason.value = reason.value.trim() ? `${reason.value.trim()} ${btn.dataset.r}` : btn.dataset.r;
+          reason.focus();
+        }));
+        box.querySelectorAll('[data-lv]').forEach((btn) => btn.addEventListener('click', () => {
+          const t = tiers.find((x) => x.id === btn.dataset.lv);
+          if (!t) return;
+          box.querySelectorAll('[data-lv]').forEach((x) => x.classList.toggle('is-on', x === btn));
+          box.querySelector('#amL').value = t.id === cur ? '' : t.id;
+          amt.value = paid ? Math.max(0, t.total - paid) : t.total;
+          amt.dispatchEvent(new Event('input'));
+          box.querySelector('#amS').value = t.includes.join('\n');
+          if (!reason.value.trim() && t.id !== cur) reason.value = `요청하신 작업이 ${editLevelOf(cur).label} 범위를 넘어서 ${t.label} 단계로 진행하려고 해요. ${t.label}에는 아래 작업이 모두 들어 있어요.`;
+        }));
+      },
+      validate: (x) => (!(Number(x.amount) >= 1000) ? '고객이 결제할 금액을 입력해 주세요.' : !String(x.reason || '').trim() ? '바꾸는 이유를 적어 주세요. 고객 메일에 그대로 실려요.' : ''),
+    });
+    if (!v) return null;
+    return {
+      amount: Number(v.amount), reason: String(v.reason).trim(), scope: String(v.scope || '').split('\n').map((x) => x.trim()).filter(Boolean),
+      level: v.level || undefined, days: Number(v.days) || undefined, eta: v.eta || undefined, notify: !!v.notify,
+    };
   }
 
   /* ---------------------------------------------------------------- 동작 */
@@ -212,17 +311,20 @@ ${(o.paymentsAll || []).length ? `<ul class="ad-pays">${o.paymentsAll.map((p) =>
         break;
       }
       case 'quote': {
-        const q = o.quote || {};
-        const v = await confirmBox({ title: '확정 견적', html: `<p class="small muted">확정하면 고객에게 결제 안내 메일이 가고, 주문이 결제 대기로 바뀝니다.</p><div class="row-2"><div class="field"><label class="label" for="qT">확정 금액(원)</label><input class="input" id="qT" name="total" type="number" min="1000" step="1000" value="${q.total || o.amount || ''}"></div><div class="field"><label class="label" for="qD">작업 기간(영업일)</label><input class="input" id="qD" name="days" type="number" min="1" value="${q.days || ''}"></div></div><div class="field"><label class="label" for="qE">예상 전달일 <small>비우면 결제 시 계산</small></label><input class="input" id="qE" name="eta" type="date"></div><div class="field"><label class="label" for="qM">고객 안내</label><textarea class="textarea" id="qM" name="message" rows="3" placeholder="견적 근거와 포함 범위를 적어 주세요"></textarea></div>`, ok: '견적 확정' });
+        const v = await this.amountBox();
         if (!v) return;
-        if (!(Number(v.total) > 0)) { toast('금액을 입력해 주세요.', { error: true }); return; }
-        this.run(b, 'adminSetQuote', { total: Number(v.total), days: Number(v.days) || undefined, eta: v.eta || undefined, message: v.message }, '견적을 보냈습니다.');
+        this.run(b, 'adminChangeAmount', v, v.notify ? `${won(v.amount)} 결제 안내 메일을 보냈습니다.` : '금액을 바꿨습니다.');
         break;
       }
       case 'extra': {
-        const v = await confirmBox({ title: '추가 결제 요청', html: '<div class="field"><label class="label" for="xA">금액(원)</label><input class="input" id="xA" name="amount" type="number" min="1000" step="1000"></div><div class="field"><label class="label" for="xR">사유(고객에게 보임)</label><input class="input" id="xR" name="reason" placeholder="예: 분량 추가 20쪽, 추가 수정 1회"></div>', ok: '요청 보내기' });
+        const v = await confirmBox({
+          title: '추가 결제 요청',
+          html: `<div class="field"><label class="label" for="xA">금액(원) <small>10만 원 단위는 아임웹 맞춤 견적 결제 상품으로 바로 결제돼요</small></label>${amountChips()}<input class="input" id="xA" name="amount" type="number" min="1000" step="1000"><p class="hint am-pay" data-pay-hint></p></div><div class="field"><label class="label" for="xR">사유(고객에게 보임)</label><input class="input" id="xR" name="reason" placeholder="예: 분량 추가 20쪽, 추가 수정 1회"></div>`,
+          ok: '요청 보내기',
+          onOpen: (box) => bindAmount(box, box.querySelector('#xA'), () => 0),
+          validate: (x) => (!(Number(x.amount) > 0) ? '금액을 입력해 주세요.' : ''),
+        });
         if (!v) return;
-        if (!(Number(v.amount) > 0)) { toast('금액을 입력해 주세요.', { error: true }); return; }
         this.run(b, 'adminRequestExtra', { amount: Number(v.amount), reason: v.reason }, '추가 결제를 요청했습니다.');
         break;
       }

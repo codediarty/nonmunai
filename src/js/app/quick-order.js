@@ -4,7 +4,8 @@
 // 원고 첨삭·피드백 반영은 원고 파일이 필요해 기존처럼 주문서를 먼저 접수한다.
 import { submitOrder, uploader, ICON } from './wizard.js';
 import { loadConfig, peekConfig, api } from './api.js';
-import { computeQuote, findItem, paperItemCode, etaDate, includesFor, listPriceFor, offText, PROMO_NAME, pageLabel } from '../core/pricing.js';
+import { computeQuote, findItem, paperItemCode, etaDate, includesFor, listPriceFor, offText, PROMO_NAME, pageLabel, EDIT_LEVELS, editLevelOf } from '../core/pricing.js';
+import { scopeNudge, josa } from './edit-scope.js';
 import { readPrompt, TYPE_LABEL, DEMO_PROMPTS } from '../core/preview.js';
 import { PAPER_TYPES, FIELDS, guessField } from '../core/kb.js';
 import { classifyFeedback } from '../core/feedback.js';
@@ -53,7 +54,7 @@ const REQ_CHIPS = {
 
 const DEF = {
   v: 4, task: 'full', topic: '', major: '', pkg: 'master80',
-  etype: 'master', epages: null, editScope: '', feedbackText: '',
+  etype: 'master', epages: null, editScope: '', feedbackText: '', level: 'deep', nudgeOff: '',
   format: 'general', formatName: '',
   addons: { priority: false, ppt: false, english: false, format: false, revisions: 0 },
   outputFormat: 'docx', due: '', request: '', method: 'auto',
@@ -87,7 +88,7 @@ function quoteInput() {
   const direct = isDirect();
   return {
     service: 'paper',
-    paper: { typeId, task: S.task, pages, feedbackItems: fb },
+    paper: { typeId, task: S.task, pages, feedbackItems: fb, ...(S.task === 'edit' ? { editLevel: levelId() } : {}) },
     // 바로 결제(상품 하나)일 때는 유료 옵션을 붙이지 않는다
     addons: direct ? { priority: false, format: false, revisions: 0, ppt: false, english: false, editing: false } : {
       priority: !!S.addons.priority, format: !!S.addons.format, revisions: Number(S.addons.revisions || 0),
@@ -96,6 +97,18 @@ function quoteInput() {
   };
 }
 const quote = () => computeQuote(CONFIG.catalog, quoteInput());
+// 첨삭 단계: 가격표에 없는 단계는 고를 수 없게(운영 가격표 반영 전 등) 기본 교정으로
+const levelItem = (id, typeId = S.etype) => findItem(CONFIG.catalog, paperItemCode(typeId, 'edit', id === 'basic' ? '' : id));
+const levelsOn = () => EDIT_LEVELS.filter((lv) => levelItem(lv.id));
+function levelId() {
+  const on = levelsOn();
+  return on.some((lv) => lv.id === S.level) ? S.level : (on.some((lv) => lv.id === 'basic') ? 'basic' : (on[0] || EDIT_LEVELS[0]).id);
+}
+// 단원 번호: 첨삭은 '어디까지 손볼지'가 3번
+function secNo(key) {
+  const order = S.task === 'edit' ? ['s1', 's2', 'lv', 'req', 'who'] : ['s1', 's2', 'req', 'who'];
+  return order.indexOf(key) + 1;
+}
 const pkgQuote = (p, task = S.task) => computeQuote(CONFIG.catalog, { service: 'paper', paper: { typeId: p.typeId, task, pages: p.pages } });
 
 // 바로 결제: 논문 완성·연구계획서이고, 결제할 상품이 하나이며 상품 주소가 있을 때
@@ -129,6 +142,7 @@ function shell(root) {
 <div class="qo-tabs" role="tablist" aria-label="필요한 작업" hidden>${TASKS.map(([v, t, d]) => `<button type="button" role="tab" class="qo-tab" data-task="${v}" aria-selected="false"><b>${t}</b><small>${d}</small></button>`).join('')}</div>
 <section class="qo-sec" id="qoS1"></section>
 <section class="qo-sec" id="qoS2"></section>
+<section class="qo-sec qo-sec-lv" id="qoLvSec"></section>
 <section class="qo-sec qo-sec-req" id="qoReqSec"></section>
 <section class="qo-sec qo-sec-more" id="qoMore"></section>
 <section class="qo-sec" id="qoS4"></section>
@@ -172,16 +186,16 @@ function s1Html() {
   const majors = `<datalist id="qoMajors">${MAJORS.map((m) => `<option value="${m}">`).join('')}</datalist>`;
   if (!writeLike()) {
     const fb = S.task === 'feedback';
-    return `<h2 class="qo-h"><span class="qo-n">1</span>원고를 올려 주세요</h2>
+    return `<h2 class="qo-h"><span class="qo-n">${secNo('s1')}</span>원고를 올려 주세요</h2>
 <p class="qo-help">${fb ? '원고와 교수님 의견을 주시면 의견 수와 관계없이 한 번에 모두 반영하고, 부족한 내용은 수정 보완, 고친 문장은 첨삭까지 해 드려요. 무엇을 어디서 고쳤는지 정리한 수정표도 함께 드려요.' : '문장과 논리, 인용과 형식을 다듬고 수정 내역을 표시한 파일과 깨끗한 정리본을 함께 드려요.'}</p>
 ${uploader(S, 'manuscript', { label: '기존 원고', required: true, hint: '한글·워드·PDF 모두 괜찮아요. 올리면 분량을 자동으로 계산해 드려요' })}
 <div id="qoDoc">${docInfoHtml()}</div>
 ${fb ? `<div class="field"><label class="label" for="qoFb">교수님 의견<span class="req">*</span></label><textarea class="textarea" id="qoFb" rows="5" data-k="feedbackText" maxlength="8000" placeholder="받은 의견을 그대로 붙여 넣어 주세요.\n예: 1. 연구의 필요성에 최근 자료를 보완할 것">${esc(S.feedbackText)}</textarea><p class="hint" id="qoFbCount">${fbCountText()}</p></div>
 ${uploader(S, 'feedback', { label: '의견이 담긴 파일', hint: '메모가 적힌 원고, 메일 캡처, 사진 모두 괜찮아요(붙여넣기와 둘 중 하나면 돼요)' })}`
-    : `<div class="field"><label class="label" for="qoScope">고칠 부분</label><input class="input" id="qoScope" data-k="editScope" maxlength="300" value="${esc(S.editScope)}" placeholder="비워 두시면 원고 전체의 문장·논리·형식을 다듬어 드려요"></div>`}
+    : `<div class="field"><label class="label" for="qoScope">맡길 범위 <span class="qo-opt">(선택)</span></label><input class="input" id="qoScope" data-k="editScope" maxlength="300" value="${esc(S.editScope)}" placeholder="특정 장만 맡기실 때 적어 주세요. 비워 두시면 원고 전체를 봐요"></div>`}
 <div class="field"><label class="label" for="qoMajor">전공 분야</label><input class="input" id="qoMajor" data-k="major" list="qoMajors" maxlength="60" value="${esc(S.major)}" placeholder="나의 전공 분야를 입력하세요 (선택)">${majors}</div>`;
   }
-  return `<h2 class="qo-h"><span class="qo-n">1</span>어떤 논문을 쓸까요?</h2>
+  return `<h2 class="qo-h"><span class="qo-n">${secNo('s1')}</span>어떤 논문을 쓸까요?</h2>
 <div class="field qo-topic"><label class="label" for="qoTopic">관심 주제나 키워드<span class="req">*</span></label>
 <textarea class="textarea qo-ta" id="qoTopic" rows="3" data-k="topic" maxlength="200" placeholder="관심 주제나 키워드를 입력하세요">${esc(S.topic)}</textarea>
 <p class="hint">예: 직장인 워라밸이랑 이직 관련해서 · 제목은 정하지 않아도 돼요.</p>
@@ -206,15 +220,58 @@ function s2Html() {
     const opts = EDIT_TYPES.filter((t) => findItem(CONFIG.catalog, paperItemCode(t, S.task)));
     const it = findItem(CONFIG.catalog, paperItemCode(S.etype, S.task));
     const unitName = (u) => (u === '쪽' ? ' Page' : u);
-    const unit = it && S.task === 'feedback' ? `피드백 전체 일괄 반영·수정표 포함 ${won(it.price)}, 항목 수와 관계없이 한 가격이에요` : it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
-    return `<h2 class="qo-h"><span class="qo-n">2</span>어떤 논문인가요?</h2>
+    const unit = it && S.task === 'feedback' ? `피드백 전체 일괄 반영·수정표 포함 ${won(it.price)}, 항목 수와 관계없이 한 가격이에요` : it && S.task === 'edit' ? '원고를 올리면 분량을 자동으로 계산해 아래 단계별 금액에 반영해요' : it ? `${it.baseUnits}${unitName(it.unitLabel)} 기준 ${won(it.price)}${it.unitPrice ? `, ${it.unitSize}${unitName(it.unitLabel)}마다 ${won(it.unitPrice)}` : ''}` : '';
+    return `<h2 class="qo-h"><span class="qo-n">${secNo('s2')}</span>어떤 논문인가요?</h2>
 <div class="qo-seg" role="radiogroup" aria-label="논문 종류">${opts.map((t) => `<label class="qo-seg-i${S.etype === t ? ' is-on' : ''}"><input type="radio" name="qoEtype" value="${t}"${S.etype === t ? ' checked' : ''}>${esc((PAPER_TYPES.find((x) => x.id === t) || {}).short || t)}</label>`).join('')}</div>
 <p class="hint">${esc(unit)}</p>
 ${S.task === 'edit' ? `<div class="field qo-pages"><label class="label" for="qoEpages">원고 분량(Page)</label><input class="input" id="qoEpages" type="number" inputmode="numeric" min="1" max="999" data-k="epages" value="${S.epages ?? ''}" placeholder="원고를 올리면 자동으로 채워집니다"></div>` : ''}`;
   }
-  return `<h2 class="qo-h"><span class="qo-n">2</span>${S.task === 'proposal' ? '어떤 계획서가 필요하세요?' : '어떤 논문이 필요하세요?'}<span class="qo-h-tag">${PROMO_NAME}</span></h2>
+  return `<h2 class="qo-h"><span class="qo-n">${secNo('s2')}</span>${S.task === 'proposal' ? '어떤 계획서가 필요하세요?' : '어떤 논문이 필요하세요?'}<span class="qo-h-tag">${PROMO_NAME}</span></h2>
 <div class="qo-pkgs">${pkgList().map(pkgCard).join('')}</div>
 <p class="hint qo-pkg-note">학교 기준 분량이 다르면 아래 요청 사항에 적어 주세요. 확인하고 맞춰 드려요.</p>`;
+}
+
+// 첨삭 단계(2026-11-26): 손보는 범위를 세 단계로 고르고, 금액은 원고 분량에 맞춰 바로 보여 준다
+function levelQuote(id) {
+  return computeQuote(CONFIG.catalog, { service: 'paper', paper: { typeId: S.etype, task: 'edit', pages: selection().pages, editLevel: id } });
+}
+function lvHtml() {
+  if (S.task !== 'edit') return '';
+  const cur = levelId();
+  const { pages } = selection();
+  const cards = levelsOn().map((lv) => {
+    const q = levelQuote(lv.id);
+    const on = cur === lv.id;
+    return `<label class="qo-lv${on ? ' is-on' : ''}${lv.id === 'deep' ? ' is-pop' : ''}"><input type="radio" name="qoLevel" value="${lv.id}"${on ? ' checked' : ''}>
+<span class="qo-lv-hd"><b>${esc(lv.label)}</b><span class="qo-lv-mk" aria-hidden="true">${ICON.check}</span></span>
+<span class="qo-lv-p num">${won(q.total)}</span>
+<span class="qo-lv-pitch">${esc(lv.pitch)}</span>
+<ul class="qo-lv-pts">${lv.points.map((x) => `<li>${ICON.check}<span>${esc(x)}</span></li>`).join('')}</ul>
+<span class="qo-lv-d">${q.days ? `영업일 ${q.days}일` : ''}</span></label>`;
+  }).join('');
+  return `<h2 class="qo-h"><span class="qo-n">${secNo('lv')}</span>어디까지 손봐 드릴까요?</h2>
+<p class="qo-help">단계마다 들어 있는 작업이 정해져 있어요. 고른 단계의 작업은 빠짐없이 해 드리고, 금액은 원고 분량${pages ? `(${pageLabel(pages)})` : ''}에 맞춰 계산돼요.</p>
+<div class="qo-lvs" role="radiogroup" aria-label="첨삭 단계">${cards}</div>
+<p class="qo-lv-guide"><b>고르기 어렵다면</b><span>맞춤법과 문장만 걱정되면 <em>기본 교정</em>, 'AI가 쓴 것 같다', '흐름이 어색하다'는 말을 들었다면 <em>심화 첨삭</em>, '내용이 부족하다', '구성을 다시 하라'는 의견을 받았다면 <em>완성도 보완</em>이 맞아요.</span></p>`;
+}
+// 요청 사항에 고른 단계보다 큰 작업이 있으면 알려 주고 한 번에 바꿀 수 있게 한다(그대로 진행해도 된다)
+function nudgeHtml() {
+  if (S.task !== 'edit') return '';
+  const cur = levelId();
+  const n = scopeNudge(`${S.request}\n${S.editScope}`, cur);
+  if (!n || S.nudgeOff === `${cur}>${n.level}` || !levelItem(n.level)) return '';
+  const to = editLevelOf(n.level);
+  const diff = levelQuote(n.level).total - levelQuote(cur).total;
+  const from = editLevelOf(cur);
+  const shown = n.labels.slice(0, 3);
+  const last = n.labels.length > 3 ? '등' : shown[shown.length - 1];
+  const said = shown.map((l) => `'${esc(l)}'`).join(', ') + (n.labels.length > 3 ? ' 등' : '') + josa(last, '은/는').slice(last.length);
+  return `<div class="qo-nudge" role="status"><p><b>적어 주신 ${said} ${esc(to.label)}에 들어 있는 작업이에요.</b> 지금 고른 ${esc(josa(from.label, '은/는'))} ${esc(from.limit)}. 원하시는 결과를 받으시려면 ${esc(josa(to.label, '을/를'))} 골라 주세요.</p>
+<div class="qo-nudge-act"><button type="button" class="btn btn-primary btn-sm" data-level="${n.level}">${esc(josa(to.label, '으로/로'))} 바꾸기${diff > 0 ? ` (+${won(diff)})` : ''}</button><button type="button" class="link-btn" data-nudge-off="${cur}>${n.level}">${esc(josa(from.label, '으로/로'))} 그대로 할게요</button></div></div>`;
+}
+function refreshNudge() {
+  const el = $('#qoNudge', ROOT);
+  if (el) el.innerHTML = nudgeHtml();
 }
 
 // 양식 단계는 두지 않는다: 기본은 일반 학위논문 양식(APA 7판), 학교 양식은 결제 후 주문 페이지나 요청 사항으로 받는다
@@ -253,11 +310,12 @@ function reqHtml() {
   const ph = write
     ? '예: ○○대학교 간호학과예요. 학교 기준은 공백 포함 16,000자 이상이고, 설문 연구로 해 주세요. 최근 5년 국내 논문 위주로 부탁드려요.'
     : '예: 2장 이론적 배경의 흐름이 어색하다는 의견을 받았어요. 참고문헌은 APA 7판으로 맞춰 주세요.';
-  return `<h2 class="qo-h"><span class="qo-n">3</span>${write ? '원하시는 내용을 편하게 적어 주세요' : '더 전하실 내용이 있나요?'}<span class="qo-h-opt">선택</span></h2>
+  return `<h2 class="qo-h"><span class="qo-n">${secNo('req')}</span>${write ? '원하시는 내용을 편하게 적어 주세요' : '더 전하실 내용이 있나요?'}<span class="qo-h-opt">선택</span></h2>
 <p class="qo-help">${write ? '학교 기준, 원하는 방향, 교수님 요청처럼 알려 주실 것을 말하듯 적어 주세요.' : '특히 봐 줬으면 하는 부분이나 학교 기준을 말하듯 적어 주세요.'} 적은 내용은 주문서와 함께 담당 박사에게 그대로 전달돼요.</p>
 <div class="qo-req-chips" role="group" aria-label="자주 적는 내용 한 줄 넣기">${chips.map((c) => `<button type="button" class="qo-req-chip${S.request.includes(`${c}:`) ? ' is-on' : ''}" data-req="${esc(c)}">${esc(c)}</button>`).join('')}</div>
 <div class="field qo-req"><textarea class="textarea qo-req-ta" id="qoReq" rows="5" data-k="request" maxlength="${REQ_MAX}" aria-label="요청 사항" placeholder="${esc(ph)}">${esc(S.request)}</textarea>
-<p class="qo-req-foot"><span id="qoReqHint">${reqHint()}</span><span class="qo-req-n num${S.request.length > REQ_MAX * 0.9 ? ' is-near' : ''}" id="qoReqN">${reqCount()}</span></p></div>`;
+<p class="qo-req-foot"><span id="qoReqHint">${reqHint()}</span><span class="qo-req-n num${S.request.length > REQ_MAX * 0.9 ? ' is-near' : ''}" id="qoReqN">${reqCount()}</span></p></div>
+<div id="qoNudge" aria-live="polite">${nudgeHtml()}</div>`;
 }
 const reqCount = () => `${S.request.length.toLocaleString('ko-KR')} / ${REQ_MAX.toLocaleString('ko-KR')}자`;
 function reqHint() {
@@ -298,7 +356,7 @@ function addReqLine(label) {
 function s4Html() {
   const terms = `<p class="consent-note">의뢰하면 <a href="${url('/terms/')}" target="_blank">이용약관</a>, <a href="${url('/privacy/')}" target="_blank">개인정보 처리방침</a>, <a href="${url('/refund/')}" target="_blank">환불 규정</a>에 동의한 것으로 봐요. 나만을 위한 맞춤 제작이라 결제가 확인되면 바로 작업이 시작되고, 완성본 발송 전 취소는 결제 금액의 20%를 환불하며 발송 후에는 환불되지 않아요.</p>`;
   if (isDirect()) return terms;
-  return `<h2 class="qo-h"><span class="qo-n">4</span>결과물은 어디로 보내 드릴까요?</h2>
+  return `<h2 class="qo-h"><span class="qo-n">${secNo('who')}</span>결과물은 어디로 보내 드릴까요?</h2>
 <div class="qo-contact">
 <div class="field"><label class="label" for="qoName">이름<span class="req">*</span></label><input class="input" id="qoName" data-k="contact.name" maxlength="40" autocomplete="name" value="${esc(S.contact.name)}" placeholder="홍길동"></div>
 <div class="field"><label class="label" for="qoPhone">휴대전화<span class="req">*</span></label><input class="input" id="qoPhone" data-k="contact.phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" value="${esc(S.contact.phone)}" placeholder="010-0000-0000"></div>
@@ -324,7 +382,7 @@ function orderLabel() {
   const p = curPkg();
   return writeLike()
     ? `${p ? p.t : (TYPE_LABEL[typeId] || '논문')} ${pageLabel(pages)}`.trim()
-    : `${(PAPER_TYPES.find((t) => t.id === typeId) || {}).short || ''} ${S.task === 'edit' ? '원고 첨삭·교정' : '피드백 반영·수정 보완·첨삭'}`.trim();
+    : `${(PAPER_TYPES.find((t) => t.id === typeId) || {}).short || ''} ${S.task === 'edit' ? editLevelOf(levelId()).label : '피드백 반영·수정 보완·첨삭'}`.trim();
 }
 const verb = () => ({ edit: '첨삭 의뢰하기', feedback: '반영 의뢰하기', proposal: '의뢰하기', full: '의뢰하기' }[S.task]);
 
@@ -332,7 +390,7 @@ function summaryHtml(q) {
   const { pages } = selection();
   const code = q.lines[0] ? q.lines[0].code : '';
   const list = listPriceFor(code, q.total);
-  const task = { full: '전체 구성·본문 완성', proposal: '연구계획서 작성', edit: '문장·논리·형식 교정', feedback: '피드백 일괄 반영·수정표 포함' }[S.task];
+  const task = { full: '전체 구성·본문 완성', proposal: '연구계획서 작성', edit: `원고 첨삭 · ${editLevelOf(levelId()).short}`, feedback: '피드백 일괄 반영·수정표 포함' }[S.task];
   const extras = q.lines.filter((l) => /^A-/.test(l.code));
   const eta = q.days ? etaDate(new Date(), q.days, String((CONFIG.settings || {}).holidays || '').split(/[,\s]+/).filter(Boolean)) : null;
   const inc = includesFor(q.includes, pages);
@@ -348,6 +406,7 @@ ${inc.length ? `<p class="qo-sum-inc"><b>포함</b>${inc.map((x) => esc(x)).join
 
 /* ------------------------------------------------------------------ 갱신 */
 let ROOT = null;
+let NUDGE_SHOWN = false;
 const previewInfo = () => {
   const r = readPrompt(S.topic);
   const { typeId, pages } = selection();
@@ -398,6 +457,7 @@ function renderTask() {
   taskTabs(ROOT);
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
+  $('#qoLvSec', ROOT).innerHTML = lvHtml();
   $('#qoReqSec', ROOT).innerHTML = reqHtml();
   refreshFlow(true);
   const editLike = !writeLike();
@@ -442,8 +502,10 @@ function rerenderUploads() {
   const openMore = $('.qo-more', ROOT) && $('.qo-more', ROOT).open;
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
+  $('#qoLvSec', ROOT).innerHTML = lvHtml();
   $('#qoMore', ROOT).innerHTML = moreHtml();
   if (openMore && $('.qo-more', ROOT)) $('.qo-more', ROOT).open = true;
+  refreshNudge();
   refreshPrice();
 }
 const activeSlots = () => {
@@ -490,7 +552,8 @@ function buildInput() {
     paper: {
       typeId, task: S.task, pages, feedbackItems: q.paper.feedbackItems, hasToc: 'no', tocText: '',
       hasFormat: formatSent ? 'yes' : 'no', formatName: formatSent ? S.formatName.trim() : '',
-      feedbackText: S.task === 'feedback' ? S.feedbackText : '', editScope: S.task === 'edit' ? (S.editScope.trim() || '원고 전체 문장·논리·형식') : '', needsData: false,
+      feedbackText: S.task === 'feedback' ? S.feedbackText : '', editScope: S.task === 'edit' ? (S.editScope.trim() || '원고 전체') : '', needsData: false,
+      ...(S.task === 'edit' ? { editLevel: levelId() } : {}),
     },
     addons: q.addons,
   };
@@ -551,6 +614,15 @@ function submit() {
     return;
   }
   if (S.hp) return;
+  // 요청 사항이 고른 첨삭 단계를 넘는데 아직 보지 못했다면 한 번 보여 준다(두 번째 누르면 그대로 진행)
+  const nudge = $('#qoNudge .qo-nudge', ROOT);
+  if (nudge && !NUDGE_SHOWN) {
+    NUDGE_SHOWN = true;
+    nudge.classList.add('is-flash');
+    nudge.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    toast('적어 주신 요청과 고른 단계를 한 번만 확인해 주세요. 그대로 진행하려면 다시 눌러 주세요.', { ms: 5000 });
+    return;
+  }
   const q = quote();
   const link = directLink();
   if (link) {
@@ -595,6 +667,8 @@ export async function startQuickOrder(root) {
   if (task && TASKS.some(([v]) => v === task)) S.task = task;
   const topic = (promptOwn || params.get('title') || '').slice(0, 200);
   if (topic) S.topic = topic;
+  const levelP = params.get('level');
+  if (levelP && EDIT_LEVELS.some((lv) => lv.id === levelP)) S.level = levelP;
   const methodP = params.get('method');
   if (methodP && METHODS.some(([v]) => v === methodP)) S.method = methodP;
   const r = readPrompt(S.topic);
@@ -621,11 +695,23 @@ export async function startQuickOrder(root) {
     if (!(c && c.catalog)) return;
     CONFIG = c;
     $('#qoS2', ROOT).innerHTML = s2Html();
+    $('#qoLvSec', ROOT).innerHTML = lvHtml();
+    refreshNudge();
     refreshFlow(true);
     refreshPrice();
   });
   // 결제 화면에서 뒤로 돌아오면(bfcache) 버튼 상태를 새로 그린다
   window.addEventListener('pageshow', (e) => { if (e.persisted) refreshPrice(); });
+}
+
+const nudgeSoon = debounce(() => refreshNudge(), 400);
+function setLevel(id) {
+  if (!EDIT_LEVELS.some((lv) => lv.id === id)) return;
+  S.level = id;
+  save();
+  $('#qoLvSec', ROOT).innerHTML = lvHtml();
+  refreshNudge();
+  refreshPrice();
 }
 
 function setPath(path, v) {
@@ -661,10 +747,11 @@ function bind() {
     t.classList.remove('is-invalid');
     save();
     if (k === 'topic') { onTopic(); refreshPreview(); }
-    if (k === 'request') reqMeta();
+    if (k === 'request') { reqMeta(); nudgeSoon(); }
+    if (k === 'editScope') nudgeSoon();
     if (k === 'major') refreshPreview();
     if (k === 'feedbackText') { const h = $('#qoFbCount', ROOT); if (h) h.textContent = fbCountText(); refreshPrice(); }
-    if (k === 'epages') refreshPrice();
+    if (k === 'epages') { $('#qoLvSec', ROOT).innerHTML = lvHtml(); refreshNudge(); refreshPrice(); }
   });
   form.addEventListener('change', async (e) => {
     const t = e.target;
@@ -672,7 +759,9 @@ function bind() {
       S.pkg = t.value; S.touched.pkg = true;
       save(); refreshFlow(); refreshPrice(); refreshPreview();
     } else if (t.name === 'qoEtype') {
-      S.etype = t.value; save(); $('#qoS2', ROOT).innerHTML = s2Html(); refreshPrice();
+      S.etype = t.value; save(); $('#qoS2', ROOT).innerHTML = s2Html(); $('#qoLvSec', ROOT).innerHTML = lvHtml(); refreshNudge(); refreshPrice();
+    } else if (t.name === 'qoLevel') {
+      setLevel(t.value);
     } else if (t.dataset.add) {
       S.addons[t.dataset.add] = t.checked; t.closest('.qo-add').classList.toggle('is-on', t.checked); save(); refreshPrice();
     } else if (t.tagName === 'SELECT' && t.dataset.k) {
@@ -687,6 +776,10 @@ function bind() {
   form.addEventListener('click', async (e) => {
     const chip = e.target.closest('[data-req]');
     if (chip) { e.preventDefault(); addReqLine(chip.dataset.req); return; }
+    const lvBtn = e.target.closest('[data-level]');
+    if (lvBtn) { e.preventDefault(); setLevel(lvBtn.dataset.level); const sec = $('#qoLvSec', ROOT); if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    const off = e.target.closest('[data-nudge-off]');
+    if (off) { e.preventDefault(); S.nudgeOff = off.dataset.nudgeOff; save(); refreshNudge(); return; }
     const tab = e.target.closest('[data-task]');
     if (tab) {
       if (tab.dataset.task === S.task) return;

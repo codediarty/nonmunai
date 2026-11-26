@@ -1,6 +1,6 @@
 import { faqBlock, ctaBand, crumbs, priceTable, price, item, statusTimeline, STATUS_STEPS, pageTiers, fullQuote, shortExtra, lineupCards, lineupOptions } from '../../templates/parts.mjs';
 import { esc } from '../../templates/layout.mjs';
-import { won, listPriceFor, PROMO_NAME } from '../../js/core/pricing.js';
+import { won, listPriceFor, PROMO_NAME, QUOTE_AMOUNTS, DEFAULT_CATALOG, computeQuote } from '../../js/core/pricing.js';
 import { FAQ_GROUPS, ALL_FAQ } from '../faq.mjs';
 
 function pageHead(T, title, lead, path, label) {
@@ -30,20 +30,21 @@ export default function info({ T, site }) {
   const pricingFaq = [
     { q: '논문 작성 비용은 얼마인가요?', a: `논문AI에서 주문하시면 ${PROMO_NAME}로 소논문 15 Page ${W('short', 15)}, 학사 졸업논문 30 Page ${W('bachelor', 30)}, 학술지 투고논문 20 Page ${W('journal', 20)}, 석사학위논문 80 Page ${W('master', 80)}(정가 ${LP('P-MASTER-FULL', 'master', 80)}), 박사학위논문 130 Page ${W('doctor', 130)}(정가 ${LP('P-DOCTOR-FULL', 'doctor', 130)})에 맡기실 수 있어요. 실존 참고문헌과 본문 인용, 전공 분야 박사 최종 검수, 수정 1회까지 모두 포함된 금액이에요.` },
     { q: '석사논문 작성 비용은 얼마인가요?', a: `석사학위논문 80 Page는 정가 ${LP('P-MASTER-FULL', 'master', 80)}인데, 논문AI에서 주문하시면 ${PROMO_NAME} ${W('master', 80)}에 맡기실 수 있어요. 같은 전공 분야 박사의 최종 검수까지 마친 완성본을 영업일 ${fullQuote('master', 80).days}일 이내에 메일로 보내 드려요.` },
-    { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭·교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 박사학위논문 ${B('P-DOCTOR-EDIT')} Page 기준 ${price('P-DOCTOR-EDIT')}, 학술지 논문 ${B('P-JOURNAL-EDIT')} Page 기준 ${price('P-JOURNAL-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이에요. 교수님 피드백 반영·수정 보완·첨삭은 석사·박사학위논문 모두 ${price('P-MASTER-FB')}이고, 피드백 항목 수와 관계없이 한 가격에 수정표까지 포함돼요.` },
+    { q: '논문 첨삭 비용은 얼마인가요?', a: `논문 첨삭은 손볼 범위에 따라 세 단계예요. 문장만 다듬는 기본 교정은 석사학위논문 ${B('P-MASTER-EDIT')} Page 기준 ${price('P-MASTER-EDIT')}, 학사 졸업논문 ${B('P-BACHELOR-EDIT')} Page 기준 ${price('P-BACHELOR-EDIT')}이고, AI 문체·흐름·인용까지 고치는 심화 첨삭은 학사 ${B('P-BACHELOR-EDIT2')} Page까지 ${price('P-BACHELOR-EDIT2')}, 석사 ${B('P-MASTER-EDIT2')} Page까지 ${price('P-MASTER-EDIT2')}, 내용 보완과 구성 재배치까지 하는 완성도 보완은 학사 ${B('P-BACHELOR-EDIT3')} Page까지 ${price('P-BACHELOR-EDIT3')}, 석사 ${B('P-MASTER-EDIT3')} Page까지 ${price('P-MASTER-EDIT3')}이에요. 교수님 피드백 반영·수정 보완·첨삭은 석사·박사학위논문 모두 ${price('P-MASTER-FB')}이고, 피드백 항목 수와 관계없이 한 가격에 수정표까지 포함돼요.` },
+    { q: '따로 안내받은 금액은 어디서 결제하나요?', a: '상담이나 메일로 안내받은 금액은 위 메뉴의 요금 결제에서 고르면 성균관컨설팅 결제 화면이 바로 열려요. 10만 원부터 100만 원까지 10만 원 단위로 결제할 수 있고, 주문번호를 함께 적으면 그 주문에 바로 연결돼요.' },
     { q: '논문 컨설팅 비용은 얼마인가요?', a: `연구 설계(연구모형, 가설, 목차, 표본 수)는 무료 논문 설계에서 먼저 받아 보실 수 있어요. 연구계획서 작성은 석사 ${price('P-MASTER-PROP')}, 박사 ${price('P-DOCTOR-PROP')}이고, 필요한 단계만 골라 맡기실 수 있어서 막힌 단계의 비용만 내시면 돼요.` },
     { q: '논문 통계분석 비용은 얼마인가요?', a: `논문 맞춤 통계분석은 분석과 통계표 ${price('T-BASIC')}, 결과 해석까지 ${price('T-INTERP')}, 연구결과(4장) 본문 작성까지 ${price('T-CHAPTER')}이에요. 설문지 작성부터 설문 결과·통계 해석까지 한 번에 맡기는 설문조사 원스톱은 ${price('S-FULL')}이에요. 분석 방법을 몰라도 괜찮아요. 주문서에서 데이터와 주제를 알려 주시면 맞는 분석을 정하고 금액도 바로 보여 드려요.` },
     { q: '표시된 가격에 부가세가 포함되어 있나요?', a: '네, 모든 가격은 부가세를 포함한 금액이에요.' },
     { q: '응답자 모집 같은 작업은 어떻게 결제하나요?', a: '응답자 모집이나 구조방정식 같은 심화 분석처럼 조건에 따라 비용이 달라지는 작업은, 자료를 먼저 확인하고 견적을 확정해 드린 뒤에 결제하시면 돼요.' },
   ];
   const groups = [
-    ['석사학위논문', ['P-MASTER-FULL', 'P-MASTER-PROP', 'P-MASTER-EDIT', 'P-MASTER-FB']],
-    ['박사학위논문', ['P-DOCTOR-FULL', 'P-DOCTOR-PROP', 'P-DOCTOR-EDIT', 'P-DOCTOR-FB']],
-    ['학술지 투고논문', ['P-JOURNAL-FULL', 'P-JOURNAL-EDIT', 'P-JOURNAL-FB']],
-    ['학사·졸업논문', ['P-BACHELOR-FULL', 'P-BACHELOR-PROP', 'P-BACHELOR-EDIT', 'P-BACHELOR-FB']],
-    ['일반 연구보고서', ['P-REPORT-FULL', 'P-REPORT-EDIT', 'P-REPORT-FB']],
-    ['청소년 탐구논문', ['P-YOUTH-FULL', 'P-YOUTH-EDIT', 'P-YOUTH-FB']],
-    ['개인 관심연구', ['P-PERSONAL-FULL', 'P-PERSONAL-EDIT', 'P-PERSONAL-FB']],
+    ['석사학위논문', ['P-MASTER-FULL', 'P-MASTER-PROP', 'P-MASTER-EDIT', 'P-MASTER-EDIT2', 'P-MASTER-EDIT3', 'P-MASTER-FB']],
+    ['박사학위논문', ['P-DOCTOR-FULL', 'P-DOCTOR-PROP', 'P-DOCTOR-EDIT', 'P-DOCTOR-EDIT2', 'P-DOCTOR-EDIT3', 'P-DOCTOR-FB']],
+    ['학술지 투고논문', ['P-JOURNAL-FULL', 'P-JOURNAL-EDIT', 'P-JOURNAL-EDIT2', 'P-JOURNAL-EDIT3', 'P-JOURNAL-FB']],
+    ['학사·졸업논문', ['P-BACHELOR-FULL', 'P-BACHELOR-PROP', 'P-BACHELOR-EDIT', 'P-BACHELOR-EDIT2', 'P-BACHELOR-EDIT3', 'P-BACHELOR-FB']],
+    ['일반 연구보고서', ['P-REPORT-FULL', 'P-REPORT-EDIT', 'P-REPORT-EDIT2', 'P-REPORT-EDIT3', 'P-REPORT-FB']],
+    ['청소년 탐구논문', ['P-YOUTH-FULL', 'P-YOUTH-EDIT', 'P-YOUTH-EDIT2', 'P-YOUTH-EDIT3', 'P-YOUTH-FB']],
+    ['개인 관심연구', ['P-PERSONAL-FULL', 'P-PERSONAL-EDIT', 'P-PERSONAL-EDIT2', 'P-PERSONAL-EDIT3', 'P-PERSONAL-FB']],
     ['소논문(15 Page)', ['P-SHORT-FULL']],
     ['설문조사', ['S-FULL', 'S-NEW', 'S-EDIT', 'S-FB', 'S-ANALYZE', 'S-RECRUIT']],
     ['통계분석', ['T-BASIC', 'T-INTERP', 'T-CHAPTER', 'T-FB', 'T-ADV', 'T-SIM']],
@@ -190,6 +191,52 @@ ${ctaBand(T, { title: '주제 한 줄로 시작해 보세요', topic: true })}`,
 <h2>연구자께 부탁드리는 것</h2>
 <p>전달받은 결과물은 꼭 직접 읽고 이해한 뒤, 지도교수님과 논의하며 완성해 주세요. 최종 제출물의 작성과 연구윤리 준수 책임은 연구자 본인에게 있어요. 생성형 AI를 활용할 때 지켜야 할 내용은 <a href="/guide/ai-thesis-ethics/">AI로 논문 쓸 때 꼭 알아야 할 연구윤리</a>에 정리해 두었어요.</p>
 </div></section>`,
+  });
+
+  // 요금 결제(2026-11-26): 상담·메일로 안내받은 금액을 아임웹(성균관컨설팅) '맞춤 견적 결제' 상품으로 바로 결제
+  const tierQ = (t, lv, pg) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: t, task: 'edit', pages: pg, editLevel: lv } }).total;
+  const PAY_FAQ = [
+    { q: '주문번호가 없어도 결제할 수 있나요?', a: '네. 결제할 때 적으신 이름과 연락처로 담당자가 확인해 연결해 드려요. 주문번호를 함께 적으시면 확인을 기다리지 않고 그 주문에 바로 연결돼요.' },
+    { q: '안내받은 금액이 목록에 없어요.', a: '10만 원 단위가 아닌 금액은 주문 결제 화면에서 금액에 맞는 상품으로 안내해 드려요. 메일로 받은 결제 버튼을 누르시거나, 상담 채널에 주문번호를 남겨 주시면 바로 결제 방법을 알려 드려요.' },
+    { q: '100만 원이 넘는 금액은 어떻게 결제하나요?', a: '100만 원 상품과 나머지 금액 상품을 함께 담아 한 번에 결제하시면 돼요. 주문 결제 화면에서 담을 상품과 수량을 그대로 안내해 드려요.' },
+    { q: '영수증은 누구 이름으로 나오나요?', a: '논문AI는 성균관컨설팅이 운영해요. 결제와 영수증은 운영사 성균관컨설팅 이름으로 처리되고, 카드 명세서에도 성균관컨설팅으로 표시돼요.' },
+  ];
+  pages.push({
+    path: '/pay/', kind: 'info', navTitle: '요금 결제', h1: '요금 결제', noindex: true, faq: PAY_FAQ,
+    title: '요금 결제 | 안내받은 금액 바로 결제 논문AI',
+    description: '상담이나 메일로 안내받은 금액을 고르면 성균관컨설팅 결제 화면이 바로 열려요. 10만 원부터 100만 원까지 10만 원 단위로 결제할 수 있어요.',
+    crumbs: [['홈', '/'], ['요금 결제', '/pay/']], styles: ['site'], scripts: ['pay'],
+    body: `${pageHead(T, '안내받은 금액, 여기서 바로 결제해요', '상담이나 메일로 안내받은 금액을 고르면 성균관컨설팅 결제 화면이 바로 열려요. 10만 원부터 100만 원까지 10만 원 단위로 준비해 두었어요.', '/pay/', '요금 결제')}
+<section class="sec sec-pay" aria-label="금액 고르기"><div class="wrap pay-grid">
+<div class="pay-main">
+<div id="payOrder" aria-live="polite"></div>
+<h2 class="pay-h"><span class="pay-n">1</span>결제할 금액을 골라 주세요</h2>
+<div class="pay-amts" role="radiogroup" aria-label="결제할 금액">${QUOTE_AMOUNTS.map((a) => `<label class="pay-amt"><input type="radio" name="payAmt" value="${a}"><b class="num">${a / 10000}<small>만 원</small></b><span class="num">${won(a)}</span></label>`).join('')}</div>
+<h2 class="pay-h"><span class="pay-n">2</span>주문번호를 적어 주세요<span class="pay-opt">선택</span></h2>
+<div class="field pay-no"><label class="sr-only" for="payNo">주문번호</label><input class="input" id="payNo" maxlength="20" autocomplete="off" spellcheck="false" placeholder="예: NA261126-AB12"><p class="hint" id="payNoHint">메일로 받은 주문번호를 적으면 결제가 그 주문에 바로 연결돼요. 상담에서 금액만 안내받으셨다면 비워 두셔도 돼요.</p></div>
+</div>
+<aside class="pay-side"><div class="pay-sum" id="paySum">
+<p class="pay-sum-k">결제 금액</p>
+<p class="pay-sum-v num" id="payTotal">금액을 골라 주세요</p>
+<p class="pay-sum-item" id="payItem">[논문AI] 맞춤 견적 결제</p>
+<a class="btn btn-primary btn-lg btn-block" id="payGo" href="#" aria-disabled="true">금액을 고르면 결제할 수 있어요</a>
+<p class="pay-sum-m"><span>카드</span><span>간편결제</span><span>계좌이체</span></p>
+<ul class="pay-checks">
+<li>${T.icon('check')}<span>결제 화면에서 이름, 연락처, 이메일을 주문서와 같게 적어 주세요.</span></li>
+<li>${T.icon('check')}<span>결제가 확인되면 메일로 알려 드리고 바로 작업을 이어 가요.</span></li>
+<li>${T.icon('check')}<span>결제와 영수증은 운영사 성균관컨설팅 이름으로 처리돼요.</span></li>
+</ul>
+<p class="pay-help">금액이 헷갈리면 <a href="${esc(site.brand.chatUrl || 'https://www.skkc.co.kr')}" target="_blank" rel="noopener">상담 채널</a>에 물어보세요. 바로 알려 드려요.</p>
+</div></aside>
+</div></section>
+<section class="sec sec-alt" aria-labelledby="pay-use-h"><div class="wrap">
+<div class="sec-head"><h2 class="h-2" id="pay-use-h">이럴 때 쓰는 결제예요</h2><p>주문서에서 바로 계산되지 않는 작업은 범위를 확인한 뒤 금액을 정해 드려요. 정해진 금액은 여기서 한 번에 결제하시면 돼요.</p></div>
+<div class="pay-uses">
+<article class="pay-use"><h3>첨삭 심화·완성도 보완</h3><p>원고 분량과 손볼 범위에 맞춰 정해진 금액이에요. 학사 졸업논문 기준 심화 첨삭 ${won(tierQ('bachelor', 'deep', 20))}, 완성도 보완 ${won(tierQ('bachelor', 'complete', 20))}이에요.</p><a href="${T.u('/thesis-editing/')}">첨삭 단계 보기</a></article>
+<article class="pay-use"><h3>상담으로 정한 맞춤 견적</h3><p>응답자 모집, 구조방정식 같은 심화 분석처럼 조건에 따라 금액이 달라지는 작업은 자료를 확인하고 견적을 드려요.</p><a href="${esc(site.brand.chatUrl || 'https://www.skkc.co.kr')}" target="_blank" rel="noopener">상담 채널 열기</a></article>
+<article class="pay-use"><h3>범위가 늘어난 추가 결제</h3><p>진행 중에 분량이나 작업이 늘어 추가 금액을 안내받으셨다면, 안내받은 금액을 고르고 주문번호를 적어 주세요.</p><a href="${T.u('/orders/')}">주문 조회</a></article>
+</div></div></section>
+${faqBlock(T, PAY_FAQ, { title: '요금 결제 자주 묻는 질문', id: 'pay-faq' })}`,
   });
 
   // 404

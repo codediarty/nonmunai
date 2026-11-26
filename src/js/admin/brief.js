@@ -5,7 +5,7 @@ import { surveyPlan, statsPlan, METHOD_LABELS } from '../core/plans.js';
 import { classifyFeedback } from '../core/feedback.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { won } from '../core/render.js';
-import { includesFor } from '../core/pricing.js';
+import { includesFor, editLevelOf, editLevelOfCode } from '../core/pricing.js';
 
 const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문지 작성부터 설문 결과·통계 해석까지(작성·제작·조사·결과 정리·분석)', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영(수정표, 파란색 표시)', analyze: '설문 응답 통계 분석·해석' };
@@ -252,6 +252,16 @@ function designBlocks(d, p, label) {
   return out;
 }
 
+// 첨삭 단계와 그 단계에서 해야 할 일(결제한 범위 그대로)
+function editTier(o) {
+  const p = (o.input && o.input.paper) || {};
+  return editLevelOf(p.editLevel || ((o.quote && editLevelOfCode(o.quote.mainCode)) || {}).id || 'basic');
+}
+function editTierText(o) {
+  const lv = editTier(o);
+  return `${lv.label}(${lv.short})${lv.limit ? ` · ${lv.limit}` : ''}`;
+}
+
 function paperBrief(o) {
   const i = o.input || {};
   const p = i.paper || {};
@@ -260,6 +270,7 @@ function paperBrief(o) {
   out.push(block('작업', [
     line('논문 유형', type ? type.label : p.typeId),
     line('요청 작업', TASK[p.task] || p.task),
+    line('첨삭 단계', p.task === 'edit' ? editTierText(o) : ''),
     line('분량', p.pages ? `${p.pages}쪽` : '기준 분량'),
     line('목차', p.hasToc === 'yes' ? (p.tocText ? '고객 목차 있음(아래)' : '고객 목차 파일 있음') : '목차 새로 구성'),
     line('양식', p.hasFormat === 'yes' ? `있음${p.formatName ? ` (${p.formatName})` : ''}` : '없음(일반 학위논문 형식)'),
@@ -411,7 +422,13 @@ export function aiPrompts(o) {
     const fb = classifyFeedback(p.feedbackText || '');
     out.push({ title: '피드백 반영 계획', text: `${role}\n\n아래 지도교수 피드백을 항목별로 반영하려고 합니다. 각 항목에 대해 (1) 요구 사항 해석, (2) 원고에서 고칠 위치, (3) 수정 문안 예시를 표로 정리하세요.${ctx ? `\n\n[연구 정보]\n${ctx}` : ''}\n\n[피드백]\n${fb.items.map((x, k) => `${k + 1}. ${x.text}`).join('\n') || '(피드백 파일 참고)'}${req}\n\n${rules}` });
   } else if (o.service === 'paper' && p.task === 'edit') {
-    out.push({ title: '첨삭 기준', text: `${role}\n\n아래 원고 일부를 첨삭합니다. 의미는 바꾸지 말고 (1) 문장 다듬기, (2) 논리 연결, (3) 용어 통일, (4) 인용 형식(APA 7판)을 고치고, 고친 이유를 짧게 덧붙이세요.\n[첨삭 범위] ${p.editScope || '원고 전체'}${req}\n\n${rules}\n\n[원고]\n(여기에 원고 일부 붙여넣기)` });
+    const lv = editTier(o);
+    const how = {
+      basic: '의미와 흐름은 바꾸지 말고 (1) 맞춤법·띄어쓰기·비문, (2) 어색하거나 긴 문장, (3) 용어·표기 통일만 고치세요.',
+      deep: '의미는 바꾸지 말고 (1) AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기, (2) 문단 흐름과 논리 연결, (3) 용어 통일, (4) 본문 인용과 참고문헌 목록 대조(APA 7판)를 하고, 장마다 보완할 점을 코멘트로 남기세요.',
+      complete: '(1) 심화 첨삭(AI 문체, 흐름, 인용 대조) 전부, (2) 목차·장 구성 점검과 재배치 제안, (3) 부족한 근거·선행연구 보완 집필(실존 문헌만), (4) 논리 비약과 사실·수치 확인, (5) 참고문헌 실존 여부 확인을 하세요. 보완해 쓴 부분은 표시하세요.',
+    }[lv.id];
+    out.push({ title: `첨삭 기준(${lv.label})`, text: `${role}\n\n아래 원고 일부를 ${lv.label} 단계로 첨삭합니다. ${how} 고친 이유를 짧게 덧붙이세요.\n[첨삭 범위] ${p.editScope || '원고 전체'}${req}\n\n${rules}\n\n[원고]\n(여기에 원고 일부 붙여넣기)` });
   } else if (o.service === 'statistics') {
     const t = i.statistics || {};
     out.push({ title: '결과 해석 문안', text: `당신은 ${field ? field.label : '사회과학'} 분야 통계 결과를 논문 문체로 해석하는 연구 보조원입니다.\n\n아래 SPSS 결과표를 APA 7판 형식 표와 해석 문단으로 정리하세요. 수치는 표에 있는 값만 쓰고, 유의확률은 p < .05처럼 표기하세요.${t.hasData === false && t.noDataPath === 'simulation' ? '\n모든 표 제목과 첫 문단에 "가상 데이터, 실제 연구 결과 아님"을 표시하세요.' : ''}${req}\n\n[결과표]\n(여기에 출력 결과 붙여넣기)` });

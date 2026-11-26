@@ -576,3 +576,152 @@ t('메일 할당량이 바닥나면 대기열에 쌓았다가 다음 날 보냄'
   assert.ok(after.length >= 1, '대기열 메일이 발송되지 않았습니다');
   assert.ok(x.env.state.mails.length > used);
 });
+
+// ---------------------------------------------------------------- 2026-11-26 첨삭 단계 · 결제 금액 바꾸기 · 맞춤 견적 결제
+const MANUSCRIPT = { slot: 'manuscript', name: '졸업논문 원고.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', data: DOCX };
+function editOrder(x, { level, pages = 20, typeId = 'bachelor', request = '' } = {}) {
+  const r = paperOrder(x, { task: 'edit', typeId, extra: { pages, editLevel: level, editScope: '원고 전체' } });
+  x.ok('uploadFile', { orderNo: r.orderNo, token: r.token, ...MANUSCRIPT });
+  x.ok('submitOrder', { orderNo: r.orderNo, token: r.token });
+  return r;
+}
+const pick = (xs, re) => xs.filter((m) => re.test(m.subject));
+
+t('첨삭 단계: 서버도 같은 금액(학사 20 Page 완성도 보완 30만 원), 운영자 메일에 단계 표시', () => {
+  const x = makeEnv();
+  const r = editOrder(x, { level: 'complete' });
+  assert.equal(r.quote.total, 300000);
+  assert.equal(r.quote.mainCode, 'P-BACHELOR-EDIT3');
+  const o = x.ok('getOrder', { orderNo: r.orderNo, token: r.token }).order;
+  assert.equal(o.amountDue, 300000);
+  assert.equal(o.productName, '학사·졸업논문 완성도 보완');
+  assert.match(o.summary, /완성도 보완/);
+  assert.equal(o.revisions.allowed, 1, '완성도 보완은 수정 1회 포함');
+  const op = pick(x.env.state.mails, /신규 주문/).pop();
+  assert.ok(op.htmlBody.includes('첨삭 단계') && op.htmlBody.includes('완성도 보완'));
+  // 잘못된 단계 값은 기본 교정으로
+  const b = paperOrder(x, { task: 'edit', typeId: 'bachelor', extra: { pages: 20, editLevel: 'hack' } });
+  assert.equal(b.quote.total, 29000);
+});
+
+t('결제 금액 바꾸기(결제 전): 사유·포함 범위·바로 결제 버튼이 담긴 메일, 단계도 함께 변경', () => {
+  const x = makeEnv();
+  const r = editOrder(x, { level: 'basic' });
+  const token = x.login();
+  x.fail('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 300000 }, 'invalid');
+  const reason = '요청하신 AI 문체 교정, 흐름·구조 검토, 내용 보완, 인용 점검은 기본 교정(29,000원) 범위를 넘어 완성도 보완 단계로 진행해요.';
+  const before = x.env.state.mails.length;
+  const res = x.ok('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 300000, reason, level: 'complete' }).order;
+  assert.equal(res.amount, 300000);
+  assert.equal(res.amountDue, 300000);
+  assert.equal(res.status, 'pending_payment');
+  assert.equal(res.productName, '학사·졸업논문 완성도 보완');
+  assert.equal(res.quote.mainCode, 'P-BACHELOR-EDIT3');
+  assert.ok(res.quote.includes.some((x2) => /보완 집필/.test(x2)));
+  const ps = res.paymentsAll;
+  assert.deepEqual(ps.map((p) => [p.amount, p.status]).sort(), [[29000, 'cancelled'], [300000, 'requested']].sort());
+  const mail = x.env.state.mails.slice(before).find((m) => m.to.includes(CONTACT.email));
+  assert.ok(mail, '고객 메일 없음');
+  assert.match(mail.subject, /결제 금액 안내 300,000원/);
+  assert.ok(mail.htmlBody.includes('금액이 바뀐 이유') && mail.htmlBody.includes('완성도 보완 단계로 진행해요'));
+  assert.ok(mail.htmlBody.includes('29,000원') && mail.htmlBody.includes('300,000원 결제하기'));
+  assert.ok(mail.htmlBody.includes('보완 집필'), '포함 범위가 메일에 없음');
+  const link = (mail.htmlBody.match(/href="([^"]*\/checkout\/[^"]*)"/) || [])[1] || '';
+  assert.match(link.replace(/&amp;/g, '&'), /\/checkout\/\?o=NA\d{6}-[A-Z0-9]{4}&t=[^&]+&pay=1$/);
+  // 고객 화면: 진행 기록에 사유가 보이고 수정 1회가 생김
+  const o = x.ok('getOrder', { orderNo: r.orderNo, token: r.token }).order;
+  assert.ok(o.timeline.some((h) => /300,000원으로 바뀌었습니다/.test(h.message) && h.message.includes('AI 문체 교정')));
+  assert.equal(o.revisions.allowed, 1);
+  assert.equal(o.quote.changes.length, 1);
+  assert.equal(o.quote.changes[0].before, 29000);
+  // 고객이 결제 완료를 알린 뒤에는 바로 바꿀 수 없음(확인 먼저)
+  x.ok('claimPayment', { orderNo: r.orderNo, token: r.token, method: 'bank', payerName: '김연구' });
+  x.fail('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 400000, reason: '분량 추가' }, 'claimed');
+  // 메일 안 보내기
+  const y = makeEnv();
+  const r2 = editOrder(y, { level: 'deep' });
+  const t2 = y.login();
+  const n = y.env.state.mails.length;
+  y.ok('adminChangeAmount', { adminToken: t2, orderNo: r2.orderNo, amount: 200000, reason: '분량이 41 Page예요.', notify: false });
+  assert.equal(y.env.state.mails.slice(n).filter((m) => m.to.includes(CONTACT.email)).length, 0);
+});
+
+t('결제 금액 바꾸기(결제 후): 낸 금액은 두고 추가 결제로 요청', () => {
+  const x = makeEnv();
+  const r = editOrder(x, { level: 'basic' });
+  const token = x.login();
+  x.ok('adminConfirmPayment', { adminToken: token, orderNo: r.orderNo });
+  const before = x.env.state.mails.length;
+  const o = x.ok('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 300000, reason: '내용 보완 집필이 필요해 완성도 보완으로 바꿔요.', level: 'complete' }).order;
+  assert.equal(o.paidAmount, 29000);
+  assert.equal(o.amount, 329000);
+  assert.equal(o.amountDue, 300000);
+  assert.equal(o.paymentsAll.filter((p) => p.kind === 'extra' && p.status === 'requested').length, 1);
+  assert.equal(o.quote.lines.reduce((a, l) => a + l.amount, 0), 329000);
+  const mail = x.env.state.mails.slice(before).find((m) => m.to.includes(CONTACT.email));
+  assert.match(mail.subject, /추가 결제 안내 300,000원/);
+  assert.ok(mail.htmlBody.includes('결제 완료') && mail.htmlBody.includes('329,000원'));
+  x.fail('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 0, reason: 'x' }, 'invalid');
+});
+
+t('맞춤 견적 결제 완료 알림: 결제 연결표면 바로 연결, 연락처가 같으면 결제 확인 중, 아니면 운영자에게만', () => {
+  const x = makeEnv();
+  const r = editOrder(x, { level: 'complete' });
+  const tk = x.ok('payTicket', { orderNo: r.orderNo, token: r.token }).ticket;
+  assert.match(tk, /^[A-Za-z0-9]{24}$/);
+  x.fail('payTicket', { orderNo: r.orderNo, token: 'bad' }, 'forbidden');
+  // 1) 결제 연결표: 연락처가 달라도 연결, advanceOnClaim(skkc)이라 작업 대기열로
+  const res = x.ok('claimShopPayment', { orderNo: r.orderNo, ticket: tk, amount: 300000, label: '학사·졸업논문 완성도 보완', contact: { name: '김부모', phone: '010-9999-0000', email: 'parent@example.com' } });
+  assert.equal(res.linked, true);
+  assert.equal(res.order, undefined, '응답에 주문 내용을 싣지 않음');
+  let o = x.ok('getOrder', { orderNo: r.orderNo, token: r.token }).order;
+  assert.equal(o.payments.find((p) => p.amount === 300000).status, 'claimed');
+  assert.ok(['in_progress', 'received', 'needs_materials'].includes(o.status), o.status);
+  assert.ok(x.env.state.mails.some((m) => /결제 확인 요청/.test(m.subject) && m.htmlBody.includes('아임웹 결제 완료')));
+  // 2) 연락처로만 확인: 결제 확인 중(작업은 운영자 확인 뒤)
+  const y = makeEnv();
+  const r2 = editOrder(y, { level: 'deep' });
+  const res2 = y.ok('claimShopPayment', { orderNo: r2.orderNo.toLowerCase(), amount: 100000, contact: { name: '김연구', phone: '01012345678', email: 'other@example.com' } });
+  assert.equal(res2.linked, true);
+  o = y.ok('getOrder', { orderNo: r2.orderNo, token: r2.token }).order;
+  assert.equal(o.status, 'payment_review');
+  // 3) 연락처가 다르고 연결표도 없음: 주문은 그대로, 운영자에게 확인 요청
+  const z = makeEnv();
+  const r3 = editOrder(z, { level: 'deep' });
+  const n = z.env.state.mails.length;
+  const res3 = z.ok('claimShopPayment', { orderNo: r3.orderNo, amount: 100000, contact: { name: '박모름', phone: '010-0000-1111', email: 'x@example.com' } });
+  assert.equal(res3.linked, false);
+  assert.equal(z.ok('getOrder', { orderNo: r3.orderNo, token: r3.token }).order.status, 'pending_payment');
+  const warn = z.env.state.mails.slice(n).find((m) => /주문 연결 확인 필요/.test(m.subject));
+  assert.ok(warn && warn.htmlBody.includes('박모름') && warn.htmlBody.includes('100,000원'));
+  assert.equal(warn.replyTo, 'x@example.com');
+  // 4) 주문번호 없이 결제: 운영자에게만
+  const res4 = z.ok('claimShopPayment', { orderNo: '', amount: 500000, contact: { name: '최견적', phone: '010-2222-3333', email: 'q@example.com' } });
+  assert.equal(res4.linked, false);
+  assert.ok(z.env.state.mails.some((m) => /주문 연결 확인 필요/.test(m.subject) && m.htmlBody.includes('주문번호 없이')));
+  z.fail('claimShopPayment', { orderNo: '', amount: 1, hp: 'bot' }, 'bad_request');
+});
+
+t('운영 가격표에 첨삭 단계 상품 추가(syncCatalogText): 기본 교정 문구도 범위가 보이게', () => {
+  const x = makeEnv();
+  const token = x.login();
+  const cat = x.ok('adminGetCatalog', { adminToken: token }).catalog;
+  cat.items = cat.items.filter((i) => !/-EDIT[23]$/.test(i.code)).map((i) => (i.code === 'P-BACHELOR-EDIT' ? { ...i, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'], price: 33000 } : i));
+  x.ok('adminSaveCatalog', { adminToken: token, catalog: cat });
+  // 단계 상품이 없을 때 완성도 보완을 고르면 결제받지 않고 견적 확인
+  const old = paperOrder(x, { task: 'edit', typeId: 'bachelor', extra: { pages: 20, editLevel: 'complete' } });
+  assert.equal(old.quote.quoteRequired, true);
+  const res = x.env.call('syncCatalogText');
+  assert.ok(res.added.includes('P-BACHELOR-EDIT3') && res.added.includes('P-DOCTOR-EDIT2'));
+  assert.ok(res.changed.includes('P-BACHELOR-EDIT'));
+  const items = x.ok('config').catalog.items;
+  const basic = items.find((i) => i.code === 'P-BACHELOR-EDIT');
+  assert.equal(basic.price, 33000, '가격은 그대로');
+  assert.ok(basic.includes.includes('맞춤법·띄어쓰기·비문 바로잡기'));
+  const e3 = items.find((i) => i.code === 'P-BACHELOR-EDIT3');
+  assert.equal(e3.price, 300000);
+  assert.equal(e3.unitPrice, 100000);
+  const now = paperOrder(x, { task: 'edit', typeId: 'bachelor', extra: { pages: 20, editLevel: 'complete' } });
+  assert.equal(now.quote.total, 300000);
+  assert.equal(now.quote.quoteRequired, false);
+});

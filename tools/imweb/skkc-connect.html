@@ -1,4 +1,4 @@
-<!-- 논문AI 바로 결제 연결(nonmunai.kr, 2026.11.03, 2026.11.12 결제 화면 정리 추가): 논문AI 주문서에서 넘어온 경우에만 작동. 상품 페이지를 건너뛰고 결제 화면을 열고, 결제 화면 위에 논문AI 주문 요약을 보여 주며, 결제하기를 누를 때의 주문자 정보로 논문AI 서버에 주문을 등록하고 결제 완료 때 결제 확인 요청을 보냄. 다른 상품 결제에는 아무 일도 하지 않음 -->
+<!-- 논문AI 바로 결제 연결(nonmunai.kr, 2026.11.03, 2026.11.12 결제 화면 정리 추가, 2026.11.26 주문 결제·맞춤 견적 결제 완료 알림 추가): 논문AI 주문서에서 넘어온 경우에만 작동. 상품 페이지를 건너뛰고 결제 화면을 열고, 결제 화면 위에 논문AI 주문 요약을 보여 주며, 결제하기를 누를 때의 주문자 정보로 논문AI 서버에 주문을 등록하고 결제 완료 때 결제 확인 요청을 보냄. 다른 상품 결제에는 아무 일도 하지 않음 -->
 <script>
 (function () {
   try {
@@ -88,9 +88,11 @@
       if (old) old.remove();
       var b = el('div', FONT + 'box-sizing:border-box;max-width:960px;margin:16px auto;padding:18px 20px;border:1px solid #CFD8F5;border-left:4px solid #1F48E0;border-radius:12px;background:#F7F9FF;color:#0A1633;line-height:1.55;text-align:left');
       b.id = 'nmBanner';
-      b.appendChild(el('p', 'margin:0 0 4px;font-size:12.5px;font-weight:700;color:#1F48E0', done ? '논문AI 의뢰 접수 완료' : '논문AI 의뢰'));
-      b.appendChild(el('p', 'margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em', o.label || '논문AI 의뢰'));
-      if (o.topic) b.appendChild(el('p', 'margin:4px 0 0;font-size:14px;color:#3A4560', '관심 주제: ' + o.topic));
+      var isNew = o.kind === 'new';
+      b.appendChild(el('p', 'margin:0 0 4px;font-size:12.5px;font-weight:700;color:#1F48E0', isNew ? (done ? '논문AI 의뢰 접수 완료' : '논문AI 의뢰') : (done ? '논문AI 결제 완료' : '논문AI 결제')));
+      b.appendChild(el('p', 'margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em', o.label || (isNew ? '논문AI 의뢰' : '맞춤 견적 결제')));
+      if (isNew && o.topic) b.appendChild(el('p', 'margin:4px 0 0;font-size:14px;color:#3A4560', '관심 주제: ' + o.topic));
+      if (!isNew && o.o) b.appendChild(el('p', 'margin:4px 0 0;font-size:14px;color:#3A4560', '주문번호 ' + o.o));
       var pr = el('p', 'margin:8px 0 0;font-size:15px;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px');
       if (o.list && o.list > o.price) {
         pr.appendChild(el('s', 'color:#8C95AA;font-size:13.5px', '정가 ' + won(o.list)));
@@ -99,9 +101,15 @@
       }
       pr.appendChild(el('b', 'font-size:18px;font-weight:800', won(o.price)));
       b.appendChild(pr);
-      b.appendChild(el('p', 'margin:8px 0 0;font-size:13px;color:#5B6478', done
-        ? '결제가 확인되는 대로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.'
-        : '결제가 확인되면 바로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.'));
+      b.appendChild(el('p', 'margin:8px 0 0;font-size:13px;color:#5B6478', isNew
+        ? (done ? '결제가 확인되는 대로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.' : '결제가 확인되면 바로 집필을 시작합니다. 진행 안내와 완성본은 주문자 이메일로 보내 드립니다.')
+        : (done ? '결제 완료를 논문AI에 알렸습니다. 결제가 확인되면 메일로 알려 드리고 바로 이어서 진행합니다.' : '결제가 확인되면 ' + (o.o ? '주문에 바로 반영되고, ' : '') + '안내는 주문자 이메일로 보내 드립니다.')));
+      if (done && !isNew && o.o) {
+        var lk = el('a', 'display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;background:#1F48E0;color:#fff;font-size:14px;font-weight:700;text-decoration:none', '주문 조회');
+        lk.href = SITE + '/orders/?o=' + encodeURIComponent(o.o);
+        lk.target = '_blank'; lk.rel = 'noopener';
+        b.appendChild(lk);
+      }
       if (done && o.orderNo && o.token) {
         var a = el('a', 'display:inline-block;margin-top:10px;padding:9px 14px;border-radius:9px;background:#1F48E0;color:#fff;font-size:14px;font-weight:700;text-decoration:none', '진행 상황 보기');
         a.href = SITE + '/orders/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(o.token);
@@ -129,14 +137,14 @@
     var onPay = function (e) {
       if (path() !== '/shop_payment') return;
       var o = load();
-      if (!o || o.kind !== 'new' || o.orderNo) return;
+      if (!o || o.claimed || (o.kind === 'new' && o.orderNo)) return;
       var t = e.composedPath ? e.composedPath()[0] : e.target;
       var btn = t && t.closest ? t.closest('button, [role="button"]') : null;
       if (!btn || !/결제하기/.test(btn.textContent || '')) return;
       var c = contactNow();
       if (!c) return;
       o.contact = c; save(o);
-      register(o);
+      if (o.kind === 'new') register(o);
     };
     document.addEventListener('click', onPay, true);
     // 결제 화면 정리(논문AI 주문일 때만): 카피클린 전용 파일 칸은 숨기고, 필수인 '결과 수령 이메일'은 주문자 이메일로 채워 두 번 적지 않게 한다
@@ -173,9 +181,14 @@
         if (o.claimed) { if (shown !== 'done' || !document.getElementById('nmBanner')) { banner(o, true); shown = 'done'; } return; }
         if (o.busy) return;
         o.claimed = true; save(o);
+        var fin = function () { banner(load() || o, true); shown = 'done'; };
+        if (o.kind !== 'new') {
+          api({ action: 'claimShopPayment', orderNo: o.o || '', ticket: o.pt || '', amount: o.price || 0, label: o.label || '', contact: o.contact || null, hp: '' }).catch(function () {}).then(fin);
+          return;
+        }
         register(o).then(function (r) {
           if (r.orderNo && r.token) return api({ action: 'claimPayment', orderNo: r.orderNo, token: r.token, method: 'skkc', payerName: (r.contact && r.contact.name) || '' }).catch(function () {});
-        }).then(function () { banner(load() || o, true); shown = 'done'; });
+        }).then(fin);
       }
     };
     setInterval(tick, 900);

@@ -42,6 +42,7 @@ function normalizeInput_(service, raw) {
       pages: p.pages === '' || p.pages === null || p.pages === undefined ? null : Math.max(0, Math.min(999, Number(p.pages) || 0)),
       feedbackItems: p.feedbackItems === null || p.feedbackItems === undefined || p.feedbackItems === '' ? null : Math.max(0, Math.min(200, Number(p.feedbackItems) || 0)),
       feedbackText: str_(p.feedbackText, 8000), editScope: str_(p.editScope, 2000), needsData: bool_(p.needsData),
+      editLevel: ['basic', 'deep', 'complete'].indexOf(String(p.editLevel || '')) >= 0 ? String(p.editLevel) : '',
     };
   } else if (service === 'survey') {
     var s = raw.survey || {};
@@ -119,7 +120,7 @@ function revisionAllowance_(o) {
   var q = orderData_(o).quote || {};
   var allowed = 0;
   (q.lines || []).forEach(function (l) { if (l.code === 'A-REVISION') allowed += l.qty || 1; });
-  if (/FULL$|PROP$/.test(q.mainCode || '') || /^S-FULL$/.test(q.mainCode || '')) allowed += 1;
+  if (/FULL$|PROP$|-EDIT3$/.test(q.mainCode || '') || /^S-FULL$/.test(q.mainCode || '')) allowed += 1;
   return allowed;
 }
 
@@ -353,7 +354,7 @@ function summaryOf_(input, quote, design) {
   if (input.service === 'paper') {
     var typeLabel = { master: '석사', doctor: '박사', journal: '학술지', bachelor: '학사', report: '보고서', youth: '청소년 탐구', personal: '개인 연구', short: '소논문' }[input.paper.typeId] || '';
     parts.push(typeLabel);
-    parts.push({ full: '전체 초안', edit: '첨삭', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || '');
+    parts.push(input.paper.task === 'edit' ? '첨삭(' + editLevelOf(input.paper.editLevel || 'basic').label + ')' : ({ full: '전체 초안', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || ''));
     if (input.paper.pages) parts.push(input.paper.pages + '쪽');
   } else if (input.service === 'survey') {
     parts.push({ full: '설문 원스톱', new: '설문지 작성', edit: '설문 점검', feedback: '피드백 반영', analyze: '응답 분석' }[input.survey.mode] || '');
@@ -508,13 +509,19 @@ function api_claimPayment(req) {
   var method = req.method === 'bank' ? 'bank' : 'skkc';
   var ps = paymentsFor_(o.orderNo).filter(function (p) { return p.status === 'requested' && (!req.paymentId || p.id === req.paymentId); });
   if (!ps.length) throw appError_('no_payment', '결제할 금액이 없습니다.');
-  var p = ps[0];
+  claimPay_(o, ps[0], method, str_(req.payerName, 40), '고객 결제 완료 알림');
+  return { order: orderView_(findOrder_(o.orderNo)) };
+}
+
+// 고객이 결제를 마쳤다고 알린 결제 한 건을 '확인 필요'로 두고 운영자에게 알린다(주문 페이지·아임웹 결제 완료 화면 공용)
+function claimPay_(o, p, method, payerName, memo, extraDetail, opts) {
+  opts = opts || {};
   p.status = 'claimed';
   p.method = method;
-  p.ref = str_(req.payerName, 40);
-  p.memo = (p.memo ? p.memo + ' / ' : '') + '고객 결제 완료 알림';
+  p.ref = payerName || '';
+  p.memo = (p.memo ? p.memo + ' / ' : '') + (memo || '고객 결제 완료 알림');
   updatePayment_(p);
-  var advance = String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
+  var advance = !opts.noAdvance && String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
   if (p.kind === 'main' && advance && ['pending_payment', 'payment_review'].indexOf(o.status) >= 0) {
     o.payStatus = 'claimed';
     startWork_(o, '결제 완료 알림을 받았습니다. 결제 내역은 담당자가 확인합니다.', { claimed: true });
@@ -526,8 +533,61 @@ function api_claimPayment(req) {
   } else {
     addHistory_(o.orderNo, '', '', 'customer', '추가 결제 완료 알림: ' + p.amount);
   }
-  notifyOperator_(o, '결제 확인 요청', (method === 'bank' ? '무통장입금' : '성균관컨설팅 결제') + ' · ' + won(p.amount) + (p.ref ? ' · 입금자 ' + p.ref : ''));
-  return { order: orderView_(findOrder_(o.orderNo)) };
+  notifyOperator_(o, '결제 확인 요청', (method === 'bank' ? '무통장입금' : '성균관컨설팅 결제') + ' · ' + won(p.amount) + (p.ref ? ' · 입금자 ' + p.ref : '') + (extraDetail ? ' · ' + extraDetail : ''));
+}
+
+// 결제 연결표(2026-11-26): 주문 결제 화면에서 아임웹으로 넘어갈 때 주소에 조회 키(token) 대신 싣는 6시간짜리 표.
+// 이 표로는 '결제를 마쳤다'는 알림만 보낼 수 있고 주문 내용은 볼 수 없다.
+var PAY_TICKET_TTL = 21600;
+function api_payTicket(req) {
+  var o = requireOrder_(req);
+  rateLimit_('pt:' + o.orderNo, 30, 3600);
+  var key = randomString_(24);
+  CacheService.getScriptCache().put('pt:' + key, o.orderNo, PAY_TICKET_TTL);
+  return { ticket: key };
+}
+function payTicketOrder_(key) {
+  key = String(key || '');
+  if (!/^[A-Za-z0-9]{16,40}$/.test(key)) return '';
+  return String(CacheService.getScriptCache().get('pt:' + key) || '');
+}
+
+// 아임웹(skkc.co.kr) 결제 완료 화면에서 보내는 결제 완료 알림(맞춤 견적 결제·주문 결제)
+// 결제 연결표가 맞거나, 결제할 때 적은 연락처(휴대전화 또는 이메일)가 주문과 같으면 그 주문의 결제를 '확인 필요'로 바꾼다.
+// 주문번호가 없거나 맞지 않으면 주문은 건드리지 않고 운영자에게만 알린다. 응답에는 주문 내용을 싣지 않는다.
+function api_claimShopPayment(req) {
+  if (req.hp) throw appError_('bad_request', '요청을 처리할 수 없습니다.');
+  rateLimit_('shopclaim:all', 60, 3600);
+  var orderNo = str_(req.orderNo, 30).toUpperCase().replace(/\s+/g, '');
+  if (orderNo) rateLimit_('shopclaim:' + orderNo, 5, 3600);
+  var c = req.contact || {};
+  var payer = { name: str_(c.name, 40), phone: normPhone_(c.phone), email: str_(c.email, 120).toLowerCase() };
+  var amount = Math.max(0, Math.round(Number(req.amount || 0)));
+  var label = str_(req.label, 80) || '맞춤 견적 결제';
+  var o = orderNo ? findOrder_(orderNo) : null;
+  if (o && o.deletedState) o = null;
+  var byTicket = !!(o && req.ticket && payTicketOrder_(req.ticket) === o.orderNo);
+  var digits = function (s) { return String(s || '').replace(/[^0-9]/g, ''); };
+  var byContact = !!(o && ((digits(payer.phone).length >= 9 && digits(payer.phone) === digits(o.phone)) || (isEmail_(payer.email) && payer.email === String(o.email || '').toLowerCase())));
+  var who = [payer.name, payer.phone, payer.email].filter(function (x) { return !!x; }).join(' · ');
+  if (o && (byTicket || byContact)) {
+    var ps = paymentsFor_(o.orderNo).filter(function (p) { return p.status === 'requested'; });
+    var p = ps.filter(function (x) { return x.amount === amount; })[0] || (ps.length === 1 ? ps[0] : null);
+    if (p) {
+      // 연락처로만 확인된 알림은 작업을 바로 시작하지 않고 결제 확인 중으로만 둔다
+      claimPay_(o, p, 'skkc', payer.name, '아임웹 결제 완료(' + label + ' ' + won(amount) + ')',
+        '아임웹 결제 완료 화면에서 알림(' + label + ', 결제자 ' + who + ')' + (p.amount !== amount ? ' · 결제 화면 금액 ' + won(amount) + '(요청 금액과 다름, 확인 필요)' : '') + (byTicket ? '' : ' · 연락처로 주문 확인'),
+        { noAdvance: !byTicket });
+      return { linked: true };
+    }
+    addHistory_(o.orderNo, '', '', 'customer', '아임웹 결제 완료 알림(요청된 결제 없음): ' + label + ' ' + won(amount) + ' · ' + who);
+    notifyOperator_(o, '결제 확인 요청', '아임웹 결제 완료 알림 · ' + label + ' ' + won(amount) + ' · 결제자 ' + who + ' · 이 주문에 결제 요청이 없어 확인이 필요합니다.');
+    return { linked: false };
+  }
+  log_('shop_claim', (orderNo || '(주문번호 없음)') + ' ' + won(amount) + ' ' + who);
+  rateLimit_('shopclaim:unlinked', 20, 3600);
+  notifyUnlinkedPayment_(orderNo, o, amount, label, payer);
+  return { linked: false };
 }
 
 function api_confirmToss(req) {

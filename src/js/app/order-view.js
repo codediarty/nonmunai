@@ -5,6 +5,7 @@ import { api } from './api.js';
 import { base64ToBlob, saveBlob, fmtSize } from './files.js';
 import { toast } from '../ui/dom.js';
 import { PAPER_TYPES, FIELDS } from '../core/kb.js';
+import { editLevelOf, editLevelOfCode } from '../core/pricing.js';
 
 export const STEP_LABEL = { received: '접수 완료', checking: '자료 확인', preparing: '작업 준비', in_progress: '작성·분석 진행', review: '박사 검수', delivered: '전달 완료' };
 export const STEP_ORDER = ['received', 'checking', 'preparing', 'in_progress', 'review', 'delivered'];
@@ -101,6 +102,7 @@ export function orderFacts(o) {
     const pt = PAPER_TYPES.find((t) => t.id === i.paper.typeId);
     if (c.topicKnown === 'free' && c.title) rows.push(['관심 주제', c.title]);
     rows.push(['논문 유형', pt ? pt.label : i.paper.typeId], ['요청 작업', TASK_LABEL[i.paper.task] || i.paper.task]);
+    if (i.paper.task === 'edit') rows.push(['첨삭 단계', editLevelOf(i.paper.editLevel || ((o.quote && editLevelOfCode(o.quote.mainCode)) || {}).id || 'basic').label]);
     if (i.paper.pages) rows.push(['분량', `약 ${i.paper.pages} Page`]);
     if (i.paper.feedbackItems) rows.push(['피드백 항목', `${i.paper.feedbackItems}개`]);
     const mt = { survey: '설문·통계', literature: '문헌연구', qualitative: '면담·사례', experiment: '실험·개발' }[c.method];

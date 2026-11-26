@@ -45,6 +45,7 @@ const TITLES = {
   31: '가짜 자동 AI 생성·가짜 퍼센트 없음', 32: '작업지시문 복사에 선택한 주문 정보 반영', 33: '관리자 결과 파일 업로드 후 고객 다운로드',
   34: '모바일 화면에서 입력·결제 요약 사용 가능', 35: '결제사 미설정 시 결제 완료를 가장하지 않음', 36: '데이터·파일 삭제 및 개인정보 동의 처리',
   41: '한 화면 논문 주문(관심 주제만, 제목 확정 없음)과 성균관컨설팅 결제 바로 연결',
+  42: '첨삭 세 단계·결제 금액 바꿔 보내기·요금 결제(맞춤 견적 10만~100만 원)로 정확한 금액을 바로 결제',
   37: '실제 응답자 개인정보 비식별화 안내', 38: '제출·게재·유의성 보장 문구 없음', 39: '파일 보관 만료 및 접근 통제 테스트', 40: '관리자 가격 변경 시 신규 주문 가격 반영, 기존 주문 가격 유지',
 };
 // 같은 항목을 서버·계산 쪽에서 나눠 확인하는 기존 단위·API 테스트(node tools/test/run-all.mjs)
@@ -55,6 +56,7 @@ const BACKEND = {
   28: 'backend: 다른 주문 토큰·위조 티켓 거부, 조회 잠금', 29: 'backend: 토큰 없으면 거부·로그인 제한·비밀번호 변경 시 토큰 무효', 30: 'backend: 자료 보완 요청→보완 완료',
   33: 'backend: 결과 업로드→전달→내려받기', 35: 'backend: 무통장 알림은 확인 중, 토스 승인·금액 위조 거부', 36: 'backend: 필수 동의 없으면 거부, 결제 전 취소 시 영구 삭제',
   39: 'backend: 자동 정리(미제출 3일·미결제 30일·보관 90일), 수정 요청 30일', 40: 'pricing·backend: 가격표 변경은 새 견적에만 반영',
+  42: 'pricing: 첨삭 세 단계 금액·납기, editscope: 요청에서 필요한 단계 읽기, payplan: 맞춤 견적 상품 묶기, backend: 금액 바꾸기 메일·결제 연결표·결제 완료 알림',
 };
 const results = [];
 const pageErrors = [];
@@ -704,11 +706,15 @@ async function tests() {
       await ap.goto(`${BASE}/admin/#order=${f.order.orderNo}`);
       await ap.waitForSelector('.ad-next [data-act="quote"]');
       await ap.click('.ad-next [data-act="quote"]');
-      await ap.fill('.modal [name="total"]', '549000');
+      // 견적 보내기 창: 금액·견적 설명(고객 메일에 그대로)·기간. 설명 없이 보내면 막힘
+      await ap.fill('.modal [name="amount"]', '549000');
+      has(await text(ap, '.modal [data-pay-hint]'), '10만 원 단위가 아니면', '결제 상품 안내');
       await ap.fill('.modal [name="days"]', '10');
-      await ap.fill('.modal [name="message"]', '간호사 200명 모집 포함 견적입니다.');
       await ap.click('.modal [data-ok]');
-      await toast(ap, '견적을 보냈습니다.');
+      await toast(ap, '바꾸는 이유를 적어 주세요');
+      await ap.fill('.modal [name="reason"]', '간호사 200명 모집 포함 견적입니다.');
+      await ap.click('.modal [data-ok]');
+      await toast(ap, '549,000원 결제 안내 메일을 보냈습니다.');
     });
     await withCtx({}, async (p) => {
       await p.goto(checkoutUrl(f.order));
@@ -1885,9 +1891,9 @@ async function tests() {
   /* ---------------------------------------------------------------- 41 */
   // 한 화면 주문: 관심 주제만 적고(제목 확정 없음) 내면 결제 대기 화면 없이 성균관컨설팅 결제로 넘어간다
   const SKKC = 'https://skkc.co.kr/shop_view/?idx=';
-  const withShop = async (fn, { direct = false } = {}) => {
+  const withShop = async (fn, { direct = false, extra = {} } = {}) => {
     const before = (await adminApi('adminGetSettings')).settings || {};
-    const links = { 'P-MASTER-FULL': `${SKKC}100`, 'P-DOCTOR-FULL': `${SKKC}104`, 'P-SHORT-FULL': `${SKKC}147`, 'P-BACHELOR-FULL': `${SKKC}150`, 'A-PRIORITY': `${SKKC}139`, 'X-19000': `${SKKC}141`, 'X-9000': `${SKKC}140`, 'P-MASTER-EDIT': `${SKKC}101` };
+    const links = { 'P-MASTER-FULL': `${SKKC}100`, 'P-DOCTOR-FULL': `${SKKC}104`, 'P-SHORT-FULL': `${SKKC}147`, 'P-BACHELOR-FULL': `${SKKC}150`, 'A-PRIORITY': `${SKKC}139`, 'X-19000': `${SKKC}141`, 'X-9000': `${SKKC}140`, 'P-MASTER-EDIT': `${SKKC}101`, ...extra };
     if (direct) links._direct = 'on';
     await adminApi('adminSaveSettings', { settings: { skkcEnabled: 'true', skkcProducts: JSON.stringify(links), tossEnabled: 'false' } });
     try { return await fn(); } finally { await adminApi('adminSaveSettings', { settings: { skkcProducts: before.skkcProducts || '{}', skkcEnabled: before.skkcEnabled || 'true', tossEnabled: before.tossEnabled || 'false' } }); }
@@ -2153,6 +2159,171 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
     await p.click('#qoBar button');
     await waitText(p, '#qoErr', '이름');
   }));
+
+  /* ----------------------------------------------------------------- 42: 첨삭 세 단계 · 금액 바꿔 보내기 · 요금 결제 */
+  const QL = Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => [`Q-${n * 100000}`, `${SKKC}${200 + n}`]));
+  // 아임웹 흉내: 실제 연결 코드(skkc-connect.html)를 넣은 상품·결제·완료 화면, 서버 호출은 개발 서버로
+  const shopRoutes = async (c, calls) => {
+    const SNIP = fs.readFileSync(path.join(__dirname, '../imweb/skkc-connect.html'), 'utf8');
+    const shopPage = (body, extra = '') => `<!doctype html><html><head><meta charset="utf-8"></head><body><header>skkc</header><main>${body}</main>${extra}${SNIP}</body></html>`;
+    const VIEW = shopPage('<h1>상품 상세</h1>', '<script>window.SITE_SHOP_DETAIL = { confirmOrderWithCartItems: function () { setTimeout(function () { location.href = "/shop_payment/?order_code=o1&order_no=1"; }, 150); } };</script>');
+    const PAY = shopPage('<div id="host"></div><h2>주문 상품 정보</h2><p>[논문AI] 맞춤 견적 결제</p>', `<script>var h = document.getElementById('host').attachShadow({ mode: 'open' });
+h.innerHTML = '<input name="ordererName"><input name="ordererCall"><input name="ordererEmail"><button type="button" id="pay">결제하기</button>';
+h.getElementById('pay').addEventListener('click', function () { setTimeout(function () { location.href = '/shop_payment_complete/?order_code=o1'; }, 1200); });</script>`);
+    const DONE = shopPage('<h1>주문 완료</h1>');
+    const views = [];
+    await c.route('https://skkc.co.kr/**', (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname.startsWith('/shop_view')) views.push(r.request().url());
+      const html = u.pathname.startsWith('/shop_view') ? VIEW : u.pathname.startsWith('/shop_payment_complete') ? DONE : u.pathname.startsWith('/shop_payment') ? PAY : '<html><body>other</body></html>';
+      r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
+    });
+    await c.route('https://script.google.com/**', async (r) => {
+      const body = r.request().postData() || '{}';
+      calls.push(JSON.parse(body));
+      const res = await fetch(`${BASE}/api`, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+      r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: await res.text() });
+    });
+    return views;
+  };
+  const payOnShop = async (p, who) => {
+    await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+    await p.waitForSelector('#nmBanner', { timeout: 8000 });
+    const banner = await text(p, '#nmBanner');
+    await p.evaluate((w) => { const sr = document.getElementById('host').shadowRoot; const set = (n, v) => { sr.querySelector(`[name=${n}]`).value = v; }; set('ordererName', w.name); set('ordererCall', w.phone); set('ordererEmail', w.email); }, who);
+    await p.evaluate(() => document.getElementById('host').shadowRoot.getElementById('pay').click());
+    await p.waitForURL(/shop_payment_complete/, { timeout: 10000 });
+    await p.waitForFunction(() => document.getElementById('nmBanner') && /결제 완료/.test(document.getElementById('nmBanner').textContent), null, { timeout: 20000 });
+    return banner;
+  };
+  await check(42, '첨삭: 세 단계 금액이 분량에 맞춰 나오고, 요청이 단계를 넘으면 알려 한 번에 바꾸며, 완성도 보완 30만 원은 맞춤 견적 결제 상품으로 바로 결제되고 결제 완료가 주문에 연결됨', async () => withShop(async () => {
+    const c = await newCtx();
+    try {
+      const calls = [];
+      const views = await shopRoutes(c, calls);
+      const p = await c.newPage();
+      await p.goto(`${BASE}/paper/new/`);
+      await p.evaluate(() => { try { localStorage.removeItem('nm:draft:quick'); } catch (e) { /* 무시 */ } });
+      await p.goto(`${BASE}/paper/new/?task=edit&type=bachelor`);
+      await p.waitForSelector('.qo-lv');
+      await p.setInputFiles('#qoS1 input[data-file="manuscript"]', [docx('E2E_졸업논문_초안.docx')]);
+      await p.fill('#qoEpages', '20');
+      await waitText(p, '.qo-lv:has(input[value="complete"])', '300,000원');
+      has(await text(p, '.qo-lv:has(input[value="basic"])'), '29,000원', '기본 교정 금액');
+      has(await text(p, '.qo-lv:has(input[value="deep"])'), '100,000원', '심화 첨삭 금액');
+      eq(await p.$eval('input[name="qoLevel"]:checked', (e) => e.value), 'deep', '처음 골라 둔 단계(추천)');
+      await p.click('.qo-lv:has(input[value="basic"])');
+      await waitText(p, '#qoSum', '29,000원');
+      await p.fill('#qoReq', 'AI 톤 문체교정, 흐름 및 구조 검토, 내용 보완 코멘트, 참고문헌·인용 일관성, 논리·사실 확인까지 해서 졸업 제출 가능한 수준으로 부탁드려요.');
+      await waitText(p, '#qoNudge', '완성도 보완에 들어 있는 작업이에요');
+      await p.fill('#qoName', '이졸업');
+      await p.fill('#qoPhone', '010-5555-0001');
+      await p.fill('#qoEmail', 'e2e-edit3@example.com');
+      // 단계를 넘는 요청을 두고 내면 한 번 멈춰 알려 준다
+      await p.click('#qoSubmit');
+      await toast(p, '고른 단계를 한 번만 확인해 주세요');
+      ok(!(await p.$('.modal-back')), '확인 전에 제출 창이 열림');
+      await p.click('#qoNudge [data-level="complete"]');
+      await waitText(p, '#qoSum', '300,000원');
+      ok(!(await p.$('#qoNudge .qo-nudge')), '단계를 바꾼 뒤에도 알림이 남음');
+      await p.click('#qoSubmit');
+      await p.waitForSelector('.handoff-card', { timeout: 40000 });
+      const card = await text(p, '.handoff-card');
+      has(card, '300,000원', '결제 연결 화면 금액');
+      const orderNo = (card.match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+      ok(orderNo, '결제 연결 화면 주문번호');
+      const banner = await payOnShop(p, { name: '이졸업부모', phone: '010-9999-0002', email: 'e2e-parent@example.com' });
+      ok(views[0] && views[0].startsWith(`${QL['Q-300000']}&`), `열린 결제 상품: ${views[0]}`);
+      const nm = decodeNm(views[0]);
+      eq([nm.kind, nm.o, nm.code, nm.price], ['order', orderNo, 'Q-300000', 300000], '결제 주소에 담긴 주문');
+      ok(/^[A-Za-z0-9]{24}$/.test(nm.pt || ''), '결제 연결표가 없음');
+      ok(!JSON.stringify(nm).includes('token'), '결제 주소에 조회 키가 실림');
+      has(banner, '학사·졸업논문 완성도 보완', '결제 화면 안내');
+      const claim = calls.find((x) => x.action === 'claimShopPayment');
+      ok(claim && claim.orderNo === orderNo && claim.ticket === nm.pt && claim.amount === 300000, `결제 완료 알림: ${JSON.stringify(claim || {})}`);
+      const o = await adminOrder(orderNo);
+      eq(o.productName, '학사·졸업논문 완성도 보완', '주문 상품');
+      eq((o.paymentsAll.find((x) => x.amount === 300000) || {}).status, 'claimed', '결제 연결(결제자 연락처가 달라도 연결표로)');
+      eq(o.input.paper.editLevel, 'complete', '주문에 담긴 첨삭 단계');
+    } finally { await c.close().catch(() => {}); }
+  }, { extra: QL }));
+  await check(42, '관리자: 기본 교정으로 들어온 첨삭을 완성도 보완 30만 원으로 바꿔 보내면, 고객은 이유와 함께 메일을 받고 결제 화면이 아임웹 30만 원 상품으로 바로 열림', async () => withShop(async () => {
+    const x = await makeOrder({ input: paperIn({ typeId: 'bachelor', task: 'edit', paper: { pages: 20, editLevel: 'basic', editScope: '원고 전체' }, request: '내용 보완과 구조 검토까지 부탁드려요.' }), files: [{ slot: 'manuscript', ...docx('E2E_기본교정.docx') }] });
+    eq((await getOrder(x)).amountDue, 29000, '처음 결제 금액');
+    await withCtx({ admin: true }, async (ap) => {
+      await ap.goto(`${BASE}/admin/#order=${x.orderNo}`);
+      await ap.waitForSelector('.ad-oside [data-act="quote"]');
+      eq((await text(ap, '.ad-oside [data-act="quote"]')).trim(), '금액 바꿔 보내기', '금액 바꾸기 단추');
+      await ap.click('.ad-oside [data-act="quote"]');
+      await ap.waitForSelector('.modal .am-lv-b');
+      await ap.click('.modal .am-lv-b[data-lv="complete"]');
+      eq(await ap.inputValue('.modal [name="amount"]'), '300000', '단계를 고르면 채워지는 금액');
+      has(await text(ap, '.modal [data-pay-hint]'), "맞춤 견적 결제 300,000원' 상품으로 고객이 바로 결제", '결제 상품 안내');
+      has(await ap.inputValue('.modal [name="scope"]'), '보완 집필', '포함 작업');
+      has(await ap.inputValue('.modal [name="reason"]'), '완성도 보완 단계로', '자동으로 넣은 이유');
+      await ap.click('.modal .am-chip[data-amt="400000"]');
+      eq(await ap.inputValue('.modal [name="amount"]'), '400000', '금액 단추');
+      await ap.click('.modal .am-chip[data-amt="300000"]');
+      await ap.click('.modal [data-ok]');
+      await toast(ap, '300,000원 결제 안내 메일을 보냈습니다.');
+      await waitText(ap, '.ad-oside', '300,000원');
+    });
+    // 전체 실행에서는 에뮬레이터 하루 메일 한도(100통)를 넘겨 메일대기에 쌓일 수 있다
+    const dv = await devInfo(true);
+    const sent = [...dv.mails, ...(dv.queued || [])];
+    ok(sent.some((m) => m.to.includes(x.contact.email) && /결제 금액 안내 300,000원/.test(m.subject)), `고객 메일 없음: ${sent.slice(-5).map((m) => m.subject).join(' / ')}`);
+    const o = await getOrder(x);
+    eq([o.amountDue, o.productName], [300000, '학사·졸업논문 완성도 보완'], '바뀐 주문');
+    const c = await newCtx();
+    try {
+      const views = await shopRoutes(c, []);
+      const p = await c.newPage();
+      await p.goto(`${checkoutUrl(x)}&pay=1`);
+      await p.waitForSelector('.handoff-card', { timeout: 20000 });
+      const card = await text(p, '.handoff-card');
+      for (const t of ['결제 안내', '300,000원', '29,000원', '금액이 바뀐 이유', '완성도 보완 단계로']) has(card, t, '결제 연결 화면');
+      await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 20000 });
+      ok(views[0].startsWith(`${QL['Q-300000']}&`), `열린 결제 상품: ${views[0]}`);
+      eq(decodeNm(views[0]).price, 300000, '결제 주소 금액');
+    } finally { await c.close().catch(() => {}); }
+  }, { extra: QL }));
+  await check(42, '요금 결제: 위 메뉴에서 열고 금액을 고르면 맞춤 견적 결제 상품으로 가고, 주문번호를 적으면 결제할 때 적은 연락처로 그 주문에 연결(결제 확인 중)', async () => withShop(async () => {
+    const x = await makeOrder({ input: paperIn({ typeId: 'master', task: 'edit', paper: { pages: 80, editLevel: 'complete', editScope: '원고 전체' } }), files: [{ slot: 'manuscript', ...docx('E2E_석사원고.docx') }] });
+    eq((await getOrder(x)).amountDue, 500000, '석사 80 Page 완성도 보완');
+    const c = await newCtx();
+    try {
+      const calls = [];
+      const views = await shopRoutes(c, calls);
+      const p = await c.newPage();
+      await p.goto(`${BASE}/`);
+      await p.click('.nav-ul a[href$="/pay/"]');
+      await p.waitForSelector('.pay-amt');
+      eq(await p.$$eval('.pay-amt input', (xs) => xs.map((i) => Number(i.value))), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => n * 100000), '금액 목록');
+      await p.click('#payGo', { force: true });
+      await toast(p, '결제할 금액을 먼저 골라 주세요');
+      await p.click('.pay-amt:has(input[value="500000"])');
+      await waitText(p, '#payGo', '500,000원 결제하기');
+      await p.fill('#payNo', x.orderNo.toLowerCase());
+      eq(await p.inputValue('#payNo'), x.orderNo, '주문번호는 대문자로');
+      await p.click('#payGo');
+      const banner = await payOnShop(p, { name: x.contact.name, phone: x.contact.phone, email: 'other@example.com' });
+      ok(views[0].startsWith(`${QL['Q-500000']}&`), `열린 결제 상품: ${views[0]}`);
+      const nm = decodeNm(views[0]);
+      eq([nm.kind, nm.o, nm.price], ['quote', x.orderNo, 500000], '결제 주소');
+      has(banner, `주문번호 ${x.orderNo}`, '결제 화면 안내');
+      const claim = calls.find((y) => y.action === 'claimShopPayment');
+      ok(claim && claim.orderNo === x.orderNo && claim.amount === 500000 && claim.contact && claim.contact.phone === x.contact.phone, `결제 완료 알림: ${JSON.stringify(claim || {})}`);
+      const o = await getOrder(x);
+      eq(o.status, 'payment_review', '연락처로만 확인된 결제는 결제 확인 중');
+      // 메일의 결제 버튼처럼 주문을 들고 오면 금액이 미리 골라지고 주문이 보임
+      const y = await makeOrder({ input: paperIn({ typeId: 'bachelor', task: 'edit', paper: { pages: 20, editLevel: 'deep' } }), files: [{ slot: 'manuscript', ...docx('E2E_심화.docx') }] });
+      const p2 = await c.newPage();
+      await p2.goto(`${BASE}/pay/?o=${y.orderNo}&t=${encodeURIComponent(y.token)}`);
+      await waitText(p2, '#payOrder', '학사·졸업논문 심화 첨삭');
+      await waitText(p2, '#payGo', '100,000원 결제하기');
+      eq(await p2.$eval('input[name="payAmt"]:checked', (e) => e.value), '100000', '미리 고른 금액');
+    } finally { await c.close().catch(() => {}); }
+  }, { extra: QL }));
 }
 
 /* =================================================================== 39: 시계를 앞당기는 확인(마지막) */

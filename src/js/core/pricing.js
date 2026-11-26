@@ -2,33 +2,47 @@
 // Apps Script에 넣을 때는 빌드가 'export ' 키워드를 제거합니다. 최신 문법(?. ??)은 쓰지 않습니다.
 
 export var DEFAULT_CATALOG = {
-  version: '2026-11-03',
+  version: '2026-11-26',
   currency: 'KRW',
   items: [
     // 논문: 유형별 4개 작업. unit = 추가 분량 과금 단위
     { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 80 Page 완성', price: 99000, baseUnits: 80, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 첨삭·교정', price: 49000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['요청 범위 문장·논리 첨삭(기준 30쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
+    { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 첨삭·교정', price: 49000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['원고 문장 교정(기준 30쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-MASTER-EDIT2', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 심화 첨삭', price: 200000, baseUnits: 100, unitLabel: '쪽', unitSize: 50, unitPrice: 100000, days: 4, includes: ['원고 심화 첨삭(기준 100쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-MASTER-EDIT3', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 완성도 보완', price: 500000, baseUnits: 100, unitLabel: '쪽', unitSize: 20, unitPrice: 100000, days: 7, includes: ['원고 완성도 보완(기준 100쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-MASTER-FB', service: 'paper', type: 'master', task: 'feedback', name: '석사학위논문 교수님 피드백 반영·수정 보완·첨삭', price: 99000, days: 2, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완(근거, 분석, 논리 보강)', '수정한 원고의 문장·논리 첨삭', '수정표 포함(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-MASTER-PROP', service: 'paper', type: 'master', task: 'proposal', name: '석사학위논문 연구계획서 작성', price: 69000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 주제·제목 확정안', '연구 목적과 필요성', '이론적 배경 요약과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
     { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 130 Page 완성', price: 199000, baseUnits: 130, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 첨삭·교정', price: 69000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['요청 범위 문장·논리 첨삭(기준 40쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
+    { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 첨삭·교정', price: 69000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['원고 문장 교정(기준 40쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-DOCTOR-EDIT2', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 심화 첨삭', price: 300000, baseUnits: 150, unitLabel: '쪽', unitSize: 50, unitPrice: 100000, days: 6, includes: ['원고 심화 첨삭(기준 150쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-DOCTOR-EDIT3', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 완성도 보완', price: 800000, baseUnits: 150, unitLabel: '쪽', unitSize: 20, unitPrice: 100000, days: 10, includes: ['원고 완성도 보완(기준 150쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-DOCTOR-FB', service: 'paper', type: 'doctor', task: 'feedback', name: '박사학위논문 교수님 피드백 반영·수정 보완·첨삭', price: 99000, days: 3, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완(근거, 분석, 논리 보강)', '수정한 원고의 문장·논리 첨삭', '수정표 포함(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-DOCTOR-PROP', service: 'paper', type: 'doctor', task: 'proposal', name: '박사학위논문 연구계획서 작성', price: 99000, baseUnits: 25, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['연구 주제·제목 확정안', '연구 목적과 독창성', '이론적 배경과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
     { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 20 Page 완성', price: 99000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['투고 학술지 형식 원고 20 Page', '국문·영문 초록', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 첨삭·교정', price: 39000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '투고 규정 형식 점검', '수정 내역 표시본'] },
+    { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 첨삭·교정', price: 39000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '투고 규정 형식 점검', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-JOURNAL-EDIT2', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-JOURNAL-EDIT3', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-JOURNAL-FB', service: 'paper', type: 'journal', task: 'feedback', name: '학술지 심사 의견 반영(수정 보완)', price: 49000, days: 2, includes: ['심사 의견 전체 일괄 반영·수정', '심사 의견 답변서(Response letter) 작성', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사 졸업논문 30 Page 완성', price: 59000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
+    { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-BACHELOR-EDIT2', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 심화 첨삭', price: 100000, baseUnits: 40, unitLabel: '쪽', unitSize: 40, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 40쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-BACHELOR-EDIT3', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-BACHELOR-FB', service: 'paper', type: 'bachelor', task: 'feedback', name: '학사·졸업논문 교수님 피드백 반영·수정 보완·첨삭', price: 39000, days: 2, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완', '수정한 원고의 문장 첨삭', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-BACHELOR-PROP', service: 'paper', type: 'bachelor', task: 'proposal', name: '학사·졸업논문 연구계획서 작성', price: 29000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 9000, days: 2, includes: ['주제·제목 확정안', '연구 목적과 방법', '목차안', '참고문헌'] },
     { code: 'P-REPORT-FULL', service: 'paper', type: 'report', task: 'full', name: '일반 연구보고서 전체 구성·초고 완성', price: 59000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['보고서 구성안', '본문 초고(기준 20쪽)', '참고자료 정리', '수정 1회'] },
-    { code: 'P-REPORT-EDIT', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
+    { code: 'P-REPORT-EDIT', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-REPORT-EDIT2', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 심화 첨삭', price: 100000, baseUnits: 40, unitLabel: '쪽', unitSize: 40, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 40쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-REPORT-EDIT3', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-REPORT-FB', service: 'paper', type: 'report', task: 'feedback', name: '일반 연구보고서 검토 의견 반영', price: 29000, days: 2, includes: ['검토 의견 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-YOUTH-FULL', service: 'paper', type: 'youth', task: 'full', name: '청소년 탐구논문 구성·초고 완성', price: 39000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['탐구 주제·질문 정리', '탐구 보고서 초고(기준 10쪽)', '참고자료 정리', '수정 1회'] },
-    { code: 'P-YOUTH-EDIT', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 첨삭·교정', price: 19000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 1, includes: ['원고 첨삭(기준 10쪽)', '수정 내역 표시본'] },
+    { code: 'P-YOUTH-EDIT', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 첨삭·교정', price: 19000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 1, includes: ['원고 문장 교정(기준 10쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-YOUTH-EDIT2', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 2, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-YOUTH-EDIT3', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 완성도 보완', price: 200000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 4, includes: ['원고 완성도 보완(기준 20쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-YOUTH-FB', service: 'paper', type: 'youth', task: 'feedback', name: '청소년 탐구논문 선생님 피드백 반영', price: 19000, days: 1, includes: ['선생님 피드백 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초고 완성', price: 49000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 3, includes: ['연구 질문 정리', '연구 원고 초고(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
-    { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
+    { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 15쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-PERSONAL-EDIT2', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-PERSONAL-EDIT3', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 완성도 보완', price: 200000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 4, includes: ['원고 완성도 보완(기준 20쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 15 Page 완성', price: 49000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 19000, days: 2, includes: ['피드백 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     // 설문조사
@@ -100,9 +114,35 @@ export function findItem(catalog, code) {
   return null;
 }
 
-export function paperItemCode(typeId, task) {
-  return 'P-' + String(typeId || 'master').toUpperCase() + '-' + ({ full: 'FULL', edit: 'EDIT', feedback: 'FB', proposal: 'PROP' }[task] || 'FULL');
+// 논문 첨삭 단계(2026-11-26): 같은 '원고 첨삭'도 손보는 범위에 따라 세 단계로 나눈다.
+// 기본 교정은 기존 상품(P-유형-EDIT), 심화 첨삭(EDIT2)·완성도 보완(EDIT3)은 10만 원 단위 금액이라
+// 아임웹 '맞춤 견적 결제'(10만~100만 원) 상품 하나로 바로 결제된다.
+export var EDIT_LEVELS = [
+  { id: 'basic', suffix: '', label: '기본 교정', short: '문장 교정', pitch: '내용과 흐름은 그대로 두고 문장만 다듬어요', limit: '문장만 다듬고 흐름·인용·내용은 손대지 않아요', points: ['맞춤법·띄어쓰기·비문 교정', '어색하고 긴 문장 다듬기', '용어·표기 통일'] },
+  { id: 'deep', suffix: '2', label: '심화 첨삭', short: 'AI 문체·흐름·인용', pitch: '읽히는 원고로 고쳐 쓰고 인용까지 맞춰요', limit: '문장·흐름·인용은 다듬지만 내용을 보태 쓰거나 구성을 바꾸지는 않아요', points: ['기본 교정 전부', 'AI 문체·번역투 자연스럽게 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 대조', '장별 보완 코멘트'] },
+  { id: 'complete', suffix: '3', label: '완성도 보완', short: '구조·내용 보완까지', pitch: '제출할 수 있는 원고로 끝까지 채워요', limit: '', points: ['심화 첨삭 전부', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 확인, 수정 1회'] },
+];
+export function editLevelOf(id) {
+  for (var i = 0; i < EDIT_LEVELS.length; i++) if (EDIT_LEVELS[i].id === id) return EDIT_LEVELS[i];
+  return EDIT_LEVELS[0];
 }
+// 상품 코드로 첨삭 단계 알기(가격표 시트에는 단계 칸이 없어서 코드 끝 숫자로 구분)
+export function editLevelOfCode(code) {
+  var m = /-EDIT([23])?$/.exec(String(code || ''));
+  if (!m) return null;
+  return m[1] === '3' ? EDIT_LEVELS[2] : m[1] === '2' ? EDIT_LEVELS[1] : EDIT_LEVELS[0];
+}
+
+export function paperItemCode(typeId, task, level) {
+  var code = 'P-' + String(typeId || 'master').toUpperCase() + '-' + ({ full: 'FULL', edit: 'EDIT', feedback: 'FB', proposal: 'PROP' }[task] || 'FULL');
+  return task === 'edit' && level ? code + editLevelOf(level).suffix : code;
+}
+
+// 맞춤 견적 결제 금액(아임웹 상품): 10만 원부터 100만 원까지 10만 원 단위
+export var QUOTE_STEP = 100000;
+export var QUOTE_MAX = 1000000;
+export var QUOTE_AMOUNTS = [100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000];
+export function isQuoteAmount(n) { n = Number(n) || 0; return n >= QUOTE_STEP && n <= QUOTE_MAX && n % QUOTE_STEP === 0; }
 
 // 포함 항목의 분량 표기를 실제 주문 분량으로 바꾸고, 'N쪽'은 'N Page'로 보여 준다
 export function includesFor(list, pages) {
@@ -117,6 +157,13 @@ export function includesFor(list, pages) {
 
 export function won(n) {
   return (Math.round(Number(n) || 0)).toLocaleString('ko-KR') + '원';
+}
+
+function isMetered(it) { return !!it && it.baseUnits != null && it.baseUnits !== '' && Number(it.unitSize) > 0; }
+// 기준 분량을 넘는 만큼 늘어나는 납기: 추가 2단위마다 하루, 최대 5일
+function extraDays(it, units) {
+  if (!isMetered(it) || units == null || !(units > it.baseUnits)) return 0;
+  return Math.min(5, Math.ceil(Math.ceil((units - it.baseUnits) / it.unitSize) / 2));
 }
 
 function line(item, opts) {
@@ -141,22 +188,32 @@ export function computeQuote(catalog, input) {
 
   if (service === 'paper') {
     var p = input.paper || {};
-    main = findItem(catalog, paperItemCode(p.typeId, p.task));
+    var level = p.task === 'edit' && p.editLevel && p.editLevel !== 'basic' ? p.editLevel : '';
+    main = findItem(catalog, paperItemCode(p.typeId, p.task, level));
+    // 고른 첨삭 단계가 가격표에 없으면 기본 교정 금액으로 결제받지 않고 확인 후 금액을 안내한다
+    if (!main && level) {
+      main = findItem(catalog, paperItemCode(p.typeId, 'edit'));
+      reasons.push('선택하신 첨삭 단계(' + editLevelOf(level).label + ')는 원고를 확인한 뒤 금액을 안내드립니다.');
+    }
     if (!main) main = findItem(catalog, paperItemCode(p.typeId, 'full'));
     if (main) {
       lines.push(line(main));
       days = main.days || 0;
       includes = (main.includes || []).slice();
+      excludes = (main.excludes || []).slice();
       // 추가 분량
       var units = null;
-      var metered = main.baseUnits != null && main.baseUnits !== '' && Number(main.unitSize) > 0;
+      var metered = isMetered(main);
       if (main.unitLabel === '항목') units = p.feedbackItems != null ? Number(p.feedbackItems) : null;
       else units = p.pages != null && p.pages !== '' ? Number(p.pages) : null;
       if (metered && units != null && units > main.baseUnits) {
         var extraBlocks = Math.ceil((units - main.baseUnits) / main.unitSize);
         lines.push({ code: main.code + '-X', name: '추가 분량 (' + main.unitSize + main.unitLabel + ' 단위 × ' + extraBlocks + ')', qty: extraBlocks, unitPrice: main.unitPrice, amount: main.unitPrice * extraBlocks, note: '기준 ' + main.baseUnits + main.unitLabel + ' 초과 ' + (units - main.baseUnits) + main.unitLabel });
-        days += Math.min(5, Math.ceil(extraBlocks / 2));
+        days += extraDays(main, units);
       }
+      // 심화·완성도 보완 납기: 같은 분량의 기본 교정 납기보다 단계만큼 길게(단계 상품은 분량 단위가 커서 따로 계산하면 짧아질 수 있음)
+      var basicEdit = level ? findItem(catalog, paperItemCode(p.typeId, 'edit')) : null;
+      if (basicEdit && basicEdit.code !== main.code) days = Math.max(days, (basicEdit.days || 0) + extraDays(basicEdit, units) + Math.max(0, (main.days || 0) - (basicEdit.days || 0)));
       if (metered && units == null) notes.push('분량을 모르셔도 기준 분량(' + main.baseUnits + main.unitLabel + ')으로 먼저 진행하고, 자료 확인 후 초과분이 있을 때만 추가 결제를 안내드립니다.');
       if (p.needsData) notes.push('결과 장은 실제 데이터 분석 후 작성됩니다. 데이터가 없으면 설문조사·통계분석 서비스와 연결해 드립니다.');
     }

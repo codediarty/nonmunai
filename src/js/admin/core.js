@@ -74,21 +74,25 @@ export function pill(status, label) {
   return `<span class="status-pill sm ${cls}"><i></i>${esc(label || STATUS_LABEL[status] || status)}</span>`;
 }
 
-export function confirmBox({ title, html, ok = '확인', danger = false }) {
+// onOpen(box): 창 안의 단추·입력에 동작을 붙인다. validate(vals): 오류 문구를 돌려주면 창을 닫지 않고 알린다
+export function confirmBox({ title, html, ok = '확인', danger = false, wide = false, onOpen = null, validate = null }) {
   return new Promise((resolve) => {
     const back = document.createElement('div');
     back.className = 'modal-back';
-    back.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-hd"><h2>${esc(title)}</h2></div><div class="modal-bd">${html}<div class="ad-modal-act"><button type="button" class="btn btn-ghost" data-x>취소</button><button type="button" class="btn ${danger ? 'btn-pen' : 'btn-primary'}" data-ok>${esc(ok)}</button></div></div></div>`;
+    back.innerHTML = `<div class="modal${wide ? ' modal-wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-hd"><h2>${esc(title)}</h2></div><div class="modal-bd">${html}<div class="ad-modal-act"><button type="button" class="btn btn-ghost" data-x>취소</button><button type="button" class="btn ${danger ? 'btn-pen' : 'btn-primary'}" data-ok>${esc(ok)}</button></div></div></div>`;
     const close = (v) => { back.remove(); resolve(v); };
     back.querySelector('[data-x]').addEventListener('click', () => close(null));
     back.querySelector('[data-ok]').addEventListener('click', () => {
       const vals = {};
       back.querySelectorAll('[name]').forEach((el) => { vals[el.name] = el.type === 'checkbox' ? el.checked : el.value; });
+      const err = validate ? validate(vals) : '';
+      if (err) { toast(err, { error: true }); return; }
       close(vals);
     });
     back.addEventListener('click', (e) => { if (e.target === back) close(null); });
     document.body.appendChild(back);
-    const f = back.querySelector('input,textarea,select');
+    if (onOpen) onOpen(back);
+    const f = back.querySelector('input:not([type=hidden]),textarea,select');
     (f || back.querySelector('[data-ok]')).focus();
   });
 }

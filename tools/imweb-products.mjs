@@ -6,7 +6,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_CATALOG, won, listPriceFor, discountRate, includesFor, promoText, PROMO_NAME, PROMO_SHORT } from '../src/js/core/pricing.js';
+import { DEFAULT_CATALOG, won, listPriceFor, discountRate, includesFor, promoText, PROMO_NAME, PROMO_SHORT, QUOTE_AMOUNTS } from '../src/js/core/pricing.js';
 import { brandMark, bookShape, BRAND } from '../src/templates/brand.mjs';
 import { verifiedBadge } from '../src/templates/parts.mjs';
 
@@ -28,7 +28,7 @@ const isFull = (code) => /^P-[A-Z]+-FULL$/.test(code);
 
 // 추가 분량 단가별 상품: 같은 단가를 쓰는 본 상품을 묶는다
 const unitUsers = {};
-for (const it of items) if (it.unitPrice && !it.addon) (unitUsers[it.unitPrice] = unitUsers[it.unitPrice] || []).push(it);
+for (const it of items) if (it.unitPrice && !it.addon && !/-EDIT[23]$/.test(it.code)) (unitUsers[it.unitPrice] = unitUsers[it.unitPrice] || []).push(it);
 
 function paperTitle(it) {
   return [TYPE[it.type], it.task === 'feedback' ? FEEDBACK_TASK[it.type] : TASK[it.task]];
@@ -37,6 +37,8 @@ function paperTitle(it) {
 const products = [];
 for (const it of items) {
   if (it.quoteOnly || !it.price) continue;
+  // 첨삭 심화·완성도 보완(EDIT2·EDIT3)은 10만 원 단위라 '맞춤 견적 결제' 상품으로 결제한다(따로 만들지 않음)
+  if (/-EDIT[23]$/.test(it.code)) continue;
   let family, lines, meta, applies = '';
   if (it.service === 'paper') {
     family = '논문 · ' + TYPE[it.type];
@@ -72,10 +74,21 @@ for (const price of [...new Set([...X_PRICES, ...Object.keys(unitUsers).map(Numb
   });
 }
 
-// 쇼핑몰 진열 순서: 본 상품, 옵션(발표 PPT·영문 작성 먼저), 추가 분량
+// 맞춤 견적 결제(2026-11-26): 논문AI에서 안내받은 금액(10만~100만 원)을 결제하는 상품
+for (const price of QUOTE_AMOUNTS) {
+  products.push({
+    code: `Q-${price}`, kind: 'quote', service: 'addon', family: '맞춤 견적 결제', lines: ['맞춤 견적 결제', won(price)],
+    name: `[논문AI] 맞춤 견적 결제 (${won(price)})`, price, days: 0,
+    meta: '논문AI에서 안내받은 금액 그대로 결제',
+    includes: ['첨삭 심화 첨삭·완성도 보완처럼 범위와 분량으로 정해진 금액', '상담에서 정한 맞춤 견적(응답자 모집, 심화 분석 등)', '진행 중 범위가 늘어 안내받은 추가 결제'],
+    excludes: [], unit: null, applies: '논문AI 주문 결제',
+  });
+}
+
+// 쇼핑몰 진열 순서: 본 상품, 옵션(발표 PPT·영문 작성 먼저), 추가 분량, 맞춤 견적 결제
 const ADDON_ORDER = ['A-PPT', 'A-ENGLISH', 'T-ADV', 'A-FORMAT', 'A-REVISION', 'A-PRIORITY'];
 products.sort((a, b) => {
-  const rank = (p) => (p.kind === 'main' ? 0 : p.kind === 'addon' ? 1 : 2);
+  const rank = (p) => (p.kind === 'main' ? 0 : p.kind === 'addon' ? 1 : p.kind === 'extra' ? 2 : 3);
   if (rank(a) !== rank(b)) return rank(a) - rank(b);
   if (a.kind === 'addon') return ADDON_ORDER.indexOf(a.code) - ADDON_ORDER.indexOf(b.code);
   return 0;
@@ -84,7 +97,9 @@ products.sort((a, b) => {
 // 요약 설명(아임웹 메타 설명): 160자 안팎
 for (const p of products) {
   const inc = p.includes.filter((x) => !/검토|검수|수정 \d+회/.test(x)).slice(0, 4).map((x) => x.replace(/\(.*?\)/g, '').replace(/\s*포함$/, '').trim()).join(', ');
-  p.summary = p.kind === 'extra'
+  p.summary = p.kind === 'quote'
+    ? `논문AI(nonmunai.kr)에서 안내받은 금액을 결제하는 상품이에요. 맞춤 견적 ${won(p.price)}. 주문번호와 함께 결제하면 주문에 바로 연결돼요.`
+    : p.kind === 'extra'
     ? `논문AI 주문서에 '추가 분량 N단위'가 안내되면 그 단위 수만큼 담아 결제하는 상품이에요. 1단위 ${won(p.price)}.`
     : p.kind === 'addon'
       ? `${p.lines.join(' ')} · ${p.code === 'A-ENGLISH' ? `${p.unit.size} Page마다 ${won(p.price)}` : won(p.price)} · ${p.applies}에 더할 수 있어요. 논문AI(nonmunai.kr) 주문과 함께 결제하세요.`
@@ -198,7 +213,16 @@ const priceBox = (p) => (p.list ? `<div style="margin:0 0 28px;padding:26px 24px
 const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCase()] : p.kind === 'extra' ? '추가 옵션' : p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '논문 맞춤 통계분석');
 for (const p of products) {
   let body = '';
-  if (p.kind === 'extra') {
+  if (p.kind === 'quote') {
+    body = hero('맞춤 견적 결제', '안내받은 금액을<br>여기서 바로 결제해요', `맞춤 견적 결제 · ${won(p.price)}`) + TRUST + SECRET
+      + sec('이럴 때 결제해요', checks(p.includes))
+      + sec('결제하는 법', cards([
+        `<b>논문AI에서 금액 고르기</b><br>${SITE_A}의 요금 결제에서 안내받은 금액을 고르거나, 메일로 받은 결제 버튼을 눌러 주세요. 이 결제 화면이 바로 열려요.`,
+        '<b>주문자 정보는 주문서와 같게</b><br>결제할 때 이름, 연락처, 이메일을 논문AI 주문서와 같게 적어 주시면 주문에 바로 연결돼요.',
+        '<b>결제 확인 후 이어서 진행</b><br>결제가 확인되면 메일로 알려 드리고 바로 작업을 시작하거나 이어서 진행해요.',
+      ]))
+      + `<p style="margin:18px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">금액이 헷갈리면 결제 전에 성균관컨설팅 상담 채널이나 contact@skkc.co.kr로 물어봐 주세요.</p>`;
+  } else if (p.kind === 'extra') {
     body = hero(KICK(p), '안내된 단위 수만큼,<br>본 상품과 함께 담아 주세요', `추가 분량 1단위 ${won(p.price)}`) + TRUST + SECRET
       + sec('이렇게 담아 주세요', `<p style="margin:0;font-size:16px;line-height:1.8;color:${INK2}">논문AI 주문서의 금액 안내에 <b>추가 분량 N단위</b>가 있으면, 이 상품을 <b>N개</b> 담아 본 상품과 함께 한 번에 결제해 주세요. 1단위는 <b>${won(p.price)}</b>이에요.</p>`)
       + sec(p.users.length ? '이 단가를 쓰는 상품' : '이럴 때 씁니다', checks(p.includes));
@@ -263,6 +287,7 @@ function cover(p) {
     const tag = task === 'feedback' ? (type === 'journal' ? '답변서 작성, 반영 부분은 파란색 표시' : BLUE_TAG) : TAG[task];
     return { kicker: TYPE[type], title, tag };
   }
+  if (p.kind === 'quote') return { kicker: '맞춤 견적 결제', title: ['맞춤 견적 결제'], tag: '논문AI에서 안내받은 금액' };
   if (p.kind === 'extra') return { kicker: '추가 옵션', title: ['추가 분량'], tag: `1단위 ${won(p.price)}` };
   if (p.code === 'A-ENGLISH') return { kicker: '추가 옵션', title: STITLE[p.code], tag: `${p.unit.size} Page마다 ${won(p.price)}` };
   const kicker = p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '통계분석';
@@ -277,12 +302,13 @@ const emWidth = (t) => [...t].reduce((a, ch) => a + (/\s/.test(ch) ? 0.3 : /[\x2
 const TASK_LABEL = { FULL: '논문 완성', EDIT: '첨삭·교정', FB: '피드백 반영', PROP: '연구계획서' };
 const isFb = (p) => p.service === 'paper' && /-FB$/.test(p.code);
 const fbTask = (p) => FEEDBACK_TASK[p.code.split('-')[1].toLowerCase()] || '피드백 반영';
-const cardLabel = (p) => (p.kind === 'extra' ? '추가 분량' : p.kind === 'addon' ? '추가 옵션' : p.service === 'survey' ? '설문조사' : p.service === 'statistics' ? '통계분석' : isFb(p) ? fbTask(p) : TASK_LABEL[p.code.split('-')[2]] || '논문');
+const cardLabel = (p) => (p.kind === 'quote' ? '맞춤 견적 결제' : p.kind === 'extra' ? '추가 분량' : p.kind === 'addon' ? '추가 옵션' : p.service === 'survey' ? '설문조사' : p.service === 'statistics' ? '통계분석' : isFb(p) ? fbTask(p) : TASK_LABEL[p.code.split('-')[2]] || '논문');
 const cardChips = (p) => {
   const out = [];
   if (p.service === 'paper') out.push(['w', TYPE_SHORT[p.code.split('-')[1].toLowerCase()]]);
   else if (p.kind === 'main') out.push(['w', p.service === 'survey' ? '설문 설계·분석' : 'SPSS·AMOS']);
   else if (p.kind === 'addon') out.push(['w', '논문AI 주문에 추가']);
+  else if (p.kind === 'quote') { out.push(['w', '안내받은 금액 그대로']); out.push(['g', '주문에 바로 연결']); }
   else out.push(['w', '단위 수만큼 담기']);
   if (isFb(p)) out.push(['g', /교수님/.test(fbTask(p)) ? '수정 보완·첨삭' : '수정 보완']);
   if (p.kind === 'main') out.push(['g', '전공 박사 검수']);
@@ -290,6 +316,7 @@ const cardChips = (p) => {
   return out;
 };
 const cardBig = (p) => {
+  if (p.kind === 'quote') return { n: String(p.price / 10000), u: '만 원', left: '논문AI 안내 금액', right: won(p.price) };
   const u = p.unit;
   if (u && (u.base || u.size) && !isFb(p)) return { n: String(u.base || u.size), u: u.label, left: p.list ? `<s>정가 ${won(p.list)}</s>` : u.base ? '기준 분량' : `${u.size} ${u.label}마다`, right: won(p.price) };
   const c = cover(p);
@@ -301,7 +328,7 @@ const imgHtml = (p) => {
   const title = p.name.replace('[논문AI] ', '');
   const titleHtml = isFb(p) ? esc(title).replace(/^(.+?) ((?:교수님|선생님) )/, '$1<br>$2') : esc(title).replace(': ', ':<br>');
   const tSize = emWidth(title) > 14.5 ? 50 : 58;
-  const trust1 = p.service === 'paper' && p.kind === 'main' ? '참고문헌 100% 실존 검증 · 전공 박사 최종 검수' : p.kind === 'main' ? '전공 분야 박사 최종 검수' : '논문AI 주문과 함께 한 번에 결제';
+  const trust1 = p.service === 'paper' && p.kind === 'main' ? '참고문헌 100% 실존 검증 · 전공 박사 최종 검수' : p.kind === 'main' ? '전공 분야 박사 최종 검수' : p.kind === 'quote' ? '주문번호와 함께 결제하면 주문에 바로 연결' : '논문AI 주문과 함께 한 번에 결제';
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/site.css"><style>
 html,body{margin:0;width:1000px;height:1000px;overflow:hidden;background:#FFFFFF}
 .cv-root{position:relative;width:1000px;height:1000px;box-sizing:border-box;padding:62px 72px 0;font-family:var(--sans);color:#0F1B3D;background:#FFFFFF}
@@ -370,7 +397,9 @@ li b{display:block;color:#0F1B3D;font-size:30px;margin-bottom:8px;letter-spacing
 const browser = await playwright.chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1000, height: 1000 }, deviceScaleFactor: 1 });
 const loadFonts = (txt) => page.evaluate(async (t) => { await Promise.all([document.fonts.load('700 60px "Noto Serif KR"', t), document.fonts.load('700 26px "Pretendard Variable"', t), document.fonts.load('500 26px "Pretendard Variable"', t)]); await document.fonts.ready; }, txt);
+const ONLY = process.env.ONLY ? new RegExp(process.env.ONLY) : null;
 for (const p of products) {
+  if (ONLY && !ONLY.test(p.code)) { p.image = `img/${p.code}.jpg`; continue; }
   await page.setContent(imgHtml(p), { waitUntil: 'networkidle' });
   { const c = cover(p); await loadFonts(c.kicker + c.title.join('') + c.tag + p.name + cardLabel(p) + cardChips(p).map((x) => x[1]).join('') + '논문AI nonmunai.kr 0123456789,원% 정가 부가세 포함 기준 분량 마다 1단위 가격 Page 개 항목 논문AI 주문과 함께 한 번에 결제 전공 분야 박사 최종 검수 참고문헌 100% 실존 검증 · ' + PROMO_NAME + PROMO_SHORT + COVER_SECURE); }
   await page.waitForTimeout(120);
@@ -385,4 +414,4 @@ await page.screenshot({ path: path.join(out, '논문AI-주문-안내.png'), type
 await browser.close();
 server.close();
 fs.writeFileSync(path.join(out, 'products.json'), JSON.stringify(products, null, 1));
-console.log(`imweb: 상품 ${products.length}개 (본 ${products.filter((p) => p.kind === 'main').length}, 옵션 ${products.filter((p) => p.kind === 'addon').length}, 추가 분량 ${products.filter((p) => p.kind === 'extra').length}) → ${out}`);
+console.log(`imweb: 상품 ${products.length}개 (본 ${products.filter((p) => p.kind === 'main').length}, 옵션 ${products.filter((p) => p.kind === 'addon').length}, 추가 분량 ${products.filter((p) => p.kind === 'extra').length}, 맞춤 견적 ${products.filter((p) => p.kind === 'quote').length}) → ${out}`);

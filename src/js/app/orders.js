@@ -240,7 +240,9 @@ ${this.manageCard()}
       banners.push(note(o.status === 'payment_review' ? '결제 완료 알림을 받았습니다. 결제 내역을 확인하는 대로 작업 순서에 배정해 드립니다.' : '결제 완료 알림을 받았습니다. 작업 순서에 배정되었고 예상 전달일이 정해졌습니다. 결제 내역은 담당자가 함께 확인합니다.', 'green'));
     }
     if (o.amountDue > 0 && o.allow.pay) {
-      banners.push(`<div class="note note-amber">${ICON.warn}<div><b>${won(o.amountDue)} 결제를 기다리고 있습니다.</b> ${o.status === 'pending_payment' ? '결제가 확인되면 작업 순서에 배정되고 예상 전달일이 확정됩니다.' : '추가 결제가 확인되면 이어서 진행합니다.'}<div class="note-act"><a class="btn btn-primary" href="${url('/checkout/')}?o=${encodeURIComponent(o.orderNo)}">결제하기</a></div></div></div>`);
+      const ch = ((o.quote && o.quote.changes) || []).slice(-1)[0];
+      const why = ch && ch.reason ? `<p class="note-why"><b>${ch.paid ? '추가 결제 사유' : ch.quote ? '견적 설명' : '금액이 바뀐 이유'}</b> ${esc(ch.reason)}</p>` : '';
+      banners.push(`<div class="note note-amber">${ICON.warn}<div><b>${won(o.amountDue)} 결제를 기다리고 있습니다.</b> ${o.status === 'pending_payment' ? '결제가 확인되면 작업 순서에 배정되고 예상 전달일이 확정됩니다.' : '추가 결제가 확인되면 이어서 진행합니다.'}${why}<div class="note-act"><a class="btn btn-primary" href="${url('/checkout/')}?o=${encodeURIComponent(o.orderNo)}&pay=1">${won(o.amountDue)} 결제하기</a></div></div></div>`);
     } else if (o.status === 'quote_requested') {
       banners.push(note('요청하신 조건과 자료를 확인해 <b>영업일 1일 안에 확정 견적</b>을 메일과 이 화면으로 안내드립니다.', 'amber'));
     } else if (o.status === 'payment_review') {

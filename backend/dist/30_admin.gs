@@ -199,6 +199,79 @@ function api_adminRequestExtra(req) {
   return { order: orderView_(o, { admin: true }) };
 }
 
+// 결제 금액 바꾸기(2026-11-26): 고객이 결제할 금액과 사유를 정하면, 바뀐 금액·사유·포함 범위와
+// 바로 결제 버튼(아임웹 결제 화면으로 바로 이어짐)이 담긴 메일이 고객에게 간다.
+// 결제 전 주문은 결제 대기 금액을 바꾸고, 이미 결제한 주문은 그 금액을 추가 결제로 요청한다.
+// level(첨삭 주문만): 기본 교정·심화 첨삭·완성도 보완 가운데 고르면 상품명과 포함 범위도 그 단계로 바꾼다.
+function api_adminChangeAmount(req) {
+  var o = adminOrder_(req);
+  var pay = Math.round(Number(req.amount || 0));
+  if (!(pay >= 1000)) throw appError_('invalid', '고객이 결제할 금액을 입력해 주세요.');
+  if (pay > 50000000) throw appError_('invalid', '금액을 다시 확인해 주세요.');
+  var reason = str_(req.reason, 600);
+  if (!reason) throw appError_('invalid', '고객에게 보낼 변경 사유를 적어 주세요.');
+  if (['cancelled', 'completed', 'draft'].indexOf(o.status) >= 0) throw appError_('invalid', '이 단계의 주문은 금액을 바꿀 수 없습니다.');
+  var pays = paymentsFor_(o.orderNo);
+  if (pays.some(function (p) { return p.status === 'claimed'; })) throw appError_('claimed', '고객이 결제를 마쳤다고 알린 결제가 있습니다. 먼저 결제 확인이나 내역 없음 처리를 해 주세요.');
+  var paid = 0;
+  pays.forEach(function (p) { if (p.status === 'confirmed') paid += p.amount; });
+  var data = orderData_(o);
+  var q = data.quote || {};
+  var wasQuote = o.status === 'quote_requested';
+  var before = paid > 0 || wasQuote ? 0 : amountDue_(o) || o.amount || 0;
+  var level = str_(req.level, 12);
+  var tier = null;
+  if (level && o.service === 'paper' && data.input && data.input.paper && data.input.paper.task === 'edit' && ['basic', 'deep', 'complete'].indexOf(level) >= 0) {
+    var inputNew = JSON.parse(JSON.stringify(data.input));
+    inputNew.paper.editLevel = level;
+    tier = computeQuote(catalog_(), quoteInput_(inputNew));
+    if (!tier.mainCode || !/-EDIT[23]?$/.test(tier.mainCode)) tier = null;
+    if (tier) { data.input = inputNew; o.productName = tier.mainName || o.productName; o.summary = summaryOf_(inputNew, tier, data.design); }
+  }
+  var scope = (req.scope || []).slice(0, 12).map(function (x) { return str_(x, 160); }).filter(String);
+  var cancel = function (p) { p.status = 'cancelled'; p.memo = (p.memo ? p.memo + ' / ' : '') + '금액 변경으로 취소'; updatePayment_(p); };
+  var lineName = (tier && tier.mainName) || o.productName || '맞춤 견적';
+  if (paid <= 0) {
+    pays.forEach(function (p) { if (p.status === 'requested') cancel(p); });
+    addPayment_({ orderNo: o.orderNo, kind: 'main', amount: pay, status: 'requested', memo: '변경 금액' });
+    q.lines = [{ code: (tier && tier.mainCode) || q.mainCode || 'QUOTE', name: lineName, qty: 1, unitPrice: pay, amount: pay, note: '금액 변경' }];
+    o.amount = pay;
+    o.payStatus = 'unpaid';
+    o.quoteRequired = false;
+    if (['quote_requested', 'pending_payment', 'payment_review'].indexOf(o.status) >= 0) o.status = 'pending_payment';
+  } else {
+    pays.forEach(function (p) { if (p.status === 'requested' && p.kind === 'extra') cancel(p); });
+    addPayment_({ orderNo: o.orderNo, kind: 'extra', amount: pay, status: 'requested', memo: '범위 변경 추가 결제' });
+    var sum = (q.lines || []).reduce(function (a, l) { return a + (Number(l.amount) || 0); }, 0);
+    q.lines = (q.lines || []).slice(0, 11);
+    if (paid > sum) q.lines.push({ code: 'PAID', name: '이전 추가 결제', qty: 1, unitPrice: paid - sum, amount: paid - sum, note: '결제 완료' });
+    q.lines.push({ code: 'CHANGE', name: tier ? lineName + ' 추가 금액' : '범위 변경 추가 금액', qty: 1, unitPrice: pay, amount: pay, note: reason.slice(0, 100) });
+    o.amount = paid + pay;
+    o.payStatus = 'partial';
+  }
+  if (tier) { q.mainCode = tier.mainCode; q.mainName = tier.mainName; q.includes = tier.includes; q.excludes = tier.excludes; }
+  if (scope.length) q.includes = scope;
+  q.total = o.amount;
+  q.quoteRequired = false;
+  q.payableNow = true;
+  q.quotedAt = iso_(now_());
+  if (req.days) q.days = Math.max(1, Number(req.days));
+  else if (tier && tier.days) q.days = tier.days;
+  if (req.eta) { var d = toDate_(req.eta + 'T18:00:00+09:00'); if (d) o.eta = d; }
+  var change = { at: iso_(now_()), before: before, pay: pay, paid: paid, total: o.amount, reason: reason, level: tier ? level : '', scope: scope, quote: wasQuote };
+  q.changes = (q.changes || []).concat([change]).slice(-10);
+  data.quote = q;
+  setOrderData_(o, data);
+  saveOrder_(o);
+  var msg = paid > 0
+    ? '추가 결제를 요청드립니다: ' + won(pay) + ' (이미 결제 ' + won(paid) + ', 총 ' + won(o.amount) + '). 사유: ' + reason
+    : wasQuote ? '확정 견적이 준비되었습니다: ' + won(pay) + '. ' + reason
+      : '결제 금액이 ' + (before ? won(before) + '에서 ' : '') + won(pay) + '으로 바뀌었습니다. 사유: ' + reason;
+  addHistory_(o.orderNo, paid > 0 ? '' : o.status, msg, 'admin', '금액 변경' + (tier ? '(' + editLevelOf(level).label + ')' : ''));
+  if (req.notify !== false) mailCustomer_(o, 'amount', change);
+  return { order: orderView_(o, { admin: true }) };
+}
+
 function api_adminConfirmPayment(req) {
   var o = adminOrder_(req);
   var p = paymentsFor_(o.orderNo).filter(function (x) { return (req.paymentId ? x.id === req.paymentId : true) && (x.status === 'claimed' || x.status === 'requested'); })[0];

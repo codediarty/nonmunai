@@ -1,6 +1,6 @@
 // 가격 계산 단위 테스트 (TESTS.md 22, 23, 40 일부)
 import assert from 'node:assert/strict';
-import { DEFAULT_CATALOG, computeQuote, addBusinessDays, includesFor, listPriceFor, discountRate, pageLabel } from '../../src/js/core/pricing.js';
+import { DEFAULT_CATALOG, computeQuote, addBusinessDays, includesFor, listPriceFor, discountRate, pageLabel, EDIT_TYPES, editLevelOfCode, paperItemCode, QUOTE_AMOUNTS, isQuoteAmount } from '../../src/js/core/pricing.js';
 
 export const tests = [];
 const t = (name, fn) => tests.push({ name, fn });
@@ -102,7 +102,55 @@ t('포함 항목의 분량은 주문한 Page로 표시', () => {
   const fb = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'feedback', feedbackItems: 10 } });
   assert.deepEqual(includesFor(fb.includes, 45), fb.includes);
   const ed = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'bachelor', task: 'edit', pages: 45 } });
-  assert.ok(includesFor(ed.includes, 45).includes('원고 첨삭(45 Page)'));
+  assert.ok(includesFor(ed.includes, 45).includes('원고 문장 교정(45 Page)'));
+});
+
+t('논문 첨삭 세 단계: 기본 교정·심화 첨삭·완성도 보완(2026-11-26)', () => {
+  const q = (typeId, level, pages) => computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId, task: 'edit', pages, editLevel: level } });
+  // 학사 20 Page: 기본 29,000원, 심화 10만 원, 완성도 30만 원(운영자가 직접 정한 금액을 기준으로)
+  assert.equal(q('bachelor', 'basic', 20).total, 29000);
+  assert.equal(q('bachelor', undefined, 20).total, 29000, '단계를 안 고르면 기본 교정');
+  assert.equal(q('bachelor', 'deep', 20).total, 100000);
+  assert.equal(q('bachelor', 'complete', 20).total, 300000);
+  assert.equal(q('bachelor', 'complete', 20).mainCode, 'P-BACHELOR-EDIT3');
+  assert.equal(q('bachelor', 'complete', 30).total, 300000);
+  assert.equal(q('bachelor', 'complete', 31).total, 400000, '기준 30 Page를 넘으면 10 Page마다 10만 원');
+  assert.equal(q('bachelor', 'deep', 41).total, 200000);
+  assert.equal(q('master', 'deep', 80).total, 200000);
+  assert.equal(q('master', 'complete', 120).total, 600000);
+  assert.equal(q('doctor', 'complete', 150).total, 800000);
+  // 심화·완성도 보완은 분량이 늘어도 늘 10만 원 단위(맞춤 견적 결제 상품 하나로 결제)
+  for (const t of EDIT_TYPES) for (const level of ['deep', 'complete']) for (const pages of [1, 15, 29, 30, 44, 80, 99, 150, 151]) {
+    const r = q(t, level, pages);
+    assert.equal(r.total % 100000, 0, `${t} ${level} ${pages}`);
+    assert.equal(r.quoteRequired, false);
+    assert.ok(r.days >= q(t, 'basic', pages).days, `${t} ${level} 납기`);
+  }
+  // 단계가 높을수록 포함 범위가 넓고 금액도 높다
+  for (const t of EDIT_TYPES) {
+    const [a, b, c] = ['basic', 'deep', 'complete'].map((l) => q(t, l, 20));
+    assert.ok(a.total < b.total && b.total < c.total, t);
+    assert.ok(b.includes.some((x) => /AI 문체/.test(x)) && !a.includes.some((x) => /AI 문체/.test(x)), t);
+    assert.ok(c.includes.some((x) => /보완 집필/.test(x)) && !b.includes.some((x) => /보완 집필/.test(x)), t);
+    assert.ok(c.includes.includes('수정 1회'));
+  }
+  assert.equal(editLevelOfCode('P-MASTER-EDIT3').id, 'complete');
+  assert.equal(editLevelOfCode('P-MASTER-EDIT').id, 'basic');
+  assert.equal(editLevelOfCode('P-MASTER-FULL'), null);
+  assert.equal(paperItemCode('master', 'edit', 'deep'), 'P-MASTER-EDIT2');
+  assert.equal(paperItemCode('master', 'feedback', 'deep'), 'P-MASTER-FB');
+  // 운영 가격표에 아직 단계 상품이 없으면 기본 금액으로 결제받지 않고 확인 후 안내(견적형)
+  const old = { ...DEFAULT_CATALOG, items: DEFAULT_CATALOG.items.filter((i) => !/-EDIT[23]$/.test(i.code)) };
+  const r = computeQuote(old, { service: 'paper', paper: { typeId: 'bachelor', task: 'edit', pages: 20, editLevel: 'complete' } });
+  assert.equal(r.quoteRequired, true);
+  assert.equal(r.payableNow, false);
+  assert.match(r.quoteReasons[0], /완성도 보완/);
+});
+
+t('맞춤 견적 결제 금액은 10만~100만 원, 10만 원 단위', () => {
+  assert.deepEqual(QUOTE_AMOUNTS, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => n * 100000));
+  assert.ok(isQuoteAmount(300000) && isQuoteAmount('1000000'));
+  assert.ok(!isQuoteAmount(29000) && !isQuoteAmount(1100000) && !isQuoteAmount(250000) && !isQuoteAmount(0));
 });
 
 t('정가와 할인 행사 할인율', () => {

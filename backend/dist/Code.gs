@@ -321,33 +321,47 @@ function operatorEmails_() {
 
 
 var DEFAULT_CATALOG = {
-  version: '2026-11-03',
+  version: '2026-11-26',
   currency: 'KRW',
   items: [
     // 논문: 유형별 4개 작업. unit = 추가 분량 과금 단위
     { code: 'P-MASTER-FULL', service: 'paper', type: 'master', task: 'full', name: '석사학위논문 80 Page 완성', price: 99000, baseUnits: 80, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 5, includes: ['연구 설계서(연구모형·가설·분석 계획)', '목차 확정본', '서론부터 결론까지 장별 본문 80 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 첨삭·교정', price: 49000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['요청 범위 문장·논리 첨삭(기준 30쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
+    { code: 'P-MASTER-EDIT', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 첨삭·교정', price: 49000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 2, includes: ['원고 문장 교정(기준 30쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-MASTER-EDIT2', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 심화 첨삭', price: 200000, baseUnits: 100, unitLabel: '쪽', unitSize: 50, unitPrice: 100000, days: 4, includes: ['원고 심화 첨삭(기준 100쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-MASTER-EDIT3', service: 'paper', type: 'master', task: 'edit', name: '석사학위논문 완성도 보완', price: 500000, baseUnits: 100, unitLabel: '쪽', unitSize: 20, unitPrice: 100000, days: 7, includes: ['원고 완성도 보완(기준 100쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-MASTER-FB', service: 'paper', type: 'master', task: 'feedback', name: '석사학위논문 교수님 피드백 반영·수정 보완·첨삭', price: 99000, days: 2, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완(근거, 분석, 논리 보강)', '수정한 원고의 문장·논리 첨삭', '수정표 포함(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-MASTER-PROP', service: 'paper', type: 'master', task: 'proposal', name: '석사학위논문 연구계획서 작성', price: 69000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 3, includes: ['연구 주제·제목 확정안', '연구 목적과 필요성', '이론적 배경 요약과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
     { code: 'P-DOCTOR-FULL', service: 'paper', type: 'doctor', task: 'full', name: '박사학위논문 130 Page 완성', price: 199000, baseUnits: 130, unitLabel: '쪽', unitSize: 10, unitPrice: 29000, days: 10, includes: ['연구 설계서와 연구모형', '목차 확정본', '장별 본문 130 Page', '실존 참고문헌과 본문 인용(APA 7판)', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 첨삭·교정', price: 69000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['요청 범위 문장·논리 첨삭(기준 40쪽)', '수정 내역 표시본과 정리본', '형식·인용 점검'] },
+    { code: 'P-DOCTOR-EDIT', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 첨삭·교정', price: 69000, baseUnits: 40, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['원고 문장 교정(기준 40쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-DOCTOR-EDIT2', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 심화 첨삭', price: 300000, baseUnits: 150, unitLabel: '쪽', unitSize: 50, unitPrice: 100000, days: 6, includes: ['원고 심화 첨삭(기준 150쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-DOCTOR-EDIT3', service: 'paper', type: 'doctor', task: 'edit', name: '박사학위논문 완성도 보완', price: 800000, baseUnits: 150, unitLabel: '쪽', unitSize: 20, unitPrice: 100000, days: 10, includes: ['원고 완성도 보완(기준 150쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-DOCTOR-FB', service: 'paper', type: 'doctor', task: 'feedback', name: '박사학위논문 교수님 피드백 반영·수정 보완·첨삭', price: 99000, days: 3, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완(근거, 분석, 논리 보강)', '수정한 원고의 문장·논리 첨삭', '수정표 포함(의견·수정 내용·쪽)', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-DOCTOR-PROP', service: 'paper', type: 'doctor', task: 'proposal', name: '박사학위논문 연구계획서 작성', price: 99000, baseUnits: 25, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['연구 주제·제목 확정안', '연구 목적과 독창성', '이론적 배경과 연구모형', '연구 방법·분석 계획', '참고문헌'] },
     { code: 'P-JOURNAL-FULL', service: 'paper', type: 'journal', task: 'full', name: '학술지 투고논문 20 Page 완성', price: 99000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 19000, days: 4, includes: ['투고 학술지 형식 원고 20 Page', '국문·영문 초록', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 첨삭·교정', price: 39000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '투고 규정 형식 점검', '수정 내역 표시본'] },
+    { code: 'P-JOURNAL-EDIT', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 첨삭·교정', price: 39000, baseUnits: 20, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '투고 규정 형식 점검', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-JOURNAL-EDIT2', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-JOURNAL-EDIT3', service: 'paper', type: 'journal', task: 'edit', name: '학술지 투고논문 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-JOURNAL-FB', service: 'paper', type: 'journal', task: 'feedback', name: '학술지 심사 의견 반영(수정 보완)', price: 49000, days: 2, includes: ['심사 의견 전체 일괄 반영·수정', '심사 의견 답변서(Response letter) 작성', '반영 부분 파란색 표시본', '최종 정리본'] },
     { code: 'P-BACHELOR-FULL', service: 'paper', type: 'bachelor', task: 'full', name: '학사 졸업논문 30 Page 완성', price: 59000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['주제·목차 구성', '장별 본문 30 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
-    { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
+    { code: 'P-BACHELOR-EDIT', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-BACHELOR-EDIT2', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 심화 첨삭', price: 100000, baseUnits: 40, unitLabel: '쪽', unitSize: 40, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 40쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-BACHELOR-EDIT3', service: 'paper', type: 'bachelor', task: 'edit', name: '학사·졸업논문 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-BACHELOR-FB', service: 'paper', type: 'bachelor', task: 'feedback', name: '학사·졸업논문 교수님 피드백 반영·수정 보완·첨삭', price: 39000, days: 2, includes: ['교수님 피드백 전체 일괄 반영', '내용 수정·보완', '수정한 원고의 문장 첨삭', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-BACHELOR-PROP', service: 'paper', type: 'bachelor', task: 'proposal', name: '학사·졸업논문 연구계획서 작성', price: 29000, baseUnits: 8, unitLabel: '쪽', unitSize: 4, unitPrice: 9000, days: 2, includes: ['주제·제목 확정안', '연구 목적과 방법', '목차안', '참고문헌'] },
     { code: 'P-REPORT-FULL', service: 'paper', type: 'report', task: 'full', name: '일반 연구보고서 전체 구성·초고 완성', price: 59000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 19000, days: 3, includes: ['보고서 구성안', '본문 초고(기준 20쪽)', '참고자료 정리', '수정 1회'] },
-    { code: 'P-REPORT-EDIT', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 20쪽)', '수정 내역 표시본'] },
+    { code: 'P-REPORT-EDIT', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 첨삭·교정', price: 29000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 20쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-REPORT-EDIT2', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 심화 첨삭', price: 100000, baseUnits: 40, unitLabel: '쪽', unitSize: 40, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 40쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-REPORT-EDIT3', service: 'paper', type: 'report', task: 'edit', name: '일반 연구보고서 완성도 보완', price: 300000, baseUnits: 30, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 5, includes: ['원고 완성도 보완(기준 30쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-REPORT-FB', service: 'paper', type: 'report', task: 'feedback', name: '일반 연구보고서 검토 의견 반영', price: 29000, days: 2, includes: ['검토 의견 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-YOUTH-FULL', service: 'paper', type: 'youth', task: 'full', name: '청소년 탐구논문 구성·초고 완성', price: 39000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['탐구 주제·질문 정리', '탐구 보고서 초고(기준 10쪽)', '참고자료 정리', '수정 1회'] },
-    { code: 'P-YOUTH-EDIT', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 첨삭·교정', price: 19000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 1, includes: ['원고 첨삭(기준 10쪽)', '수정 내역 표시본'] },
+    { code: 'P-YOUTH-EDIT', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 첨삭·교정', price: 19000, baseUnits: 10, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 1, includes: ['원고 문장 교정(기준 10쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-YOUTH-EDIT2', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 2, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-YOUTH-EDIT3', service: 'paper', type: 'youth', task: 'edit', name: '청소년 탐구논문 완성도 보완', price: 200000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 4, includes: ['원고 완성도 보완(기준 20쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-YOUTH-FB', service: 'paper', type: 'youth', task: 'feedback', name: '청소년 탐구논문 선생님 피드백 반영', price: 19000, days: 1, includes: ['선생님 피드백 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     { code: 'P-PERSONAL-FULL', service: 'paper', type: 'personal', task: 'full', name: '개인 관심연구 구성·초고 완성', price: 49000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 3, includes: ['연구 질문 정리', '연구 원고 초고(기준 15쪽)', '참고문헌 정리', '수정 1회'] },
-    { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 첨삭(기준 15쪽)', '수정 내역 표시본'] },
+    { code: 'P-PERSONAL-EDIT', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 첨삭·교정', price: 19000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['원고 문장 교정(기준 15쪽)', '맞춤법·띄어쓰기·비문 바로잡기', '어색하고 긴 문장 다듬기', '용어·표기 통일', '수정 내역 표시본과 정리본'], excludes: ['AI 문체 고쳐 쓰기·인용 대조(심화 첨삭)', '내용 보완·구조 재구성(완성도 보완)'] },
+    { code: 'P-PERSONAL-EDIT2', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 심화 첨삭', price: 100000, baseUnits: 30, unitLabel: '쪽', unitSize: 30, unitPrice: 100000, days: 3, includes: ['원고 심화 첨삭(기준 30쪽)', '기본 교정 전부(맞춤법·문장·용어 통일)', 'AI 문체·번역투를 자연스러운 학술 문장으로 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 목록 대조·형식 통일', '장별 보완 코멘트', '수정 내역 표시본과 정리본'], excludes: ['내용 보완 집필·구조 재구성(완성도 보완)'] },
+    { code: 'P-PERSONAL-EDIT3', service: 'paper', type: 'personal', task: 'edit', name: '개인 관심연구 완성도 보완', price: 200000, baseUnits: 20, unitLabel: '쪽', unitSize: 10, unitPrice: 100000, days: 4, includes: ['원고 완성도 보완(기준 20쪽)', '심화 첨삭 전부(AI 문체·흐름·인용 대조)', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 여부 확인', '수정 내역 표시본과 정리본', '수정 1회'] },
     { code: 'P-SHORT-FULL', service: 'paper', type: 'short', task: 'full', name: '소논문 15 Page 완성', price: 49000, baseUnits: 15, unitLabel: '쪽', unitSize: 5, unitPrice: 9000, days: 2, includes: ['주제와 연구 질문 정리', '소논문 본문 15 Page', '실존 참고문헌과 본문 인용', '전공 분야 박사 최종 검수', '수정 1회'] },
     { code: 'P-PERSONAL-FB', service: 'paper', type: 'personal', task: 'feedback', name: '개인 관심연구 피드백 반영', price: 19000, days: 2, includes: ['피드백 전체 일괄 반영', '수정표 포함', '반영 부분 파란색 표시본'] },
     // 설문조사
@@ -419,9 +433,35 @@ function findItem(catalog, code) {
   return null;
 }
 
-function paperItemCode(typeId, task) {
-  return 'P-' + String(typeId || 'master').toUpperCase() + '-' + ({ full: 'FULL', edit: 'EDIT', feedback: 'FB', proposal: 'PROP' }[task] || 'FULL');
+// 논문 첨삭 단계(2026-11-26): 같은 '원고 첨삭'도 손보는 범위에 따라 세 단계로 나눈다.
+// 기본 교정은 기존 상품(P-유형-EDIT), 심화 첨삭(EDIT2)·완성도 보완(EDIT3)은 10만 원 단위 금액이라
+// 아임웹 '맞춤 견적 결제'(10만~100만 원) 상품 하나로 바로 결제된다.
+var EDIT_LEVELS = [
+  { id: 'basic', suffix: '', label: '기본 교정', short: '문장 교정', pitch: '내용과 흐름은 그대로 두고 문장만 다듬어요', limit: '문장만 다듬고 흐름·인용·내용은 손대지 않아요', points: ['맞춤법·띄어쓰기·비문 교정', '어색하고 긴 문장 다듬기', '용어·표기 통일'] },
+  { id: 'deep', suffix: '2', label: '심화 첨삭', short: 'AI 문체·흐름·인용', pitch: '읽히는 원고로 고쳐 쓰고 인용까지 맞춰요', limit: '문장·흐름·인용은 다듬지만 내용을 보태 쓰거나 구성을 바꾸지는 않아요', points: ['기본 교정 전부', 'AI 문체·번역투 자연스럽게 고쳐 쓰기', '문단 흐름과 논리 연결 다듬기', '본문 인용과 참고문헌 대조', '장별 보완 코멘트'] },
+  { id: 'complete', suffix: '3', label: '완성도 보완', short: '구조·내용 보완까지', pitch: '제출할 수 있는 원고로 끝까지 채워요', limit: '', points: ['심화 첨삭 전부', '목차·장 구성 점검과 재배치', '부족한 근거·선행연구 보완 집필', '논리 비약과 사실·수치 확인', '참고문헌 실존 확인, 수정 1회'] },
+];
+function editLevelOf(id) {
+  for (var i = 0; i < EDIT_LEVELS.length; i++) if (EDIT_LEVELS[i].id === id) return EDIT_LEVELS[i];
+  return EDIT_LEVELS[0];
 }
+// 상품 코드로 첨삭 단계 알기(가격표 시트에는 단계 칸이 없어서 코드 끝 숫자로 구분)
+function editLevelOfCode(code) {
+  var m = /-EDIT([23])?$/.exec(String(code || ''));
+  if (!m) return null;
+  return m[1] === '3' ? EDIT_LEVELS[2] : m[1] === '2' ? EDIT_LEVELS[1] : EDIT_LEVELS[0];
+}
+
+function paperItemCode(typeId, task, level) {
+  var code = 'P-' + String(typeId || 'master').toUpperCase() + '-' + ({ full: 'FULL', edit: 'EDIT', feedback: 'FB', proposal: 'PROP' }[task] || 'FULL');
+  return task === 'edit' && level ? code + editLevelOf(level).suffix : code;
+}
+
+// 맞춤 견적 결제 금액(아임웹 상품): 10만 원부터 100만 원까지 10만 원 단위
+var QUOTE_STEP = 100000;
+var QUOTE_MAX = 1000000;
+var QUOTE_AMOUNTS = [100000, 200000, 300000, 400000, 500000, 600000, 700000, 800000, 900000, 1000000];
+function isQuoteAmount(n) { n = Number(n) || 0; return n >= QUOTE_STEP && n <= QUOTE_MAX && n % QUOTE_STEP === 0; }
 
 // 포함 항목의 분량 표기를 실제 주문 분량으로 바꾸고, 'N쪽'은 'N Page'로 보여 준다
 function includesFor(list, pages) {
@@ -436,6 +476,13 @@ function includesFor(list, pages) {
 
 function won(n) {
   return (Math.round(Number(n) || 0)).toLocaleString('ko-KR') + '원';
+}
+
+function isMetered(it) { return !!it && it.baseUnits != null && it.baseUnits !== '' && Number(it.unitSize) > 0; }
+// 기준 분량을 넘는 만큼 늘어나는 납기: 추가 2단위마다 하루, 최대 5일
+function extraDays(it, units) {
+  if (!isMetered(it) || units == null || !(units > it.baseUnits)) return 0;
+  return Math.min(5, Math.ceil(Math.ceil((units - it.baseUnits) / it.unitSize) / 2));
 }
 
 function line(item, opts) {
@@ -460,22 +507,32 @@ function computeQuote(catalog, input) {
 
   if (service === 'paper') {
     var p = input.paper || {};
-    main = findItem(catalog, paperItemCode(p.typeId, p.task));
+    var level = p.task === 'edit' && p.editLevel && p.editLevel !== 'basic' ? p.editLevel : '';
+    main = findItem(catalog, paperItemCode(p.typeId, p.task, level));
+    // 고른 첨삭 단계가 가격표에 없으면 기본 교정 금액으로 결제받지 않고 확인 후 금액을 안내한다
+    if (!main && level) {
+      main = findItem(catalog, paperItemCode(p.typeId, 'edit'));
+      reasons.push('선택하신 첨삭 단계(' + editLevelOf(level).label + ')는 원고를 확인한 뒤 금액을 안내드립니다.');
+    }
     if (!main) main = findItem(catalog, paperItemCode(p.typeId, 'full'));
     if (main) {
       lines.push(line(main));
       days = main.days || 0;
       includes = (main.includes || []).slice();
+      excludes = (main.excludes || []).slice();
       // 추가 분량
       var units = null;
-      var metered = main.baseUnits != null && main.baseUnits !== '' && Number(main.unitSize) > 0;
+      var metered = isMetered(main);
       if (main.unitLabel === '항목') units = p.feedbackItems != null ? Number(p.feedbackItems) : null;
       else units = p.pages != null && p.pages !== '' ? Number(p.pages) : null;
       if (metered && units != null && units > main.baseUnits) {
         var extraBlocks = Math.ceil((units - main.baseUnits) / main.unitSize);
         lines.push({ code: main.code + '-X', name: '추가 분량 (' + main.unitSize + main.unitLabel + ' 단위 × ' + extraBlocks + ')', qty: extraBlocks, unitPrice: main.unitPrice, amount: main.unitPrice * extraBlocks, note: '기준 ' + main.baseUnits + main.unitLabel + ' 초과 ' + (units - main.baseUnits) + main.unitLabel });
-        days += Math.min(5, Math.ceil(extraBlocks / 2));
+        days += extraDays(main, units);
       }
+      // 심화·완성도 보완 납기: 같은 분량의 기본 교정 납기보다 단계만큼 길게(단계 상품은 분량 단위가 커서 따로 계산하면 짧아질 수 있음)
+      var basicEdit = level ? findItem(catalog, paperItemCode(p.typeId, 'edit')) : null;
+      if (basicEdit && basicEdit.code !== main.code) days = Math.max(days, (basicEdit.days || 0) + extraDays(basicEdit, units) + Math.max(0, (main.days || 0) - (basicEdit.days || 0)));
       if (metered && units == null) notes.push('분량을 모르셔도 기준 분량(' + main.baseUnits + main.unitLabel + ')으로 먼저 진행하고, 자료 확인 후 초과분이 있을 때만 추가 결제를 안내드립니다.');
       if (p.needsData) notes.push('결과 장은 실제 데이터 분석 후 작성됩니다. 데이터가 없으면 설문조사·통계분석 서비스와 연결해 드립니다.');
     }
@@ -951,6 +1008,7 @@ function normalizeInput_(service, raw) {
       pages: p.pages === '' || p.pages === null || p.pages === undefined ? null : Math.max(0, Math.min(999, Number(p.pages) || 0)),
       feedbackItems: p.feedbackItems === null || p.feedbackItems === undefined || p.feedbackItems === '' ? null : Math.max(0, Math.min(200, Number(p.feedbackItems) || 0)),
       feedbackText: str_(p.feedbackText, 8000), editScope: str_(p.editScope, 2000), needsData: bool_(p.needsData),
+      editLevel: ['basic', 'deep', 'complete'].indexOf(String(p.editLevel || '')) >= 0 ? String(p.editLevel) : '',
     };
   } else if (service === 'survey') {
     var s = raw.survey || {};
@@ -1028,7 +1086,7 @@ function revisionAllowance_(o) {
   var q = orderData_(o).quote || {};
   var allowed = 0;
   (q.lines || []).forEach(function (l) { if (l.code === 'A-REVISION') allowed += l.qty || 1; });
-  if (/FULL$|PROP$/.test(q.mainCode || '') || /^S-FULL$/.test(q.mainCode || '')) allowed += 1;
+  if (/FULL$|PROP$|-EDIT3$/.test(q.mainCode || '') || /^S-FULL$/.test(q.mainCode || '')) allowed += 1;
   return allowed;
 }
 
@@ -1262,7 +1320,7 @@ function summaryOf_(input, quote, design) {
   if (input.service === 'paper') {
     var typeLabel = { master: '석사', doctor: '박사', journal: '학술지', bachelor: '학사', report: '보고서', youth: '청소년 탐구', personal: '개인 연구', short: '소논문' }[input.paper.typeId] || '';
     parts.push(typeLabel);
-    parts.push({ full: '전체 초안', edit: '첨삭', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || '');
+    parts.push(input.paper.task === 'edit' ? '첨삭(' + editLevelOf(input.paper.editLevel || 'basic').label + ')' : ({ full: '전체 초안', feedback: '피드백 반영', proposal: '연구계획서' }[input.paper.task] || ''));
     if (input.paper.pages) parts.push(input.paper.pages + '쪽');
   } else if (input.service === 'survey') {
     parts.push({ full: '설문 원스톱', new: '설문지 작성', edit: '설문 점검', feedback: '피드백 반영', analyze: '응답 분석' }[input.survey.mode] || '');
@@ -1417,13 +1475,19 @@ function api_claimPayment(req) {
   var method = req.method === 'bank' ? 'bank' : 'skkc';
   var ps = paymentsFor_(o.orderNo).filter(function (p) { return p.status === 'requested' && (!req.paymentId || p.id === req.paymentId); });
   if (!ps.length) throw appError_('no_payment', '결제할 금액이 없습니다.');
-  var p = ps[0];
+  claimPay_(o, ps[0], method, str_(req.payerName, 40), '고객 결제 완료 알림');
+  return { order: orderView_(findOrder_(o.orderNo)) };
+}
+
+// 고객이 결제를 마쳤다고 알린 결제 한 건을 '확인 필요'로 두고 운영자에게 알린다(주문 페이지·아임웹 결제 완료 화면 공용)
+function claimPay_(o, p, method, payerName, memo, extraDetail, opts) {
+  opts = opts || {};
   p.status = 'claimed';
   p.method = method;
-  p.ref = str_(req.payerName, 40);
-  p.memo = (p.memo ? p.memo + ' / ' : '') + '고객 결제 완료 알림';
+  p.ref = payerName || '';
+  p.memo = (p.memo ? p.memo + ' / ' : '') + (memo || '고객 결제 완료 알림');
   updatePayment_(p);
-  var advance = String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
+  var advance = !opts.noAdvance && String(setting_('advanceOnClaim') || '').split(/[,\s]+/).indexOf(method) >= 0;
   if (p.kind === 'main' && advance && ['pending_payment', 'payment_review'].indexOf(o.status) >= 0) {
     o.payStatus = 'claimed';
     startWork_(o, '결제 완료 알림을 받았습니다. 결제 내역은 담당자가 확인합니다.', { claimed: true });
@@ -1435,8 +1499,61 @@ function api_claimPayment(req) {
   } else {
     addHistory_(o.orderNo, '', '', 'customer', '추가 결제 완료 알림: ' + p.amount);
   }
-  notifyOperator_(o, '결제 확인 요청', (method === 'bank' ? '무통장입금' : '성균관컨설팅 결제') + ' · ' + won(p.amount) + (p.ref ? ' · 입금자 ' + p.ref : ''));
-  return { order: orderView_(findOrder_(o.orderNo)) };
+  notifyOperator_(o, '결제 확인 요청', (method === 'bank' ? '무통장입금' : '성균관컨설팅 결제') + ' · ' + won(p.amount) + (p.ref ? ' · 입금자 ' + p.ref : '') + (extraDetail ? ' · ' + extraDetail : ''));
+}
+
+// 결제 연결표(2026-11-26): 주문 결제 화면에서 아임웹으로 넘어갈 때 주소에 조회 키(token) 대신 싣는 6시간짜리 표.
+// 이 표로는 '결제를 마쳤다'는 알림만 보낼 수 있고 주문 내용은 볼 수 없다.
+var PAY_TICKET_TTL = 21600;
+function api_payTicket(req) {
+  var o = requireOrder_(req);
+  rateLimit_('pt:' + o.orderNo, 30, 3600);
+  var key = randomString_(24);
+  CacheService.getScriptCache().put('pt:' + key, o.orderNo, PAY_TICKET_TTL);
+  return { ticket: key };
+}
+function payTicketOrder_(key) {
+  key = String(key || '');
+  if (!/^[A-Za-z0-9]{16,40}$/.test(key)) return '';
+  return String(CacheService.getScriptCache().get('pt:' + key) || '');
+}
+
+// 아임웹(skkc.co.kr) 결제 완료 화면에서 보내는 결제 완료 알림(맞춤 견적 결제·주문 결제)
+// 결제 연결표가 맞거나, 결제할 때 적은 연락처(휴대전화 또는 이메일)가 주문과 같으면 그 주문의 결제를 '확인 필요'로 바꾼다.
+// 주문번호가 없거나 맞지 않으면 주문은 건드리지 않고 운영자에게만 알린다. 응답에는 주문 내용을 싣지 않는다.
+function api_claimShopPayment(req) {
+  if (req.hp) throw appError_('bad_request', '요청을 처리할 수 없습니다.');
+  rateLimit_('shopclaim:all', 60, 3600);
+  var orderNo = str_(req.orderNo, 30).toUpperCase().replace(/\s+/g, '');
+  if (orderNo) rateLimit_('shopclaim:' + orderNo, 5, 3600);
+  var c = req.contact || {};
+  var payer = { name: str_(c.name, 40), phone: normPhone_(c.phone), email: str_(c.email, 120).toLowerCase() };
+  var amount = Math.max(0, Math.round(Number(req.amount || 0)));
+  var label = str_(req.label, 80) || '맞춤 견적 결제';
+  var o = orderNo ? findOrder_(orderNo) : null;
+  if (o && o.deletedState) o = null;
+  var byTicket = !!(o && req.ticket && payTicketOrder_(req.ticket) === o.orderNo);
+  var digits = function (s) { return String(s || '').replace(/[^0-9]/g, ''); };
+  var byContact = !!(o && ((digits(payer.phone).length >= 9 && digits(payer.phone) === digits(o.phone)) || (isEmail_(payer.email) && payer.email === String(o.email || '').toLowerCase())));
+  var who = [payer.name, payer.phone, payer.email].filter(function (x) { return !!x; }).join(' · ');
+  if (o && (byTicket || byContact)) {
+    var ps = paymentsFor_(o.orderNo).filter(function (p) { return p.status === 'requested'; });
+    var p = ps.filter(function (x) { return x.amount === amount; })[0] || (ps.length === 1 ? ps[0] : null);
+    if (p) {
+      // 연락처로만 확인된 알림은 작업을 바로 시작하지 않고 결제 확인 중으로만 둔다
+      claimPay_(o, p, 'skkc', payer.name, '아임웹 결제 완료(' + label + ' ' + won(amount) + ')',
+        '아임웹 결제 완료 화면에서 알림(' + label + ', 결제자 ' + who + ')' + (p.amount !== amount ? ' · 결제 화면 금액 ' + won(amount) + '(요청 금액과 다름, 확인 필요)' : '') + (byTicket ? '' : ' · 연락처로 주문 확인'),
+        { noAdvance: !byTicket });
+      return { linked: true };
+    }
+    addHistory_(o.orderNo, '', '', 'customer', '아임웹 결제 완료 알림(요청된 결제 없음): ' + label + ' ' + won(amount) + ' · ' + who);
+    notifyOperator_(o, '결제 확인 요청', '아임웹 결제 완료 알림 · ' + label + ' ' + won(amount) + ' · 결제자 ' + who + ' · 이 주문에 결제 요청이 없어 확인이 필요합니다.');
+    return { linked: false };
+  }
+  log_('shop_claim', (orderNo || '(주문번호 없음)') + ' ' + won(amount) + ' ' + who);
+  rateLimit_('shopclaim:unlinked', 20, 3600);
+  notifyUnlinkedPayment_(orderNo, o, amount, label, payer);
+  return { linked: false };
 }
 
 function api_confirmToss(req) {
@@ -1802,6 +1919,79 @@ function api_adminRequestExtra(req) {
   return { order: orderView_(o, { admin: true }) };
 }
 
+// 결제 금액 바꾸기(2026-11-26): 고객이 결제할 금액과 사유를 정하면, 바뀐 금액·사유·포함 범위와
+// 바로 결제 버튼(아임웹 결제 화면으로 바로 이어짐)이 담긴 메일이 고객에게 간다.
+// 결제 전 주문은 결제 대기 금액을 바꾸고, 이미 결제한 주문은 그 금액을 추가 결제로 요청한다.
+// level(첨삭 주문만): 기본 교정·심화 첨삭·완성도 보완 가운데 고르면 상품명과 포함 범위도 그 단계로 바꾼다.
+function api_adminChangeAmount(req) {
+  var o = adminOrder_(req);
+  var pay = Math.round(Number(req.amount || 0));
+  if (!(pay >= 1000)) throw appError_('invalid', '고객이 결제할 금액을 입력해 주세요.');
+  if (pay > 50000000) throw appError_('invalid', '금액을 다시 확인해 주세요.');
+  var reason = str_(req.reason, 600);
+  if (!reason) throw appError_('invalid', '고객에게 보낼 변경 사유를 적어 주세요.');
+  if (['cancelled', 'completed', 'draft'].indexOf(o.status) >= 0) throw appError_('invalid', '이 단계의 주문은 금액을 바꿀 수 없습니다.');
+  var pays = paymentsFor_(o.orderNo);
+  if (pays.some(function (p) { return p.status === 'claimed'; })) throw appError_('claimed', '고객이 결제를 마쳤다고 알린 결제가 있습니다. 먼저 결제 확인이나 내역 없음 처리를 해 주세요.');
+  var paid = 0;
+  pays.forEach(function (p) { if (p.status === 'confirmed') paid += p.amount; });
+  var data = orderData_(o);
+  var q = data.quote || {};
+  var wasQuote = o.status === 'quote_requested';
+  var before = paid > 0 || wasQuote ? 0 : amountDue_(o) || o.amount || 0;
+  var level = str_(req.level, 12);
+  var tier = null;
+  if (level && o.service === 'paper' && data.input && data.input.paper && data.input.paper.task === 'edit' && ['basic', 'deep', 'complete'].indexOf(level) >= 0) {
+    var inputNew = JSON.parse(JSON.stringify(data.input));
+    inputNew.paper.editLevel = level;
+    tier = computeQuote(catalog_(), quoteInput_(inputNew));
+    if (!tier.mainCode || !/-EDIT[23]?$/.test(tier.mainCode)) tier = null;
+    if (tier) { data.input = inputNew; o.productName = tier.mainName || o.productName; o.summary = summaryOf_(inputNew, tier, data.design); }
+  }
+  var scope = (req.scope || []).slice(0, 12).map(function (x) { return str_(x, 160); }).filter(String);
+  var cancel = function (p) { p.status = 'cancelled'; p.memo = (p.memo ? p.memo + ' / ' : '') + '금액 변경으로 취소'; updatePayment_(p); };
+  var lineName = (tier && tier.mainName) || o.productName || '맞춤 견적';
+  if (paid <= 0) {
+    pays.forEach(function (p) { if (p.status === 'requested') cancel(p); });
+    addPayment_({ orderNo: o.orderNo, kind: 'main', amount: pay, status: 'requested', memo: '변경 금액' });
+    q.lines = [{ code: (tier && tier.mainCode) || q.mainCode || 'QUOTE', name: lineName, qty: 1, unitPrice: pay, amount: pay, note: '금액 변경' }];
+    o.amount = pay;
+    o.payStatus = 'unpaid';
+    o.quoteRequired = false;
+    if (['quote_requested', 'pending_payment', 'payment_review'].indexOf(o.status) >= 0) o.status = 'pending_payment';
+  } else {
+    pays.forEach(function (p) { if (p.status === 'requested' && p.kind === 'extra') cancel(p); });
+    addPayment_({ orderNo: o.orderNo, kind: 'extra', amount: pay, status: 'requested', memo: '범위 변경 추가 결제' });
+    var sum = (q.lines || []).reduce(function (a, l) { return a + (Number(l.amount) || 0); }, 0);
+    q.lines = (q.lines || []).slice(0, 11);
+    if (paid > sum) q.lines.push({ code: 'PAID', name: '이전 추가 결제', qty: 1, unitPrice: paid - sum, amount: paid - sum, note: '결제 완료' });
+    q.lines.push({ code: 'CHANGE', name: tier ? lineName + ' 추가 금액' : '범위 변경 추가 금액', qty: 1, unitPrice: pay, amount: pay, note: reason.slice(0, 100) });
+    o.amount = paid + pay;
+    o.payStatus = 'partial';
+  }
+  if (tier) { q.mainCode = tier.mainCode; q.mainName = tier.mainName; q.includes = tier.includes; q.excludes = tier.excludes; }
+  if (scope.length) q.includes = scope;
+  q.total = o.amount;
+  q.quoteRequired = false;
+  q.payableNow = true;
+  q.quotedAt = iso_(now_());
+  if (req.days) q.days = Math.max(1, Number(req.days));
+  else if (tier && tier.days) q.days = tier.days;
+  if (req.eta) { var d = toDate_(req.eta + 'T18:00:00+09:00'); if (d) o.eta = d; }
+  var change = { at: iso_(now_()), before: before, pay: pay, paid: paid, total: o.amount, reason: reason, level: tier ? level : '', scope: scope, quote: wasQuote };
+  q.changes = (q.changes || []).concat([change]).slice(-10);
+  data.quote = q;
+  setOrderData_(o, data);
+  saveOrder_(o);
+  var msg = paid > 0
+    ? '추가 결제를 요청드립니다: ' + won(pay) + ' (이미 결제 ' + won(paid) + ', 총 ' + won(o.amount) + '). 사유: ' + reason
+    : wasQuote ? '확정 견적이 준비되었습니다: ' + won(pay) + '. ' + reason
+      : '결제 금액이 ' + (before ? won(before) + '에서 ' : '') + won(pay) + '으로 바뀌었습니다. 사유: ' + reason;
+  addHistory_(o.orderNo, paid > 0 ? '' : o.status, msg, 'admin', '금액 변경' + (tier ? '(' + editLevelOf(level).label + ')' : ''));
+  if (req.notify !== false) mailCustomer_(o, 'amount', change);
+  return { order: orderView_(o, { admin: true }) };
+}
+
 function api_adminConfirmPayment(req) {
   var o = adminOrder_(req);
   var p = paymentsFor_(o.orderNo).filter(function (x) { return (req.paymentId ? x.id === req.paymentId : true) && (x.status === 'claimed' || x.status === 'requested'); })[0];
@@ -2021,6 +2211,8 @@ function api_adminTestNotify(req) {
 function siteUrl_() { return String(setting_('siteUrl') || '').replace(/\/+$/, ''); }
 function orderLink_(o) { return siteUrl_() + '/orders/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(makeOrderToken_(o.orderNo, o.tokenKey)); }
 function adminLink_(o) { return siteUrl_() + '/admin/#order=' + encodeURIComponent(o.orderNo); }
+// 결제 바로 가기: 주문 결제 화면이 잠깐 금액을 보여 주고 아임웹(성균관컨설팅) 결제 화면을 바로 연다(2026-11-26)
+function checkoutLink_(o) { return siteUrl_() + '/checkout/?o=' + encodeURIComponent(o.orderNo) + '&t=' + encodeURIComponent(makeOrderToken_(o.orderNo, o.tokenKey)) + '&pay=1'; }
 
 function mailLayout_(title, body, opts) {
   opts = opts || {};
@@ -2122,7 +2314,7 @@ function mailCustomer_(o, kind, extra) {
         title = '주문서가 접수되었습니다';
         body = '<p>' + name + '님, 논문AI에 맡겨 주셔서 감사합니다.</p><p>결제가 확인되면 작업 순서에 배정되고, 예상 전달일을 바로 알려 드립니다. 주문 페이지에서 결제와 진행 상황을 확인하실 수 있습니다.</p>' + REPLY_INVITE;
         card = orderCard_(o, [['결제 금액', '<span style="color:#2346E8">' + won(q.total || o.amount) + '</span>'], ['상태', '결제 대기']]);
-        button = { label: '결제하고 작업 시작하기', url: link };
+        button = { label: '결제하고 작업 시작하기', url: checkoutLink_(o) };
       }
       break;
     case 'quote':
@@ -2130,7 +2322,7 @@ function mailCustomer_(o, kind, extra) {
       title = '확정 견적이 준비되었습니다';
       body = '<p>' + name + '님, 요청하신 작업의 확정 견적을 안내드립니다.</p>' + (extra.message ? '<p>' + escHtml_(extra.message).replace(/\n/g, '<br>') + '</p>' : '');
       card = orderCard_(o, [['확정 금액', '<span style="color:#2346E8">' + won(q.total || o.amount) + '</span>']].concat(o.eta ? [['예상 전달일', korDate_(o.eta)]] : []));
-      button = { label: '견적 확인하고 결제하기', url: link };
+      button = { label: won(q.total || o.amount) + ' 결제하기', url: checkoutLink_(o) };
       break;
     case 'started':
       if (extra.claimed) {
@@ -2178,7 +2370,25 @@ function mailCustomer_(o, kind, extra) {
       title = '추가 결제 안내';
       body = '<p>' + name + '님, 아래 사유로 추가 결제를 요청드립니다. 결제가 확인되면 이어서 진행합니다.</p>';
       card = orderCard_(o, [['사유', escHtml_(extra.reason || '')], ['금액', '<span style="color:#2346E8">' + won(extra.amount) + '</span>']]);
-      button = { label: '추가 결제하기', url: link };
+      button = { label: won(extra.amount) + ' 추가 결제하기', url: checkoutLink_(o) };
+      break;
+    case 'amount':
+      // 결제 금액 바꾸기(관리자): 바뀐 금액, 사유, 포함 범위, 바로 결제 버튼
+      var paidBefore = Number(extra.paid || 0);
+      var inc = (extra.scope && extra.scope.length ? extra.scope : includesFor(q.includes || [], ((orderData_(o).input || {}).paper || {}).pages)).slice(0, 12);
+      subject = '[논문AI] ' + (paidBefore ? '추가 결제 안내 ' : extra.quote ? '확정 견적 안내 ' : '결제 금액 안내 ') + won(extra.pay) + ' (' + o.orderNo + ')';
+      title = paidBefore ? '추가 결제를 부탁드려요' : extra.quote ? '확정 견적을 안내드려요' : '결제 금액을 다시 안내드려요';
+      body = '<p>' + name + '님, 보내 주신 ' + (o.service === 'paper' ? '원고와 ' : '자료와 ') + '요청 사항을 확인하고 ' + (paidBefore ? '추가로 필요한 금액을 안내드려요.' : extra.quote ? '확정 견적을 안내드려요.' : '작업 범위에 맞는 결제 금액을 다시 안내드려요.') + '</p>' +
+        '<p style="margin:18px 0 6px;font-size:13px;font-weight:800;color:#2346E8">' + (paidBefore ? '추가 결제 사유' : extra.quote ? '견적 설명' : '금액이 바뀐 이유') + '</p>' +
+        '<div style="padding:14px 16px;border-left:3px solid #2346E8;border-radius:8px;background:#F4F6FE;color:#0F1B3D;font-size:15px;line-height:1.75">' + escHtml_(extra.reason || '').replace(/\n/g, '<br>') + '</div>' +
+        (inc.length ? '<p style="margin:20px 0 6px;font-size:13px;font-weight:800;color:#2346E8">이 금액에 들어 있는 작업</p><ul style="margin:0;padding:0 0 0 18px;color:#2B3446;font-size:14.5px;line-height:1.8">' + inc.map(function (x) { return '<li>' + escHtml_(x) + '</li>'; }).join('') + '</ul>' : '') +
+        '<p style="margin-top:18px">아래 버튼을 누르면 성균관컨설팅 결제 화면이 바로 열려요. 결제가 확인되면 바로 ' + (paidBefore ? '이어서 진행' : '작업을 시작') + '할게요.</p>' +
+        '<p style="color:#4A5468;font-size:14px">금액이나 작업 범위가 궁금하시면 이 메일에 답장해 주세요. 담당자가 바로 답해 드려요.</p>';
+      card = orderCard_(o, (extra.before && !paidBefore ? [['변경 전', '<s style="color:#8A93A6">' + won(extra.before) + '</s>']] : [])
+        .concat([[paidBefore ? '추가 결제' : '결제할 금액', '<span style="color:#2346E8;font-size:17px">' + won(extra.pay) + '</span>']])
+        .concat(paidBefore ? [['결제 완료', won(paidBefore)], ['총 주문 금액', won(extra.total)]] : [])
+        .concat(o.eta ? [['예상 전달일', korDate_(o.eta)]] : []));
+      button = { label: won(extra.pay) + ' 결제하기', url: checkoutLink_(o) };
       break;
     case 'cancelled':
       subject = '[논문AI] 주문이 자동 취소되었습니다 (' + o.orderNo + ')';
@@ -2248,6 +2458,7 @@ function orderDetailHtml_(o) {
   var job = [];
   put(job, '상품', o.productName, 120, true);
   if (o.service === 'paper' && p.pages) put(job, '분량', p.pages + '쪽(Page)');
+  if (o.service === 'paper' && p.task === 'edit') put(job, '첨삭 단계', editLevelOf(p.editLevel || ((q.mainCode && editLevelOfCode(q.mainCode)) || {}).id || 'basic').label, 40, true);
   put(job, c.topicKnown === 'free' ? '관심 주제' : '연구 주제', c.title, 400, true);
   put(job, '전공', c.fieldText, 80);
   put(job, '키워드', (c.keywords || []).join(', '), 200);
@@ -2306,6 +2517,20 @@ function notifyOperator_(o, event, detail, opts) {
   });
   sendMail_(operatorEmails_().join(','), subject, html, true, reply);
   pushNtfy_('논문AI ' + event, (amount ? amount + ' · ' : '') + (o.summary || o.productName) + ' · ' + o.orderNo, adminLink_(o));
+}
+
+// 아임웹 맞춤 견적 결제 완료 알림 중 주문에 자동으로 연결하지 못한 것(주문번호 없음·못 찾음·연락처 다름)
+function notifyUnlinkedPayment_(orderNo, o, amount, label, payer) {
+  var why = o ? '적어 주신 주문번호의 연락처와 결제할 때 적은 연락처가 달라 주문에 자동으로 연결하지 않았습니다.'
+    : orderNo ? '적어 주신 주문번호(' + escHtml_(orderNo) + ')를 찾지 못했습니다.' : '주문번호 없이 결제했습니다.';
+  var rows = [['결제 금액', '<b>' + won(amount) + '</b>'], ['결제 상품', escHtml_(label)], ['결제자', escHtml_(payer.name || '-')], ['연락처', escHtml_(payer.phone || '-')], ['이메일', escHtml_(payer.email || '-')], ['적은 주문번호', escHtml_(orderNo || '없음')]];
+  if (o) rows.push(['주문 고객', escHtml_(o.name) + ' · ' + escHtml_(o.phone) + ' · ' + escHtml_(o.productName || '')]);
+  var html = mailLayout_('결제 완료 알림(주문 연결 확인 필요)', '<p>' + why + ' 아임웹 주문 내역에서 결제를 확인한 뒤, 해당 주문의 관리자 화면에서 결제 확인 처리를 해 주세요.</p>', {
+    card: rows,
+    button: o ? { label: '관리자 화면에서 보기', url: adminLink_(o) } : { label: '관리자 화면 열기', url: siteUrl_() + '/admin/' },
+  });
+  sendMail_(operatorEmails_().join(','), '[논문AI] 결제 완료 알림(주문 연결 확인 필요) · ' + won(amount) + ' · ' + (payer.name || '결제자'), html, true, isEmail_(payer.email) ? payer.email : '');
+  pushNtfy_('논문AI 결제 완료 알림', won(amount) + ' · ' + (payer.name || '') + ' · 주문 연결 확인 필요', o ? adminLink_(o) : siteUrl_() + '/admin/');
 }
 
 function notifyOperatorDebounced_(o, event, detail) {
@@ -2605,6 +2830,8 @@ var ROUTES = {
   sendAccessLink: api_sendAccessLink,
   downloadFile: api_downloadFile,
   claimPayment: api_claimPayment,
+  payTicket: api_payTicket,
+  claimShopPayment: api_claimShopPayment,
   confirmToss: api_confirmToss,
   addMessage: api_addMessage,
   cancelOrder: api_cancelOrder,
@@ -2617,6 +2844,7 @@ var ROUTES = {
   adminUpdateStatus: api_adminUpdateStatus,
   adminSetQuote: api_adminSetQuote,
   adminRequestExtra: api_adminRequestExtra,
+  adminChangeAmount: api_adminChangeAmount,
   adminConfirmPayment: api_adminConfirmPayment,
   adminRejectClaim: api_adminRejectClaim,
   adminUploadResult: api_adminUploadResult,
