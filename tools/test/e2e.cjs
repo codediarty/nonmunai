@@ -2226,6 +2226,13 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       has(card, '29,000원', '결제 연결 화면 금액');
       const orderNo = (card.match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
       ok(orderNo, '결제 연결 화면 주문번호');
+      // 아임웹 결제 화면: 주문서에 적은 이름·휴대전화·이메일이 미리 채워져 다시 적지 않아도 됨
+      await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+      await p.waitForFunction(() => { const h = document.getElementById('host'); const f = h && h.shadowRoot && h.shadowRoot.querySelector('[name=ordererEmail]'); return f && f.value === 'e2e-edit3@example.com'; }, null, { timeout: 15000 });
+      const pre = await p.evaluate(() => { const sr = document.getElementById('host').shadowRoot; return ['ordererName', 'ordererCall', 'ordererEmail'].map((n) => sr.querySelector(`[name=${n}]`).value); });
+      eq([pre[0], pre[1].replace(/\D/g, ''), pre[2]], ['이졸업', '01055550001', 'e2e-edit3@example.com'], '결제 화면 주문자 정보 미리 채움');
+      ok(calls.some((x) => x.action === 'payTicketContact'), '연결표로 주문자 정보 받기');
+      // 다른 사람(부모님 등)이 결제해도 연결표로 그 주문에 연결된다
       const banner = await payOnShop(p, { name: '이졸업부모', phone: '010-9999-0002', email: 'e2e-parent@example.com' });
       ok(views[0] && views[0].startsWith(`${SKKC}112&`), `열린 결제 상품: ${views[0]}`);
       const nm = decodeNm(views[0]);

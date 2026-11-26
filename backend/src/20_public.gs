@@ -552,6 +552,22 @@ function payTicketOrder_(key) {
   return String(CacheService.getScriptCache().get('pt:' + key) || '');
 }
 
+// 아임웹 결제 화면의 주문자 정보(이름·휴대전화·이메일) 미리 채우기(2026-11-26): 주문서에 이미 적은 연락처를 결제 화면에서
+// 다시 적지 않게 한다. 결제 연결표(6시간)가 맞을 때만, 연결표 하나에 다섯 번까지 돌려준다. 맞지 않으면 아무것도 돌려주지 않는다
+function api_payTicketContact(req) {
+  rateLimit_('ptc:all', 300, 3600);
+  var key = String(req.ticket || '');
+  var no = payTicketOrder_(key);
+  if (!no) return { contact: null };
+  var cache = CacheService.getScriptCache();
+  var used = Number(cache.get('ptc:' + key) || 0);
+  if (used >= 5) return { contact: null };
+  cache.put('ptc:' + key, String(used + 1), PAY_TICKET_TTL);
+  var o = findOrder_(no);
+  if (!o || o.deletedState || !o.email) return { contact: null };
+  return { contact: { name: String(o.name || ''), phone: String(o.phone || ''), email: String(o.email || '') } };
+}
+
 // 아임웹(skkc.co.kr) 결제 완료 화면에서 보내는 결제 완료 알림(맞춤 견적 결제·주문 결제)
 // 결제 연결표가 맞거나, 결제할 때 적은 연락처(휴대전화 또는 이메일)가 주문과 같으면 그 주문의 결제를 '확인 필요'로 바꾼다.
 // 주문번호가 없거나 맞지 않으면 주문은 건드리지 않고 운영자에게만 알린다. 응답에는 주문 내용을 싣지 않는다.

@@ -17,6 +17,7 @@ var ROUTES = {
   claimPayment: api_claimPayment,
   payTicket: api_payTicket,
   claimShopPayment: api_claimShopPayment,
+  payTicketContact: api_payTicketContact,
   confirmToss: api_confirmToss,
   addMessage: api_addMessage,
   cancelOrder: api_cancelOrder,

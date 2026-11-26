@@ -664,6 +664,21 @@ t('결제 금액 바꾸기(결제 후): 낸 금액은 두고 추가 결제로 �
   x.fail('adminChangeAmount', { adminToken: token, orderNo: r.orderNo, amount: 0, reason: 'x' }, 'invalid');
 });
 
+t('아임웹 결제 화면 주문자 정보 미리 채우기: 결제 연결표가 맞을 때만, 연결표 하나에 다섯 번까지', () => {
+  const x = makeEnv();
+  const r = editOrder(x, {});
+  const tk = x.ok('payTicket', { orderNo: r.orderNo, token: r.token }).ticket;
+  const c = x.ok('payTicketContact', { ticket: tk }).contact;
+  assert.equal(c.name, CONTACT.name);
+  assert.equal(c.email, CONTACT.email);
+  assert.equal(c.phone.replace(/\D/g, ''), CONTACT.phone.replace(/\D/g, ''));
+  assert.equal(x.ok('payTicketContact', { ticket: 'A'.repeat(24) }).contact, null, '없는 연결표');
+  assert.equal(x.ok('payTicketContact', { ticket: '' }).contact, null, '빈 연결표');
+  assert.equal(x.ok('payTicketContact', { ticket: '../x' }).contact, null, '형식이 틀린 연결표');
+  for (let i = 0; i < 4; i++) x.ok('payTicketContact', { ticket: tk });
+  assert.equal(x.ok('payTicketContact', { ticket: tk }).contact, null, '다섯 번 넘게는 주지 않음');
+});
+
 t('맞춤 견적 결제 완료 알림: 결제 연결표면 바로 연결, 연락처가 같으면 결제 확인 중, 아니면 운영자에게만', () => {
   const x = makeEnv();
   const r = editOrder(x, { level: 'complete' });
