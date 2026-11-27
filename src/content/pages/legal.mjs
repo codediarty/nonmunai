@@ -24,7 +24,7 @@ export default function legal({ T, root }) {
       md = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : `${label}을 준비하고 있습니다. 문의: contact@skkc.co.kr`;
     }
     const { html } = renderMarkdown(md.replace(/<!--[\s\S]*?-->/g, ''));
-    const since = key === 'privacy' ? '2026년 11월 1일' : '2026년 11월 4일';
+    const since = key === 'privacy' ? '2026년 11월 1일 · 개정 2026년 11월 27일(방문 통계)' : '2026년 11월 4일';
     return {
       path: p, kind: 'legal', navTitle: label, h1, title: `${label} | 논문AI`, description: desc, crumbs: [['홈', '/'], [label, p]], priority: '0.3', changefreq: 'yearly', noindex: key !== 'privacy',
       body: `<section class="phero phero-sm"><div class="wrap">${crumbs(T, [['홈', '/'], [label, p]])}<h1 class="h-1" style="margin-top:20px">${esc(h1)}</h1><p class="muted">시행일 ${since}</p></div></section><section class="sec"><div class="wrap-narrow prose legal">${html}</div></section>`,
