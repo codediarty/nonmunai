@@ -7,6 +7,7 @@ import { PAPER_TYPES, FIELDS } from '../core/kb.js';
 import { won } from '../core/render.js';
 import { includesFor, editLevelOf, editLevelOfCode } from '../core/pricing.js';
 import { EXTRA_WORK } from '../app/edit-scope.js';
+import { statExtras } from '../app/stat-extras.js';
 
 const TASK = { full: '전체 구성·초고 완성', edit: '논문 첨삭·교정', feedback: '교수님 피드백 반영', proposal: '연구계획서 작성' };
 const SURVEY_MODE = { full: '설문지 작성부터 설문 결과·통계 해석까지(작성·제작·조사·결과 정리·분석)', new: '설문지 작성', edit: '설문지 점검·수정', feedback: '설문지 피드백 반영(수정표, 파란색 표시)', analyze: '설문 응답 통계 분석·해석' };
@@ -332,7 +333,7 @@ function surveyBrief(o) {
     line('의뢰 유형', SURVEY_MODE[s.mode] || s.mode),
     line('응답 대상', s.target === 'other' ? s.targetOther : (TARGET[s.target] || s.target)),
     line('목표 응답 수', s.targetN && /^\d+$/.test(s.targetN) ? `${s.targetN}명` : '추천 필요'),
-    line('응답 수집', { us: '모집·배포 대행(견적 확정분)', self: '고객 직접 수집', none: '설문지만' }[s.recruit] || s.recruit),
+    line('응답 수집', { us: '모집·배포 대행(견적 확정분)', self: '고객 직접 수집', none: '설문지만', ask: '모집도 맡기고 싶음(모집 비용 안내 필요)' }[s.recruit] || s.recruit),
     line('분석 수준', s.advanced ? '심화(매개·조절)' : s.sem ? '구조방정식' : '기본'),
     line('연구계획서', s.hasPlan === 'yes' ? '있음(자료 참고)' : ''),
   ]));
@@ -348,7 +349,23 @@ function surveyBrief(o) {
     out.push(`■ 피드백 항목(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표 작성, 반영한 문항은 파란색 글자로 표시`);
   }
   if (s.recruit === 'us') out.push('■ 모집 대행 확인\n  · 모집 경로·일정·사례비 집행 내역 기록(이용약관 제28조 제2항)\n  · 참여 동의 문구와 개인정보 최소 수집, IRB 필요 여부 확인');
+  if (s.recruit === 'ask') out.push('■ 모집 비용 안내(고객은 기본 금액만 결제)\n  · 대상, 목표 응답 수, 기간, 모집 경로를 확인하고 모집 비용을 \'추가 결제 요청\'으로 보냄(이유 칸에 인원·기간·경로를 적기)\n  · 고객이 맡기지 않기로 하면 배포용 링크와 참여 안내문으로 직접 수집하도록 안내\n  · 참여 동의 문구와 개인정보 최소 수집, IRB 필요 여부 확인');
+  out.push(...extraBlock(o));
   return out;
+}
+
+// 기본 금액에 없는 분석을 고객이 적었을 때(설문 응답 분석·통계분석): 데이터를 보고 추가 결제 요청
+function extraBlock(o) {
+  const i = o.input || {};
+  const t = i.statistics || {};
+  const s = i.survey || {};
+  if (o.service === 'survey' && s.mode !== 'analyze') return [];
+  if (o.service === 'statistics' && (t.output === 'revise' || t.hasData === false)) return [];
+  if (o.service !== 'survey' && o.service !== 'statistics') return [];
+  if ((o.service === 'statistics' && t.advanced) || (o.service === 'survey' && s.advanced)) return [];
+  const xs = statExtras(`${(i.common || {}).title || ''}\n${(i.common || {}).request || ''}`);
+  if (!xs.length) return [];
+  return [`■ 추가 분석 확인(고객은 기본 금액만 결제, 확인 뒤 추가 결제 안내 받음)\n${xs.map((x) => `  · ${x.label}: ${x.key === 'adv' ? "필요하면 '추가 결제 요청'의 '매개·조절효과 분석' 단추로 안내" : '모형과 데이터를 보고 금액을 정해 \'추가 결제 요청\'으로 안내'}`).join('\n')}`];
 }
 
 function statsBrief(o) {
@@ -373,6 +390,7 @@ function statsBrief(o) {
     const fb = classifyFeedback(t.feedbackText);
     out.push(`■ 교수님 의견(${fb.items.length}개)\n${fb.items.map((x, k) => `  ${k + 1}. [${x.category}] ${x.text}`).join('\n')}\n  → 수정 대조표 작성, 고친 표와 수치는 파란색으로 표시`);
   }
+  out.push(...extraBlock(o));
   return out;
 }
 

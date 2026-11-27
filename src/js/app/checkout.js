@@ -6,7 +6,7 @@ import { buildDesign } from '../core/engine.js';
 import { designReportHtml } from '../ui/report.js';
 import { esc, won } from '../core/render.js';
 import { $, toast, url, modal, cfg } from '../ui/dom.js';
-import { cartPlan, productLinks, amountLinks, amountRows } from './pay-plan.js';
+import { cartPlan, productLinks, amountLinks, amountRows, unitLink, unitRows } from './pay-plan.js';
 import { includesFor, listPriceFor, offText } from '../core/pricing.js';
 import { shopUrl } from './shop-link.js';
 
@@ -19,11 +19,13 @@ function tokenFor(no) {
 
 // 상품 하나로 결제하는 주소는 결제 화면을 바로 여는 주소로 바꾼다(skkc.co.kr 공통 코드가 처리)
 // pt: 결제 연결표(6시간). 아임웹 결제 완료 화면이 이 표로 '결제를 마쳤다'는 알림을 이 주문에 보낸다(조회 키는 싣지 않음)
+// 1,000원 단위 상품(link.auto)은 수량을 실어 보내고, skkc.co.kr 공통 코드가 상품 페이지에서 수량을 맞춘다(2026-11-27)
 function directUrl(o, link, pt) {
-  const single = link.cart ? link.cart.length === 1 && link.cart[0].qty === 1 : link.exact && !link.unit && !link.chat;
+  const auto = !!(link.auto && link.cart && link.cart.length === 1 && link.cart[0].qty > 1);
+  const single = auto || (link.cart ? link.cart.length === 1 && link.cart[0].qty === 1 : link.exact && !link.unit && !link.chat);
   if (!single || !/^https?:\/\/(www\.)?skkc\.co\.kr\/shop_view/.test(link.url || '')) return '';
-  const code = link.cart ? link.cart[0].code : ((o.quote || {}).mainCode || '');
-  return shopUrl(link.url, { kind: 'order', o: o.orderNo, code, price: o.amountDue, list: listPriceFor(code, o.amountDue), label: payLabel(o, link), ...(pt ? { pt } : {}) });
+  const code = auto ? ((o.quote || {}).mainCode || '') : link.cart ? link.cart[0].code : ((o.quote || {}).mainCode || '');
+  return shopUrl(link.url, { kind: 'order', o: o.orderNo, code, price: o.amountDue, list: auto ? 0 : listPriceFor(code, o.amountDue), label: payLabel(o, link), ...(auto ? { qty: link.cart[0].qty, unit: link.cart[0].unitPrice } : {}), ...(pt ? { pt } : {}) });
 }
 function payTicket(o, token) {
   return api('payTicket', { orderNo: o.orderNo, token }, { retries: 0, timeoutMs: 8000 }).then((r) => (r && r.ticket) || '').catch(() => '');
@@ -43,16 +45,22 @@ function payLabel(o, link) {
 
 function skkcLink(o, settings, catalog) {
   const due = o.amountDue;
+  // 1,000원 단위 결제 상품(있을 때만): 상품 둘 이상·수량이 있는 결제를 상품 하나로 한 번에 결제한다
+  const unit = unitRows(due, unitLink(settings), dueName(o));
+  const auto = unit ? { url: unit[0].url, exact: true, cart: unit, auto: true } : null;
   // 1) 주문 금액 줄마다 맞는 아임웹 상품(본 상품, 추가 분량, 옵션)
   const cart = cartPlan(o, settings, catalog);
   if (cart && cart.length === 1 && cart[0].qty === 1) return { url: cart[0].url, exact: true, cart };
+  if (cart && auto) return auto;
   if (cart) return { url: cart[0].url, exact: false, cart };
   // 2) 남은 금액과 값이 같은 상품(추가 결제 등): 추가 분량 단가 상품을 먼저 본다
   const pl = productLinks(settings);
   if (pl[`X-${due}`]) return { url: pl[`X-${due}`], exact: true };
   // 3) 맞춤 견적 결제 상품(10만~100만 원, 10만 원 단위). 100만 원이 넘으면 100만 원 상품과 나머지를 함께 담는다
   const ar = amountRows(due, amountLinks(settings), dueName(o));
-  if (ar) return { url: ar[0].url, exact: ar.length === 1 && ar[0].qty === 1, cart: ar };
+  if (ar && ar.length === 1 && ar[0].qty === 1) return { url: ar[0].url, exact: true, cart: ar };
+  if (auto) return auto;
+  if (ar) return { url: ar[0].url, exact: false, cart: ar };
   const same = (catalog.items || []).find((i) => i.price === due && (i.payUrl || pl[i.code]));
   if (same) return { url: same.payUrl || pl[same.code], exact: true };
   const item = (catalog.items || []).find((i) => i.code === (o.quote || {}).mainCode);

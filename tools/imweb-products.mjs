@@ -84,11 +84,20 @@ for (const price of QUOTE_AMOUNTS) {
     excludes: [], unit: null, applies: '논문AI 주문 결제',
   });
 }
+// 1,000원 단위 결제(2026-11-27): 결제할 상품이 둘 이상이거나 수량이 있는 주문(첨삭 추가 분량, 옵션 등)을 이 상품 하나로 결제한다.
+// 수량(금액 ÷ 1,000)은 skkc.co.kr 공통 코드가 상품 페이지에서 자동으로 맞춘다
+products.push({
+  code: 'U-1000', kind: 'unit', service: 'addon', family: '주문 결제', lines: ['주문 결제', '1,000원 단위'],
+  name: '[논문AI] 주문 결제 (1,000원 단위)', price: 1000, days: 0,
+  meta: '논문AI 주문 금액을 1,000원 단위 수량으로 결제',
+  includes: ['첨삭 원고가 기준 분량보다 길어 추가 분량이 붙은 주문', '심사 발표 PPT, 우선 처리 같은 옵션을 함께 고른 주문', '논문AI에서 안내받은 추가 결제 금액'],
+  excludes: [], unit: null, applies: '논문AI 주문 결제',
+});
 
 // 쇼핑몰 진열 순서: 본 상품, 옵션(발표 PPT·영문 작성 먼저), 추가 분량, 맞춤 견적 결제
 const ADDON_ORDER = ['A-PPT', 'A-ENGLISH', 'T-ADV', 'A-FORMAT', 'A-REVISION', 'A-PRIORITY'];
 products.sort((a, b) => {
-  const rank = (p) => (p.kind === 'main' ? 0 : p.kind === 'addon' ? 1 : p.kind === 'extra' ? 2 : 3);
+  const rank = (p) => (p.kind === 'main' ? 0 : p.kind === 'addon' ? 1 : p.kind === 'extra' ? 2 : p.kind === 'quote' ? 3 : 4);
   if (rank(a) !== rank(b)) return rank(a) - rank(b);
   if (a.kind === 'addon') return ADDON_ORDER.indexOf(a.code) - ADDON_ORDER.indexOf(b.code);
   return 0;
@@ -97,7 +106,9 @@ products.sort((a, b) => {
 // 요약 설명(아임웹 메타 설명): 160자 안팎
 for (const p of products) {
   const inc = p.includes.filter((x) => !/검토|검수|수정 \d+회/.test(x)).slice(0, 4).map((x) => x.replace(/\(.*?\)/g, '').replace(/\s*포함$/, '').trim()).join(', ');
-  p.summary = p.kind === 'quote'
+  p.summary = p.kind === 'unit'
+    ? '논문AI(nonmunai.kr) 주문 금액을 1,000원 단위 수량으로 결제하는 상품이에요. 논문AI 결제 버튼으로 오면 수량이 주문 금액에 맞춰 자동으로 담겨요.'
+    : p.kind === 'quote'
     ? `논문AI(nonmunai.kr)에서 안내받은 금액을 결제하는 상품이에요. 맞춤 견적 ${won(p.price)}. 주문번호와 함께 결제하면 주문에 바로 연결돼요.`
     : p.kind === 'extra'
     ? `논문AI 주문서에 '추가 분량 N단위'가 안내되면 그 단위 수만큼 담아 결제하는 상품이에요. 1단위 ${won(p.price)}.`
@@ -216,7 +227,16 @@ const priceBox = (p) => (p.list ? `<div style="margin:0 0 28px;padding:26px 24px
 const KICK = (p) => (p.service === 'paper' ? TYPE[p.code.split('-')[1].toLowerCase()] : p.kind === 'extra' ? '추가 옵션' : p.kind === 'addon' ? (p.service === 'statistics' ? '통계분석 옵션' : '추가 옵션') : p.code === 'S-FULL' ? '설문조사 원스톱' : p.service === 'survey' ? '설문조사' : '논문 맞춤 통계분석');
 for (const p of products) {
   let body = '';
-  if (p.kind === 'quote') {
+  if (p.kind === 'unit') {
+    body = hero('주문 결제', '논문AI 주문 금액을<br>한 번에 결제해요', '1,000원 단위 · 수량은 자동으로 맞춰져요') + TRUST + SECRET
+      + sec('이럴 때 결제해요', checks(p.includes))
+      + sec('결제하는 법', cards([
+        `<b>논문AI 결제 버튼으로 오기</b><br>${SITE_A} 주문서나 메일의 결제 버튼을 누르면 수량이 주문 금액에 맞춰 담긴 결제 화면이 바로 열려요. 예: 144,000원이면 144개예요.`,
+        '<b>결제 화면 위 안내와 금액 확인</b><br>결제 화면 맨 위에 논문AI 주문 이름과 금액이 보여요. 아래 결제 금액과 같은지 확인하고 결제해 주세요.',
+        '<b>결제 확인 후 바로 진행</b><br>결제가 끝나면 주문에 자동으로 연결되고, 결제가 확인되면 메일로 알려 드리고 바로 작업을 시작해요.',
+      ]))
+      + `<p style="margin:18px 0 0;font-size:15px;line-height:1.7;color:${MUTED}">직접 수량을 고르실 필요는 없어요. 금액이 헷갈리면 결제 전에 성균관컨설팅 상담 채널이나 contact@skkc.co.kr로 물어봐 주세요.</p>`;
+  } else if (p.kind === 'quote') {
     body = hero('맞춤 견적 결제', '안내받은 금액을<br>여기서 바로 결제해요', `맞춤 견적 결제 · ${won(p.price)}`) + TRUST + SECRET
       + sec('이럴 때 결제해요', checks(p.includes))
       + sec('결제하는 법', cards([
@@ -291,6 +311,7 @@ function cover(p) {
     const tag = task === 'feedback' ? (type === 'journal' ? '답변서 작성, 반영 부분은 파란색 표시' : BLUE_TAG) : TAG[task];
     return { kicker: TYPE[type], title, tag };
   }
+  if (p.kind === 'unit') return { kicker: '주문 결제', title: ['주문 결제'], tag: '1,000원 단위 · 수량 자동' };
   if (p.kind === 'quote') return { kicker: '맞춤 견적 결제', title: ['맞춤 견적 결제'], tag: '논문AI에서 안내받은 금액' };
   if (p.kind === 'extra') return { kicker: '추가 옵션', title: ['추가 분량'], tag: `1단위 ${won(p.price)}` };
   if (p.code === 'A-ENGLISH') return { kicker: '추가 옵션', title: STITLE[p.code], tag: `${p.unit.size} Page마다 ${won(p.price)}` };
@@ -306,13 +327,14 @@ const emWidth = (t) => [...t].reduce((a, ch) => a + (/\s/.test(ch) ? 0.3 : /[\x2
 const TASK_LABEL = { FULL: '논문 완성', EDIT: '첨삭·교정', FB: '피드백 반영', PROP: '연구계획서' };
 const isFb = (p) => p.service === 'paper' && /-FB$/.test(p.code);
 const fbTask = (p) => FEEDBACK_TASK[p.code.split('-')[1].toLowerCase()] || '피드백 반영';
-const cardLabel = (p) => (p.kind === 'quote' ? '맞춤 견적 결제' : p.kind === 'extra' ? '추가 분량' : p.kind === 'addon' ? '추가 옵션' : p.service === 'survey' ? '설문조사' : p.service === 'statistics' ? '통계분석' : isFb(p) ? fbTask(p) : TASK_LABEL[p.code.split('-')[2]] || '논문');
+const cardLabel = (p) => (p.kind === 'unit' ? '주문 결제' : p.kind === 'quote' ? '맞춤 견적 결제' : p.kind === 'extra' ? '추가 분량' : p.kind === 'addon' ? '추가 옵션' : p.service === 'survey' ? '설문조사' : p.service === 'statistics' ? '통계분석' : isFb(p) ? fbTask(p) : TASK_LABEL[p.code.split('-')[2]] || '논문');
 const cardChips = (p) => {
   const out = [];
   if (p.service === 'paper') out.push(['w', TYPE_SHORT[p.code.split('-')[1].toLowerCase()]]);
   else if (p.kind === 'main') out.push(['w', p.service === 'survey' ? '설문 설계·분석' : 'SPSS·AMOS']);
   else if (p.kind === 'addon') out.push(['w', '논문AI 주문에 추가']);
   else if (p.kind === 'quote') { out.push(['w', '안내받은 금액 그대로']); out.push(['g', '주문에 바로 연결']); }
+  else if (p.kind === 'unit') { out.push(['w', '1,000원 단위']); out.push(['g', '수량 자동']); }
   else out.push(['w', '단위 수만큼 담기']);
   if (isFb(p)) out.push(['g', /교수님/.test(fbTask(p)) ? '수정 보완·첨삭' : '수정 보완']);
   if (p.kind === 'main') out.push(['g', '전공 박사 검수']);
@@ -321,6 +343,7 @@ const cardChips = (p) => {
 };
 const cardBig = (p) => {
   if (p.kind === 'quote') return { n: String(p.price / 10000), u: '만 원', left: '논문AI 안내 금액', right: won(p.price) };
+  if (p.kind === 'unit') return { n: '1,000', u: '원 × 수량', left: '주문 금액만큼 자동으로', right: '<small>부가세 포함</small>' };
   const u = p.unit;
   if (u && (u.base || u.size) && !isFb(p)) return { n: String(u.base || u.size), u: u.label, left: p.list ? `<s>정가 ${won(p.list)}</s>` : u.base ? '기준 분량' : `${u.size} ${u.label}마다`, right: won(p.price) };
   const c = cover(p);
@@ -332,7 +355,7 @@ const imgHtml = (p) => {
   const title = p.name.replace('[논문AI] ', '');
   const titleHtml = isFb(p) ? esc(title).replace(/^(.+?) ((?:교수님|선생님) )/, '$1<br>$2') : esc(title).replace(': ', ':<br>');
   const tSize = emWidth(title) > 14.5 ? 50 : 58;
-  const trust1 = p.service === 'paper' && p.kind === 'main' ? '참고문헌 100% 실존 검증 · 전공 박사 최종 검수' : p.kind === 'main' ? '전공 분야 박사 최종 검수' : p.kind === 'quote' ? '주문번호와 함께 결제하면 주문에 바로 연결' : '논문AI 주문과 함께 한 번에 결제';
+  const trust1 = p.service === 'paper' && p.kind === 'main' ? '참고문헌 100% 실존 검증 · 전공 박사 최종 검수' : p.kind === 'main' ? '전공 분야 박사 최종 검수' : p.kind === 'quote' || p.kind === 'unit' ? '주문번호와 함께 결제하면 주문에 바로 연결' : '논문AI 주문과 함께 한 번에 결제';
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><link rel="stylesheet" href="${base}/assets/css/site.css"><style>
 html,body{margin:0;width:1000px;height:1000px;overflow:hidden;background:#FFFFFF}
 .cv-root{position:relative;width:1000px;height:1000px;box-sizing:border-box;padding:62px 72px 0;font-family:var(--sans);color:#0F1B3D;background:#FFFFFF}
@@ -418,4 +441,4 @@ await page.screenshot({ path: path.join(out, '논문AI-주문-안내.png'), type
 await browser.close();
 server.close();
 fs.writeFileSync(path.join(out, 'products.json'), JSON.stringify(products, null, 1));
-console.log(`imweb: 상품 ${products.length}개 (본 ${products.filter((p) => p.kind === 'main').length}, 옵션 ${products.filter((p) => p.kind === 'addon').length}, 추가 분량 ${products.filter((p) => p.kind === 'extra').length}, 맞춤 견적 ${products.filter((p) => p.kind === 'quote').length}) → ${out}`);
+console.log(`imweb: 상품 ${products.length}개 (본 ${products.filter((p) => p.kind === 'main').length}, 옵션 ${products.filter((p) => p.kind === 'addon').length}, 추가 분량 ${products.filter((p) => p.kind === 'extra').length}, 맞춤 견적 ${products.filter((p) => p.kind === 'quote').length}, 1,000원 단위 ${products.filter((p) => p.kind === 'unit').length}) → ${out}`);

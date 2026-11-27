@@ -5,7 +5,7 @@ import { loadConfig, peekConfig } from './api.js';
 import { FIELDS } from '../core/kb.js';
 import { computeQuote, findItem, paperItemCode } from '../core/pricing.js';
 import { statsPlan, METHOD_LABELS } from '../core/plans.js';
-import { diagnoseFile } from '../core/diagnose-data.js';
+import { diagnoseData, compactInfo, diagHtml as diagCard } from './data-diag.js';
 import { classifyFeedback } from '../core/feedback.js';
 import { esc, won } from '../core/render.js';
 import { url } from '../ui/dom.js';
@@ -65,11 +65,6 @@ ${ppt ? box('ppt', '심사 발표 PPT·PDF 제작', ppt.price, '분석 결과와
 ${ed && !isSim(s) ? box('editing', '논문 첨삭·교정', ed.price, `직접 쓰신 논문 원고의 문장을 다듬는 기본 교정이에요(${esc(ed.name)}, 기준 ${ed.baseUnits}${ed.unitLabel}). 원고는 주문 뒤 올려 주셔도 됩니다.`) : ''}
 ${pr ? box('priority', '우선 처리', pr.price, '일정상 가능한 경우 작업 순서를 앞당깁니다.') : ''}
 </div>`;
-}
-
-function compactInfo(i) {
-  if (!i || !i.ok) return i ? { ok: false, message: i.message } : null;
-  return { n: i.n, vars: i.vars, likert: i.likertCount, missing: Math.round(i.missingRate * 1000) / 10, pii: i.pii, demo: i.demographics, scales: i.scales.map((x) => ({ name: x.name, items: x.items, alpha: x.alpha ? Math.round(x.alpha * 1000) / 1000 : null })) };
 }
 
 function normalizeMethods(vals, changed, checked) {
@@ -169,18 +164,7 @@ ${s.dataInfo && s.dataInfo.ok ? `<div class="rv-block"><h3 class="sub-q">데이�
   },
 ];
 
-function diagHtml(s) {
-  const i = s.dataInfo;
-  if (!i) return '';
-  if (!i.ok) return `<p class="hint">${esc(i.message || '')}</p>`;
-  const cols = (i.columns || []).slice(0, 40);
-  return `<div class="auto-card data-diag"><div class="auto-hd">${ICON.spark}<b>데이터 자동 진단</b><span class="muted">${esc(i.fileName || '')}${i.sheets > 1 ? ` · 첫 번째 시트 기준(시트 ${i.sheets}개)` : ''}</span></div>
-<dl class="auto-dl"><div><dt>응답 수</dt><dd>${i.n.toLocaleString('ko-KR')}명</dd></div><div><dt>변수</dt><dd>${i.vars}개</dd></div><div><dt>리커트 문항</dt><dd>${i.likertCount}개</dd></div><div><dt>결측</dt><dd>${(i.missingRate * 100).toFixed(1)}%</dd></div></dl>
-${i.scales.length ? `<p class="small"><b>문항 묶음 추정</b> ${i.scales.map((x) => `${esc(x.name)} ${x.items}문항${x.alpha != null ? ` (α=${x.alpha.toFixed(2)})` : ''}`).join(', ')}</p>` : ''}
-${i.pii.length ? `<p class="small" style="color:var(--pen)"><b>개인정보로 보이는 열</b> ${i.pii.map(esc).join(', ')}. 지운 뒤 다시 올리는 것을 권장합니다.</p>` : '<p class="small" style="color:var(--green)"><b>개인정보로 보이는 열이 없습니다.</b></p>'}
-${cols.length ? `<details><summary class="small">변수 목록 보기</summary><div class="table-wrap"><table class="diag-table"><thead><tr><th>변수</th><th>형태</th><th>결측</th><th>범위</th></tr></thead><tbody>${cols.map((c) => `<tr><td class="${c.pii ? 'pii' : ''}">${esc(c.name)}</td><td>${esc(c.type)}</td><td>${(c.missingRate * 100).toFixed(0)}%</td><td>${c.numeric && c.min != null ? `${c.min}~${c.max}` : '-'}</td></tr>`).join('')}</tbody></table></div></details>` : ''}
-<p class="hint">브라우저 안에서 계산한 사전 진단입니다. 최종 분석은 분석가가 직접 실행하고 검수합니다.</p></div>`;
-}
+const diagHtml = (s) => diagCard(s.dataInfo);
 
 function sidePanel(s) {
   const q = s.statistics.hasData ? computeQuote(CONFIG.catalog, quoteInput(s)) : null;
@@ -209,10 +193,7 @@ export async function startStatsWizard(root) {
   const wctx = createWizard({
     root, key: 'statistics', title: '통계분석 의뢰하기', steps, defaults, sidePanel, mobileSummary, settings: () => CONFIG.settings || {},
     onFileAdded: async (slot, file, s) => {
-      if (slot === 'data') {
-        const info = await diagnoseFile(file);
-        s.dataInfo = { ...info, fileName: file.name, columns: info.columns ? info.columns.slice(0, 60).map((c) => ({ name: c.name, type: c.type, missingRate: c.missingRate, numeric: c.numeric, min: c.min, max: c.max, pii: c.pii })) : [] };
-      }
+      if (slot === 'data') s.dataInfo = await diagnoseData(file);
     },
     onSubmit: (s) => submitOrder({ service: 'statistics', state: s, input: toInput(s), design: { title: s.common.title, designLabel: isSim(s) ? '학습용 시뮬레이션' : '통계분석', methodLabel: (s.statistics.methods || []).map((m) => METHOD_LABELS[m]).join(', '), population: '', sampleText: s.dataInfo && s.dataInfo.ok ? `응답 ${s.dataInfo.n}명` : '', vars: {}, hypotheses: [], titleCandidates: [] }, quote: computeQuote(CONFIG.catalog, quoteInput(s)), draftKey: 'draft:statistics' }),
   });

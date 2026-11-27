@@ -1,5 +1,5 @@
 // 성균관컨설팅(아임웹) 결제 안내: 주문 금액 줄마다 맞는 상품을 찾아 장바구니 구성을 만든다 (DOM 없음, 테스트 가능)
-import { AMOUNT_PRODUCTS } from './amount-products.js';
+import { AMOUNT_PRODUCTS, UNIT_PRODUCT, UNIT_MAX_QTY } from './amount-products.js';
 import { QUOTE_MAX, isQuoteAmount } from '../core/pricing.js';
 
 export function productLinks(settings) {
@@ -85,4 +85,20 @@ export function cartPlan(o, settings, catalog) {
     rows = [...amt, ...rows.filter(has)];
   }
   return rows;
+}
+
+// 1,000원 단위 결제 상품(설정 skkcUnitUrl이 먼저, 없으면 기본 상품). 없으면 null
+export function unitLink(settings) {
+  const url = String((settings && settings.skkcUnitUrl) || UNIT_PRODUCT.url || '');
+  const price = Number(settings && settings.skkcUnitPrice) || UNIT_PRODUCT.price;
+  return /^https?:\/\//.test(url) && price > 0 ? { url, price } : null;
+}
+
+// 금액 하나를 1,000원 단위 상품과 수량으로(금액이 단위로 나누어떨어지고 수량이 한도 안일 때만)
+export function unitRows(total, unit, name = '논문AI 주문 결제') {
+  const n = Math.round(Number(total) || 0);
+  if (!unit || !(n > 0) || n % unit.price !== 0) return null;
+  const qty = n / unit.price;
+  if (qty > UNIT_MAX_QTY) return null;
+  return [{ code: `U-${unit.price}`, name, qty, unitPrice: unit.price, amount: n, url: unit.url, unit: true }];
 }

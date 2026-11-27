@@ -13,3 +13,10 @@ export const AMOUNT_PRODUCTS = {
   900000: 'https://skkc.co.kr/shop_view/?idx=182',
   1000000: 'https://skkc.co.kr/shop_view/?idx=183',
 };
+
+// 1,000원 단위 결제 상품(2026-11-27): 결제할 상품이 둘 이상이거나 수량이 있는 주문(첨삭 추가 분량, 옵션 등)을
+// 이 상품 하나와 수량(금액 ÷ 1,000)으로 결제한다. skkc.co.kr 공통 코드가 상품 페이지에서 수량을 맞춰 결제 화면을 연다.
+// 설정 skkcUnitUrl·skkcUnitPrice가 있으면 그쪽이 먼저다(pay-plan.js unitLink). 주소가 비어 있으면 쓰지 않는다.
+export const UNIT_PRODUCT = { price: 1000, url: '' };
+// 한 번에 담을 수 있는 최대 수량(1,000원 × 3,000 = 300만 원)
+export const UNIT_MAX_QTY = 3000;

@@ -1,8 +1,8 @@
 // 주문 화면(앱) 껍데기: 내용은 JS가 그림
 const APP = [
   { path: '/paper/new/', script: 'paper', title: '논문 의뢰하기 | 논문AI', h1: '논문 의뢰하기', description: '관심 주제와 전공을 적고 논문 종류를 고르면 결제 화면이 바로 열려요. 회원가입 없이 카드, 간편결제, 계좌이체로 결제할 수 있어요.' },
-  { path: '/survey/new/', script: 'survey', title: '설문조사 의뢰하기 | 논문AI', h1: '설문조사 의뢰하기', description: '설문 목적과 대상, 의뢰 유형을 고르시면 필요한 자료와 견적을 바로 계산해 드려요.' },
-  { path: '/statistics/new/', script: 'statistics', title: '통계분석 의뢰하기 | 논문AI', h1: '통계분석 의뢰하기', description: '데이터가 있는지와 분석 목적을 고르시면 분석 계획과 견적을 바로 계산해 드려요.' },
+  { path: '/survey/new/', script: 'survey', title: '설문조사 의뢰하기 | 논문AI', h1: '설문조사 의뢰하기', description: '연구 주제를 적고 필요한 작업만 고르면 금액이 바로 나와요. 설문지 작성부터 통계 해석까지 한 화면에서 의뢰할 수 있어요.' },
+  { path: '/statistics/new/', script: 'statistics', title: '통계분석 의뢰하기 | 논문AI', h1: '통계분석 의뢰하기', description: '데이터를 올리고 받을 결과 형태만 고르면 금액이 바로 나와요. SPSS를 몰라도 통계표와 해석까지 맡길 수 있어요.' },
   { path: '/checkout/', script: 'checkout', title: '결제 | 논문AI', h1: '주문 확인과 결제', description: '주문 내용과 금액을 확인하고 결제해 주세요.' },
   { path: '/orders/', script: 'orders', title: '주문 조회 | 논문AI', h1: '주문 조회', description: '주문번호와 조회 비밀번호로 진행 상황을 확인하고 결과물을 내려받을 수 있어요.' },
 ];

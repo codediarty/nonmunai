@@ -5,8 +5,10 @@ import { designReportHtml } from '../ui/report.js';
 import { orderFacts, factsTable, orderTitle, isSimulation } from '../app/order-view.js';
 import { blobToBase64, base64ToBlob, saveBlob, fmtSize } from '../app/files.js';
 import { loadConfig } from '../app/api.js';
-import { computeQuote, editLevelOfCode, includesFor, QUOTE_AMOUNTS, QUOTE_MAX, QUOTE_STEP, isQuoteAmount } from '../core/pricing.js';
+import { computeQuote, findItem, editLevelOfCode, includesFor, QUOTE_AMOUNTS, QUOTE_MAX, QUOTE_STEP, isQuoteAmount } from '../core/pricing.js';
 import { EXTRA_WORK, neededLevel } from '../app/edit-scope.js';
+import { statExtras } from '../app/stat-extras.js';
+import { unitLink } from '../app/pay-plan.js';
 
 const SLOT = { manuscript: '기존 원고', materials: '참고 자료', toc: '목차', format: '양식', feedback: '피드백', questionnaire: '설문지', proposal: '연구계획서', data: '데이터', prevResult: '기존 분석', codebook: '변수 설명', other: '기타', result: '결과물' };
 const STATUS_FLOW = ['quote_requested', 'pending_payment', 'payment_review', 'received', 'checking', 'needs_materials', 'preparing', 'in_progress', 'review', 'delivered', 'revision', 'completed', 'cancelled'];
@@ -24,18 +26,21 @@ export async function renderOrder(root, orderNo, go) {
 function amountChips() {
   return `<div class="am-chips" role="group" aria-label="금액 빠르게 고르기">${QUOTE_AMOUNTS.map((a) => `<button type="button" class="am-chip" data-amt="${a}">${a / 10000}만</button>`).join('')}</div>`;
 }
-function payHint(n, paid) {
+// unit: 1,000원 단위 결제 상품(있으면 10만 원 단위가 아닌 금액도 상품 하나로 바로 결제)
+function payHint(n, paid, unit) {
   if (!(n > 0)) return '';
   const total = paid ? ` · 총 주문 금액 ${won(paid + n)}` : '';
   if (isQuoteAmount(n)) return `아임웹 '맞춤 견적 결제 ${won(n)}' 상품으로 고객이 바로 결제해요${total}`;
+  if (unit && n % unit.price === 0) return `아임웹 '1,000원 단위 결제' 상품 ${(n / unit.price).toLocaleString('ko-KR')}개로 고객이 바로 결제해요(수량은 자동으로 맞춰져요)${total}`;
   if (n > QUOTE_MAX && n % 100000 === 0) return `100만 원 상품 ${Math.floor(n / QUOTE_MAX)}개${n % QUOTE_MAX ? `와 ${won(n % QUOTE_MAX)} 상품` : ''}을 함께 담아 결제해요${total}`;
   return `10만 원 단위가 아니면 같은 금액 상품이 있을 때만 바로 결제돼요. 없으면 고객이 상담 채널에서 결제 링크를 받아야 해요${total}`;
 }
-function bindAmount(box, input, paidOf) {
+function bindAmount(box, input, paidOf, unit = null) {
   const hint = box.querySelector('[data-pay-hint]');
   const sync = () => {
     const n = Number(input.value) || 0;
-    if (hint) { hint.textContent = payHint(n, paidOf()); hint.classList.toggle('is-warn', n > 0 && !(n % 100000 === 0)); }
+    const easy = n % 100000 === 0 || !!(unit && n % unit.price === 0);
+    if (hint) { hint.textContent = payHint(n, paidOf(), unit); hint.classList.toggle('is-warn', n > 0 && !easy); }
     box.querySelectorAll('[data-amt]').forEach((c) => c.classList.toggle('is-on', Number(c.dataset.amt) === n));
   };
   box.querySelectorAll('[data-amt]').forEach((c) => c.addEventListener('click', () => { input.value = c.dataset.amt; sync(); input.focus(); }));
@@ -202,6 +207,8 @@ ${((o.quote && o.quote.changes) || []).length ? `<p class="hint am-last">마지�
     const act = amountAct(o);
     const curInc = includesFor(q.includes || [], p.pages);
     const ceil = (n) => Math.max(QUOTE_STEP, Math.ceil(n / QUOTE_STEP) * QUOTE_STEP);
+    let unit = null;
+    try { unit = unitLink((await loadConfig()).settings); } catch { unit = null; }
     let extras = [];
     if (edit) {
       try {
@@ -215,7 +222,19 @@ ${((o.quote && o.quote.changes) || []).length ? `<p class="hint am-last">마지�
         }).filter(Boolean);
       } catch { extras = []; }
     }
-    const need = edit ? neededLevel(`${((o.input && o.input.common) || {}).request || ''}\n${p.editScope || ''}`) : 'basic';
+    // 설문 응답 분석·통계분석: 매개·조절효과 분석(T-ADV)을 고객이 적었거나 데이터를 보고 필요하면 한 번에 채운다(2026-11-27)
+    const st = (o.input && o.input.statistics) || {};
+    const sv = (o.input && o.input.survey) || {};
+    const advOk = (o.service === 'statistics' && st.hasData !== false && st.output !== 'revise' && !st.advanced) || (o.service === 'survey' && sv.mode === 'analyze' && !sv.advanced);
+    if (advOk && !(q.lines || []).some((l) => l.code === 'T-ADV')) {
+      try {
+        const cfg = await loadConfig();
+        const it = findItem(cfg.catalog, 'T-ADV');
+        if (it) extras.push({ level: 'adv', label: '매개·조절효과 분석', amount: paid ? it.price : (o.amount || 0) + it.price, days: (q.days || 0) + (it.days || 0), work: ['PROCESS Macro 매개·조절효과 분석(부트스트래핑)'], reason: '요청하신 매개·조절효과 분석은 기본 분석에 들어 있지 않은 심화 분석이라 그만큼 금액을 안내드려요.' });
+      } catch { /* 가격표를 못 받으면 단추 없이 */ }
+    }
+    const advNeed = advOk && statExtras(`${((o.input && o.input.common) || {}).title || ''}\n${((o.input && o.input.common) || {}).request || ''}`).some((x) => x.key === 'adv');
+    const need = edit ? neededLevel(`${((o.input && o.input.common) || {}).request || ''}\n${p.editScope || ''}`) : advNeed ? 'adv' : 'basic';
     const REASONS = [
       ['범위', '요청하신 작업이 처음 결제하신 범위보다 넓어서 그만큼 금액을 안내드려요.'],
       ['분량', '보내 주신 원고 분량이 주문서에 적은 분량보다 많아서 늘어난 분량만큼 금액을 안내드려요.'],
@@ -242,7 +261,7 @@ ${extraBtns}
       wide: true,
       onOpen: (box) => {
         const amt = box.querySelector('#amA');
-        bindAmount(box, amt, () => paid);
+        bindAmount(box, amt, () => paid, unit);
         const reason = box.querySelector('#amR');
         box.querySelectorAll('[data-r]').forEach((btn) => btn.addEventListener('click', () => {
           reason.value = reason.value.trim() ? `${reason.value.trim()} ${btn.dataset.r}` : btn.dataset.r;

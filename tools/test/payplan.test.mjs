@@ -100,3 +100,26 @@ tests.push(
     if (Object.keys(fromLinks).length) assert.deepEqual(Object.keys(fromLinks).map(Number).sort((a, b) => a - b), QUOTE_AMOUNTS);
   } },
 );
+
+// 2026-11-27 1,000원 단위 결제 상품: 상품 둘 이상·수량이 있는 결제를 상품 하나와 수량으로
+import { unitLink, unitRows } from '../../src/js/app/pay-plan.js';
+import { UNIT_PRODUCT, UNIT_MAX_QTY } from '../../src/js/app/amount-products.js';
+tests.push(
+  { name: '1,000원 단위 상품: 설정이 먼저, 주소가 없으면 쓰지 않음', fn() {
+    assert.deepEqual(unitLink({ skkcUnitUrl: 'https://skkc.co.kr/shop_view/?idx=999', skkcUnitPrice: '1000' }), { url: 'https://skkc.co.kr/shop_view/?idx=999', price: 1000 });
+    if (!UNIT_PRODUCT.url) assert.equal(unitLink({}), null, '기본 상품 주소가 비어 있으면 없음');
+    else assert.deepEqual(unitLink({}), { url: UNIT_PRODUCT.url, price: UNIT_PRODUCT.price });
+    assert.equal(unitLink({ skkcUnitUrl: 'not a url' }), null, '주소가 아니면 없음');
+  } },
+  { name: '1,000원 단위 상품 수량: 석사 첨삭 80 Page(본 상품+추가 분량 5단위)를 상품 하나 144개로', fn() {
+    const unit = { url: 'https://skkc.co.kr/shop_view/?idx=999', price: 1000 };
+    const q = computeQuote(DEFAULT_CATALOG, { service: 'paper', paper: { typeId: 'master', task: 'edit', pages: 80 } });
+    assert.equal(q.total, 144000);
+    assert.equal(cartPlan(order(q, q.total), settings, DEFAULT_CATALOG) === null || cartPlan(order(q, q.total), settings, DEFAULT_CATALOG).length !== 1, true, '상품별로는 하나로 결제할 수 없음');
+    assert.deepEqual(unitRows(q.total, unit, '석사학위논문 첨삭·교정').map((r) => [r.code, r.qty, r.unitPrice, r.amount, r.url, r.name]), [['U-1000', 144, 1000, 144000, unit.url, '석사학위논문 첨삭·교정']]);
+    assert.equal(unitRows(144500, unit), null, '1,000원으로 나누어떨어지지 않으면 없음');
+    assert.equal(unitRows((UNIT_MAX_QTY + 1) * 1000, unit), null, '수량 한도를 넘으면 없음');
+    assert.equal(unitRows(0, unit), null);
+    assert.equal(unitRows(144000, null), null);
+  } },
+);

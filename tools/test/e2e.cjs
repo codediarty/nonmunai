@@ -46,6 +46,7 @@ const TITLES = {
   34: '모바일 화면에서 입력·결제 요약 사용 가능', 35: '결제사 미설정 시 결제 완료를 가장하지 않음', 36: '데이터·파일 삭제 및 개인정보 동의 처리',
   41: '한 화면 논문 주문(관심 주제만, 제목 확정 없음)과 성균관컨설팅 결제 바로 연결',
   42: '첨삭은 한 가지 금액, 더 드는 작업은 운영자가 금액·이유를 보내고(결제 전 금액 바꾸기·결제 후 추가 결제), 요금 결제(맞춤 견적 10만~100만 원)로 바로 결제',
+  43: '설문조사·통계분석도 한 화면 주문(단계·조회 비밀번호 없이), 기본 금액에 없는 일은 안내만, 상품 둘 이상인 결제는 1,000원 단위 상품 하나로',
   37: '실제 응답자 개인정보 비식별화 안내', 38: '제출·게재·유의성 보장 문구 없음', 39: '파일 보관 만료 및 접근 통제 테스트', 40: '관리자 가격 변경 시 신규 주문 가격 반영, 기존 주문 가격 유지',
 };
 // 같은 항목을 서버·계산 쪽에서 나눠 확인하는 기존 단위·API 테스트(node tools/test/run-all.mjs)
@@ -57,6 +58,7 @@ const BACKEND = {
   33: 'backend: 결과 업로드→전달→내려받기', 35: 'backend: 무통장 알림은 확인 중, 토스 승인·금액 위조 거부', 36: 'backend: 필수 동의 없으면 거부, 결제 전 취소 시 영구 삭제',
   39: 'backend: 자동 정리(미제출 3일·미결제 30일·보관 90일), 수정 요청 30일', 40: 'pricing·backend: 가격표 변경은 새 견적에만 반영',
   42: 'pricing: 첨삭 세 단계 금액·납기, editscope: 요청에서 필요한 단계 읽기, payplan: 맞춤 견적 상품 묶기, backend: 금액 바꾸기 메일·결제 연결표·결제 완료 알림',
+  43: 'statextras: 요청에서 매개·조절·구조방정식 읽기, payplan: 1,000원 단위 상품 수량',
 };
 const results = [];
 const pageErrors = [];
@@ -343,13 +345,13 @@ async function paperTaskToReview(p, { request = '', contact = {} } = {}) {
   await W.go(p, 'contact'); await fillContact(p, contact); await W.go(p, 'review');
 }
 async function surveyToMode(p, { purpose = 'master', title = '간호사의 감정노동이 소진에 미치는 영향' } = {}) {
-  await W.open(p, '/survey/new/', 'purpose');
+  await W.open(p, '/survey/new/?detail=1', 'purpose');
   await W.pick(p, 'common.purpose', purpose); await W.go(p, 'topic');
   await W.pick(p, 'common.fieldId', 'nursing'); await W.pick(p, 'common.topicKnown', 'yes'); await W.fill(p, 'common.title', title);
   await W.go(p, 'mode');
 }
 async function statsToData(p, { purpose = 'degree', title = '중학생의 학업스트레스가 학교적응에 미치는 영향에서 사회적 지지의 조절효과' } = {}) {
-  await W.open(p, '/statistics/new/', 'purpose');
+  await W.open(p, '/statistics/new/?detail=1', 'purpose');
   await W.pick(p, 'common.purpose', purpose); await W.go(p, 'topic');
   await W.pick(p, 'common.fieldId', 'edu'); await W.fill(p, 'common.title', title);
   await W.go(p, 'data');
@@ -434,6 +436,10 @@ async function tests() {
           has(await text(p, '.qo-h1'), '주제만 알려 주세요', '논문 주문서 제목');
           return;
         }
+        // 설문조사·통계분석도 한 화면 주문서(2026-11-27). 단계별 신청서는 ?detail=1
+        await p.waitForSelector('#soForm');
+        has(await text(p, '.qo-h1'), href === '/survey/new/' ? '설문부터 해석까지' : '통계표와 해석까지', `${href} 주문서 제목`);
+        return;
         await p.waitForSelector(`#wzStep[data-step="${first}"]`);
         eq(await text(p, '.wz-title h1'), h1, `${href} 신청서 제목`);
       });
@@ -443,7 +449,7 @@ async function tests() {
     await W.open(p, '/paper/new/?detail=1', 'type');
     await W.pick(p, 'paper.typeId', 'doctor');
     await sleep(450);
-    for (const [url, first] of [['/statistics/new/', 'purpose'], ['/survey/new/', 'purpose']]) {
+    for (const [url, first] of [['/statistics/new/?detail=1', 'purpose'], ['/survey/new/?detail=1', 'purpose']]) {
       await W.open(p, url, first);
       eq(await p.$('#rsYes'), null, `${url}에 논문 신청서 이어쓰기 안내가 뜸`);
     }
@@ -1817,9 +1823,9 @@ async function tests() {
     const x = await deliveredOrder({ input: paperIn() });
     await withCtx({}, async (p) => {
       const bodies = [];
-      for (const u of ['/paper/new/', '/paper/new/?detail=1', '/survey/new/', '/statistics/new/']) { await p.goto(BASE + u); await p.waitForSelector(u === '/paper/new/' ? '#qoForm' : '#wzStep'); bodies.push(await text(p, 'body')); }
+      for (const u of ['/paper/new/', '/paper/new/?detail=1', '/survey/new/', '/statistics/new/', '/survey/new/?detail=1', '/statistics/new/?detail=1']) { await p.goto(BASE + u); await p.waitForSelector(u === '/paper/new/' ? '#qoForm' : /detail/.test(u) ? '#wzStep' : '#soForm'); bodies.push(await text(p, 'body')); }
       await p.goto(ordersUrl(x)); await p.waitForSelector('#results'); bodies.push(await text(p, 'body'));
-      has(bodies[4], '제출 전에 내용과 출처를 직접 확인해 주세요', '결과물 확인 안내');
+      has(bodies[bodies.length - 1], '제출 전에 내용과 출처를 직접 확인해 주세요', '결과물 확인 안내');
       await p.goto(checkoutUrl(await makeOrder({ input: paperIn() }))); await p.waitForSelector('.ord-no'); bodies.push(await text(p, 'body'));
       const all = bodies.join('\n');
       const m = all.match(/(합격|통과|게재|유의)[^.!?\n]{0,10}(보장|약속)(합니다|해 드립니다|드립니다)/);
@@ -2369,6 +2375,216 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
       eq(await p2.$eval('input[name="payAmt"]:checked', (e) => e.value), '100000', '미리 고른 금액');
     } finally { await c.close().catch(() => {}); }
   }, { extra: QL }));
+
+  /* ----------------------------------------------------------------- 43: 한 화면 설문·통계 주문, 1,000원 단위 결제(2026-11-27) */
+  const SV = { 'S-FULL': `${SKKC}124`, 'S-NEW': `${SKKC}125`, 'S-ANALYZE': `${SKKC}128`, 'T-BASIC': `${SKKC}129`, 'T-INTERP': `${SKKC}130`, 'T-CHAPTER': `${SKKC}131`, 'T-FB': `${SKKC}132` };
+  const UNIT = `${SKKC}190`;
+  const withUnit = async (fn) => {
+    const before = (await adminApi('adminGetSettings')).settings || {};
+    await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: UNIT, skkcUnitPrice: '1000' } });
+    try { return await fn(); } finally { await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: before.skkcUnitUrl || '', skkcUnitPrice: before.skkcUnitPrice || '1000' } }); }
+  };
+  await check(43, '설문조사: 단계 없이 한 화면(주제 → 작업 → 요청 → 받을 곳), 응답자 모집을 골라도 기본 금액으로 바로 결제되고 모집 희망은 주문에 남음, 조회 비밀번호는 휴대전화 뒤 4자리', async () => withShop(async () => {
+    const c = await newCtx();
+    try {
+      const calls = [];
+      const views = await shopRoutes(c, calls);
+      const p = await c.newPage();
+      await p.goto(`${BASE}/survey/new/`);
+      await p.waitForSelector('#soForm #soTopic');
+      eq(await p.locator('#wzStep, [data-path="pin"], [data-choice]').count(), 0, '단계별 신청서·조회 비밀번호 칸이 없음');
+      has(await text(p, '.qo-h1'), '설문부터 해석까지', '주문서 제목');
+      eq(await p.$eval('input[name="soMode"]:checked', (e) => e.value), 'full', '처음 고른 작업(원스톱)');
+      await waitText(p, '#soSum', '149,000원');
+      // 아무것도 적지 않고 내면 주제 칸으로 안내
+      await p.click('#soSubmit');
+      await waitText(p, '#soErr', '연구 주제를 적어 주세요');
+      await p.fill('#soTopic', '간호사의 직무스트레스와 이직의도');
+      await waitText(p, '#soPlan', '설문 구성 미리보기');
+      // 작업을 바꾸면 금액이 바로 바뀌고, 이미 만든 설문지 작업은 아래 작은 단추로
+      await p.click('.qo-pkg:has(input[value="new"])');
+      await waitText(p, '#soSum', '39,000원');
+      await p.click('.so-fix-i:has(input[value="edit"])');
+      await waitText(p, '#soSum', '29,000원');
+      ok(await p.$('[data-up="questionnaire"] .drop'), '설문지 점검에는 설문지 파일 칸');
+      await p.click('.qo-pkg:has(input[value="full"])');
+      await waitText(p, '#soSum', '149,000원');
+      // 응답자 모집: 고르게 하되 금액은 그대로(따로 안내)
+      await p.click('.so-recruit');
+      await waitText(p, '.so-recruit', '모집 비용을 먼저 알려 드려요');
+      await waitText(p, '#soSum', '응답자 모집 비용');
+      has(await text(p, '#soSum'), '149,000원', '모집을 골라도 금액은 그대로');
+      await p.click('.qo-req-chip[data-req="응답 대상"]');
+      await p.type('#soReq', '종합병원 간호사 200명');
+      await p.fill('#soName', '설문고객');
+      await p.fill('#soPhone', '01024681111');
+      const email = mail('sv');
+      await p.fill('#soEmail', email);
+      await p.click('#soSubmit');
+      await p.waitForSelector('.handoff-card', { timeout: 40000 });
+      const card = await text(p, '.handoff-card');
+      has(card, '149,000원', '결제 연결 화면 금액');
+      const orderNo = (card.match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+      ok(orderNo, '결제 연결 화면 주문번호');
+      await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+      ok(views[0] && views[0].startsWith(`${SV['S-FULL']}&`), `열린 결제 상품: ${views[0]}`);
+      eq([decodeNm(views[0]).kind, decodeNm(views[0]).o, decodeNm(views[0]).price], ['order', orderNo, 149000], '결제 주소에 담긴 주문');
+      const r = await api('lookupOrder', { orderNo, contact: email, pin: '1111' }).catch((e) => ({ error: e }));
+      ok(!r.error, `휴대전화 뒤 4자리로 주문 조회가 안 됨: ${r.error && r.error.message}`);
+      const o = await adminOrder(orderNo);
+      eq([o.service, o.input.survey.mode, o.input.survey.recruit, o.amount, o.status], ['survey', 'full', 'ask', 149000, 'pending_payment'], '설문 주문');
+      eq([o.input.common.title, o.input.common.fieldId], ['간호사의 직무스트레스와 이직의도', 'nursing'], '주제·분야');
+      has(o.input.common.request, '응답 대상: 종합병원 간호사 200명', '요청 사항');
+      has(o.input.common.request, '[모집] 응답자 모집도 맡기고 싶어요', '모집 희망 표시');
+      ok(!o.quoteRequired, '견적 대기로 멈추지 않음');
+    } finally { await c.close().catch(() => {}); }
+  }, { extra: SV }));
+  await check(43, '설문 응답 분석: 응답 파일이 꼭 필요하고 올리면 바로 진단, 매개효과를 적으면 추가 금액 안내만 하고 막지 않음', async () => withShop(async () => {
+    await withCtx({ mobile: true }, async (p) => {
+      await p.goto(`${BASE}/survey/new/?mode=analyze`);
+      await p.waitForSelector('#soForm');
+      eq(await p.$eval('input[name="soMode"]:checked', (e) => e.value), 'analyze', '주소로 고른 작업');
+      await waitText(p, '#soBar', '69,000원');
+      await p.fill('#soTopic', '직무스트레스와 이직의도');
+      await p.fill('#soName', '분석고객');
+      await p.fill('#soPhone', '010-2222-3333');
+      await p.fill('#soEmail', mail('sva'));
+      await p.click('#soBar button');
+      await waitText(p, '#soErr', '모은 응답 파일을 올려 주세요');
+      await p.setInputFiles('input[data-file="data"]', [csv('E2E_응답.csv')]);
+      await p.waitForSelector('#soDiag .data-diag');
+      has(await text(p, '#soDiag'), '24명', '자동 진단 응답 수');
+      await p.fill('#soReq', '회복탄력성의 매개효과도 보고 싶어요');
+      await waitText(p, '#soNote', '매개·조절효과 분석은 19,000원이 더해져요');
+      has(await text(p, '#soNote'), '지금은 기본 금액만 결제하시면 돼요', '막지 않는 안내');
+      has(await text(p, '#soBar'), '69,000원', '금액은 그대로');
+      const hits = await catchShop(p);
+      await p.click('#soBar button');
+      await p.waitForSelector('.handoff-card', { timeout: 40000 });
+      const orderNo = ((await text(p, '.handoff-card')).match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+      await p.waitForFunction(() => location.hostname === 'skkc.co.kr', null, { timeout: 15000 });
+      ok(hits[0].startsWith(`${SV['S-ANALYZE']}&`), `열린 결제 상품: ${hits[0]}`);
+      const o = await adminOrder(orderNo);
+      eq([o.input.survey.mode, o.amount], ['analyze', 69000], '응답 분석 주문');
+      eq(o.files.customer.map((f) => f.slot), ['data'], '올린 파일');
+      has(o.input.common.request, '매개효과', '요청 사항');
+    });
+  }, { extra: SV }));
+  await check(43, '통계분석: 데이터부터 받고(없으면 막음) 결과 형태 카드로 금액이 바로 바뀌며, 재분석은 기존 결과·교수님 의견이 있어야 함, 구조방정식은 안내만', async () => withShop(async () => {
+    await withCtx({}, async (p) => {
+      await p.goto(`${BASE}/statistics/new/`);
+      await p.waitForSelector('#soForm');
+      has(await text(p, '.qo-h1'), '통계표와 해석까지', '주문서 제목');
+      eq(await p.$eval('input[name="soMode"]:checked', (e) => e.value), 'interp', '처음 고른 결과 형태(표준형)');
+      await waitText(p, '#soSum', '69,000원');
+      await p.click('#soSubmit');
+      await waitText(p, '#soErr', '분석할 데이터 파일을 올려 주세요');
+      await p.setInputFiles('input[data-file="data"]', [csv('E2E_데이터.csv')]);
+      await p.waitForSelector('#soDiag .data-diag');
+      await p.fill('#soTopic', '중학생의 학업스트레스가 학교적응에 미치는 영향');
+      await waitText(p, '#soPlan', '분석 순서 미리보기');
+      await p.click('.qo-pkg:has(input[value="table"])');
+      await waitText(p, '#soSum', '49,000원');
+      await p.click('.qo-pkg:has(input[value="chapter"])');
+      await waitText(p, '#soSum', '99,000원');
+      await p.click('.so-fix-i:has(input[value="revise"])');
+      await waitText(p, '#soSum', '39,000원');
+      await p.fill('#soName', '통계고객');
+      await p.fill('#soPhone', '010-3333-4444');
+      await p.fill('#soEmail', mail('st'));
+      await p.click('#soSubmit');
+      await waitText(p, '#soErr', '기존 분석 결과 파일을 올려 주세요');
+      await p.setInputFiles('input[data-file="prevResult"]', [xlsx('E2E_기존결과.xlsx')]);
+      await p.click('#soSubmit');
+      await waitText(p, '#soErr', '교수님 의견을 붙여 넣거나 파일로 올려 주세요');
+      await p.click('.qo-pkg:has(input[value="interp"])');
+      await waitText(p, '#soSum', '69,000원');
+      eq(await p.locator('[data-up="prevResult"]').count(), 0, '재분석 칸은 재분석에서만');
+      await p.fill('#soReq', '독립변수는 학업스트레스, 종속변수는 학교적응이에요. AMOS로 구조방정식도 해 주세요.');
+      await waitText(p, '#soNote', '구조방정식처럼 모형이 복잡한 분석은 금액이 더 들어요');
+      const hits = await catchShop(p);
+      await p.click('#soSubmit');
+      await p.waitForSelector('.handoff-card', { timeout: 40000 });
+      const orderNo = ((await text(p, '.handoff-card')).match(/NA\d{6}-[A-Z0-9]+/) || [''])[0];
+      await p.waitForFunction(() => location.hostname === 'skkc.co.kr', null, { timeout: 15000 });
+      ok(hits[0].startsWith(`${SV['T-INTERP']}&`), `열린 결제 상품: ${hits[0]}`);
+      const o = await adminOrder(orderNo);
+      eq([o.service, o.input.statistics.output, o.input.statistics.hasData, o.amount], ['statistics', 'interp', true, 69000], '통계 주문');
+      eq(o.files.customer.map((f) => f.slot).sort(), ['data'], '재분석을 그만두면 기존 결과 파일은 보내지 않음');
+      ok(/"n":24/.test(o.input.statistics.dataInfo || ''), `데이터 진단 요약: ${o.input.statistics.dataInfo}`);
+      has(o.input.common.request, '구조방정식', '요청 사항');
+    });
+  }, { extra: SV }));
+  await check(43, '1,000원 단위 결제: 첨삭 80 Page(상품 둘)를 결제 상품 하나 144개로 열고, 연결 코드가 수량을 맞추면 결제 화면 금액이 주문 금액과 같고, 못 맞추면 결제 화면을 열지 않음', async () => withUnit(() => withShop(async () => {
+    const SNIP = fs.readFileSync(path.join(__dirname, '../imweb/skkc-connect.html'), 'utf8');
+    const shopPage = (body, extra = '') => `<!doctype html><html><head><meta charset="utf-8"></head><body><header>skkc</header><main>${body}</main>${extra}${SNIP}</body></html>`;
+    const VIEW = shopPage('<h1>상품 상세</h1>', '<script>window.SITE_SHOP_DETAIL = { n: 1, changeOrderCount: function (t, k, ok) { this.n = k; if (ok) ok(); }, getOrderCount: function () { return this.n; }, confirmOrderWithCartItems: function () { var k = this.n; setTimeout(function () { location.href = "/shop_payment/?order_code=o1&order_no=1&n=" + k; }, 150); } };</script>');
+    const BROKEN = shopPage('<h1>상품 상세</h1>', '<script>window.SITE_SHOP_DETAIL = { confirmOrderWithCartItems: function () { location.href = "/shop_payment/?order_code=o1&n=1"; } };</script>');
+    const PAY = shopPage('<div id="host"></div><h2>주문 상품 정보</h2><p>[논문AI] 1,000원 단위 결제</p><p id="tot"></p>', `<script>var n = Number(new URLSearchParams(location.search).get('n') || 1); document.getElementById('tot').textContent = '총 주문금액 ' + (n * 1000).toLocaleString('ko-KR') + '원';
+var h = document.getElementById('host').attachShadow({ mode: 'open' });
+h.innerHTML = '<input name="ordererName"><input name="ordererCall"><input name="ordererEmail"><button type="button" id="pay">결제하기</button>';
+h.getElementById('pay').addEventListener('click', function () { setTimeout(function () { location.href = '/shop_payment_complete/?order_code=o1'; }, 1200); });</script>`);
+    const DONE = shopPage('<h1>주문 완료</h1>');
+    const c = await newCtx();
+    try {
+      const views = [];
+      const calls = [];
+      await c.route('https://skkc.co.kr/**', (r) => {
+        const u = new URL(r.request().url());
+        if (u.pathname.startsWith('/shop_view')) views.push(r.request().url());
+        const html = u.pathname.startsWith('/shop_view') ? (u.searchParams.get('broken') ? BROKEN : VIEW) : u.pathname.startsWith('/shop_payment_complete') ? DONE : u.pathname.startsWith('/shop_payment') ? PAY : '<html><body>other</body></html>';
+        r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
+      });
+      await c.route('https://script.google.com/**', async (r) => {
+        const body = r.request().postData() || '{}';
+        calls.push(JSON.parse(body));
+        const res = await fetch(`${BASE}/api`, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body });
+        r.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: await res.text() });
+      });
+      const x = await makeOrder({ input: paperIn({ typeId: 'master', task: 'edit', paper: { pages: 80, editScope: '원고 전체' } }), files: [{ slot: 'manuscript', ...docx('E2E_석사80.docx') }] });
+      eq((await getOrder(x)).amountDue, 144000, '석사 첨삭 80 Page 금액(기본 30 Page + 추가 50 Page)');
+      const p = await c.newPage();
+      await p.goto(`${checkoutUrl(x)}&pay=1`);
+      await p.waitForSelector('.handoff-card', { timeout: 20000 });
+      has(await text(p, '.handoff-card'), '144,000원', '결제 연결 화면 금액');
+      await p.waitForURL(/skkc\.co\.kr\/shop_payment\//, { timeout: 25000 });
+      ok(views[0].startsWith(`${UNIT}&`), `열린 결제 상품(1,000원 단위): ${views[0]}`);
+      const nm = decodeNm(views[0]);
+      eq([nm.kind, nm.o, nm.price, nm.qty, nm.unit], ['order', x.orderNo, 144000, 144, 1000], '결제 주소에 담긴 수량');
+      await waitText(p, '#nmBanner', '1,000원 단위 결제 상품 144개');
+      await sleep(1200);
+      eq(await p.locator('#nmWarn').count(), 0, '결제 화면 금액이 주문 금액과 같음(경고 없음)');
+      has(await text(p, 'main'), '총 주문금액 144,000원', '결제 화면 금액');
+      await payOnShop(p, { name: '석사첨삭', phone: '010-7777-1234', email: 'e2e-unit@example.com' });
+      const claim = calls.find((y) => y.action === 'claimShopPayment');
+      ok(claim && claim.orderNo === x.orderNo && claim.amount === 144000, `결제 완료 알림: ${JSON.stringify(claim || {})}`);
+      eq(((await adminOrder(x.orderNo)).paymentsAll.find((y) => y.amount === 144000) || {}).status, 'claimed', '결제 연결');
+      // 상품 페이지가 수량을 못 맞추면 결제 화면으로 넘기지 않고 수량을 안내한다
+      const p2 = await c.newPage();
+      const nm2 = Buffer.from(JSON.stringify({ v: 1, kind: 'order', o: x.orderNo, price: 144000, qty: 144, label: '석사학위논문 첨삭·교정' })).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      await p2.goto(`${UNIT}&broken=1&nm=${nm2}`);
+      await waitText(p2, 'body', '수량을 144개로 맞춘 뒤 구매해 주세요');
+      await sleep(600);
+      ok(/shop_view/.test(p2.url()), `수량을 못 맞췄는데 결제 화면으로 넘어감: ${p2.url()}`);
+    } finally { await c.close().catch(() => {}); }
+  }, { extra: { 'P-MASTER-EDIT': `${SKKC}101`, 'X-19000': `${SKKC}141` } })));
+  await check(43, '관리자: 통계 주문에 매개효과를 적었으면 \'매개·조절효과 분석\' 단추가 \'요청과 맞음\'으로 보이고, 누르면 금액(결제 전이면 그 분석까지 들어간 금액)과 이유가 채워짐', async () => withUnit(async () => {
+    const x = await makeOrder({ service: 'statistics', input: { common: { fieldId: 'edu', title: '학업스트레스와 학교적응: 사회적 지지의 조절효과', request: '조절효과 분석도 부탁드려요' }, statistics: { hasData: true, output: 'interp', methods: ['auto'] }, addons: {} }, files: [{ slot: 'data', ...csv('E2E_조절.csv') }] });
+    eq((await getOrder(x)).amountDue, 69000, '처음 결제 금액(표준형)');
+    await withCtx({ admin: true }, async (ap) => {
+      await ap.goto(`${BASE}/admin/#order=${x.orderNo}`);
+      await ap.waitForSelector('.ad-oside [data-act="quote"]');
+      has(await text(ap, '.ad-page'), '추가 분석 확인', '작업지시문의 추가 분석 안내');
+      await ap.click('.ad-oside [data-act="quote"]');
+      await ap.waitForSelector('.modal [data-xw="adv"]');
+      has(await text(ap, '.modal [data-xw="adv"]'), '요청과 맞음', '요청에 맞는 추가 작업 표시');
+      await ap.click('.modal [data-xw="adv"]');
+      eq(await ap.inputValue('.modal [name="amount"]'), '88000', '결제 전이라 표준형 + 매개·조절효과 금액');
+      has(await ap.inputValue('.modal [name="reason"]'), '매개·조절효과 분석', '자동으로 넣은 이유');
+      has(await text(ap, '.modal [data-pay-hint]'), '1,000원 단위 결제', '결제 상품 안내(1,000원 단위 상품)');
+      await ap.click('.modal [data-x]');
+    });
+  }));
 }
 
 /* =================================================================== 39: 시계를 앞당기는 확인(마지막) */

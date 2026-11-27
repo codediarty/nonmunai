@@ -123,11 +123,23 @@ function directLink() {
 const isDirect = () => !!directLink();
 
 /* ------------------------------------------------------------------ 화면 */
+// 맨 위 제목은 고른 작업에 맞춘다(2026-11-27: 첨삭·피드백 반영에도 '주제만 알려 주세요'가 보이던 것)
+const HERO = {
+  full: ['주제만 알려 주세요.<br>완성본으로 보내 드려요.', '관심 주제를 적고 논문 종류만 고르면 결제 화면이 바로 열려요. 제목과 목차, 연구 방법은 같은 전공 박사가 정해 드려요.'],
+  proposal: ['주제만 알려 주세요.<br>연구계획서로 보내 드려요.', '관심 주제를 적고 계획서 종류만 고르면 결제 화면이 바로 열려요. 연구 목적과 방법, 참고문헌은 같은 전공 박사가 잡아 드려요.'],
+  edit: ['원고만 올려 주세요.<br>문장을 꼼꼼히 다듬어 드려요.', '원고를 올리면 분량과 금액이 바로 계산돼요. 고친 곳을 표시한 파일과 깨끗한 정리본을 함께 드려요.'],
+  feedback: ['원고와 교수님 의견만 주세요.<br>한 번에 모두 반영해 드려요.', '의견이 몇 개든 한 가격이에요. 무엇을 어디서 고쳤는지 정리한 수정표도 함께 드려요.'],
+};
+function heroHtml() {
+  const [h, lead] = HERO[S.task] || HERO.full;
+  return `<h1 class="qo-h1">${h}</h1>
+<p class="qo-lead">${lead}</p>`;
+}
+
 function shell(root) {
   root.innerHTML = `<div class="qo">
-<div class="qo-hero"><div class="wrap qo-hero-in">
-<h1 class="qo-h1">주제만 알려 주세요.<br>완성본으로 보내 드려요.</h1>
-<p class="qo-lead">관심 주제를 적고 논문 종류만 고르면 결제 화면이 바로 열려요. 제목과 목차, 연구 방법은 같은 전공 박사가 정해 드려요.</p>
+<div class="qo-hero"><div class="wrap qo-hero-in" id="qoHero">
+${heroHtml()}
 </div></div>
 <div class="wrap qo-grid">
 <form class="qo-form" id="qoForm" novalidate autocomplete="off">
@@ -418,6 +430,8 @@ ${S.task === 'feedback' ? '<table class="pv-rev"><thead><tr><th>교수님 의견
 
 function renderTask() {
   taskTabs(ROOT);
+  const hero = $('#qoHero', ROOT);
+  if (hero) hero.innerHTML = heroHtml();
   $('#qoS1', ROOT).innerHTML = s1Html();
   $('#qoS2', ROOT).innerHTML = s2Html();
   $('#qoReqSec', ROOT).innerHTML = reqHtml();

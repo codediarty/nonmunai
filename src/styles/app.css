@@ -716,3 +716,43 @@
 
 .note-why { margin: 8px 0 0; font-size: 13.5px; line-height: 1.6; }
 .note-why b { margin-right: 4px; }
+
+/* 한 화면 설문조사·통계분석 주문(2026-11-27, simple-order.js): 논문 주문서(qo)와 같은 틀에 몇 가지만 더한다 */
+/* 주문서 카드가 위쪽 남색 띠 아래로 숨지 않게(첫 단원 제목 '1'이 가려지던 문제, 논문 주문서 포함) */
+.qo-grid { position: relative; z-index: 1; }
+.so .qo-form > .qo-sec:first-of-type { border-top: 0; }
+.so .so-ta { min-height: 72px; }
+.so-pkgs { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
+.so .qo-pkg-hd { flex-wrap: wrap; row-gap: 0; }
+.so-recruit { margin-top: 10px; }
+.so-recruit small { margin-top: 2px; }
+.so-fix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--paper-2); }
+.so-fix-l { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.so-fix .qo-seg { gap: 6px; }
+.so-fix-i { padding: 8px 13px; font-size: 13.5px; background: #fff; }
+.so-fix-i em { margin-left: 4px; font-style: normal; font-weight: 700; color: var(--muted); }
+.so-fix-i.is-on em { color: var(--blue-2); }
+.so-cond { display: grid; gap: 14px; margin-top: 14px; padding: 16px; border: 1px solid var(--blue-line); border-radius: 14px; background: #FAFBFF; }
+.so-cond .field { margin: 0; }
+.so-pii { margin: 8px 0 0; }
+.so-nodata { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 12px 0 0; font-size: 13.5px; color: var(--muted); }
+.so-nodata a, .so-detail a { font-weight: 700; color: var(--ink-2); text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 4px; }
+.so-nodata a:hover, .so-detail a:hover { color: var(--blue-2); text-decoration-color: currentColor; }
+.so .qo-sec .up + .up { margin-top: 14px; }
+.so-plan { display: grid; gap: 10px; padding: 16px 18px; border: 1px solid var(--rule); border-radius: 18px; background: #fff; }
+.so-plan-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: 14px; color: var(--ink); }
+.so-plan-h .i { width: 15px; height: 15px; color: var(--blue); }
+.so-plan-h span { margin-left: auto; font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.so-plan ul, .so-plan ol { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.so-plan ol { counter-reset: sp; }
+.so-plan ul li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 10px; border-radius: 9px; background: var(--paper-2); font-size: 13px; color: var(--ink-2); }
+.so-plan ul li em { flex: none; font-style: normal; font-weight: 700; color: var(--muted); }
+.so-plan ol li { counter-increment: sp; position: relative; padding-left: 26px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.so-plan ol li::before { content: counter(sp); position: absolute; left: 0; top: 1px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--blue-soft); font-size: 11px; font-weight: 800; color: var(--blue-2); }
+.so-plan-f { margin: 0; font-size: 12px; color: var(--faint); }
+.so .qo-bar-p small { display: block; max-width: 46vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) {
+  .so-fix { padding: 12px; }
+  .so-fix .qo-seg { width: 100%; }
+  .so-fix-i { flex: 1 1 auto; text-align: center; }
+}
