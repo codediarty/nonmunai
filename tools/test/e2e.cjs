@@ -2382,7 +2382,7 @@ h.getElementById('pay').addEventListener('click', function () { setTimeout(funct
   const withUnit = async (fn) => {
     const before = (await adminApi('adminGetSettings')).settings || {};
     await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: UNIT, skkcUnitPrice: '1000' } });
-    try { return await fn(); } finally { await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: before.skkcUnitUrl || '', skkcUnitPrice: before.skkcUnitPrice || '1000' } }); }
+    try { return await fn(); } finally { await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: before.skkcUnitUrl || 'off', skkcUnitPrice: before.skkcUnitPrice || '1000' } }); }
   };
   await check(43, '설문조사: 단계 없이 한 화면(주제 → 작업 → 요청 → 받을 곳), 응답자 모집을 골라도 기본 금액으로 바로 결제되고 모집 희망은 주문에 남음, 조회 비밀번호는 휴대전화 뒤 4자리', async () => withShop(async () => {
     const c = await newCtx();
@@ -2691,6 +2691,9 @@ async function timeTravel() {
   // 리눅스에서 LANG이 비어 있으면 Chromium이 한글 파일 이름을 저장하지 못하고 'download'로 바꾼다(실사용 브라우저와 무관한 환경 문제)
   const utf8 = /utf-?8/i.test(process.env.LC_ALL || process.env.LANG || '');
   browser = await chromium.launch(utf8 ? {} : { env: { ...process.env, LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8' } });
+  // 운영 기본값인 1,000원 단위 결제 상품(아임웹 #184)은 개발 서버에서 끈다: 끄지 않으면 주문서를 낼 때마다 실제 skkc.co.kr로 넘어간다.
+  // 1,000원 단위 결제는 43번 항목이 테스트용 주소로 켜서 따로 확인한다
+  await adminApi('adminSaveSettings', { settings: { skkcUnitUrl: 'off' } });
   try {
     await tests();
     await timeTravel();

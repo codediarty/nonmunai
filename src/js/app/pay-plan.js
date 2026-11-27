@@ -88,7 +88,9 @@ export function cartPlan(o, settings, catalog) {
 }
 
 // 1,000원 단위 결제 상품(설정 skkcUnitUrl이 먼저, 없으면 기본 상품). 없으면 null
+// 설정에 off를 넣으면 쓰지 않는다(예전처럼 상품별 장바구니 안내로 돌아감)
 export function unitLink(settings) {
+  if (String((settings && settings.skkcUnitUrl) || '').trim().toLowerCase() === 'off') return null;
   const url = String((settings && settings.skkcUnitUrl) || UNIT_PRODUCT.url || '');
   const price = Number(settings && settings.skkcUnitPrice) || UNIT_PRODUCT.price;
   return /^https?:\/\//.test(url) && price > 0 ? { url, price } : null;

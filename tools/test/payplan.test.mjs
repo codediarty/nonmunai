@@ -110,6 +110,7 @@ tests.push(
     if (!UNIT_PRODUCT.url) assert.equal(unitLink({}), null, '기본 상품 주소가 비어 있으면 없음');
     else assert.deepEqual(unitLink({}), { url: UNIT_PRODUCT.url, price: UNIT_PRODUCT.price });
     assert.equal(unitLink({ skkcUnitUrl: 'not a url' }), null, '주소가 아니면 없음');
+    assert.equal(unitLink({ skkcUnitUrl: 'off' }), null, '설정 off면 쓰지 않음');
   } },
   { name: '1,000원 단위 상품 수량: 석사 첨삭 80 Page(본 상품+추가 분량 5단위)를 상품 하나 144개로', fn() {
     const unit = { url: 'https://skkc.co.kr/shop_view/?idx=999', price: 1000 };
@@ -121,5 +122,12 @@ tests.push(
     assert.equal(unitRows((UNIT_MAX_QTY + 1) * 1000, unit), null, '수량 한도를 넘으면 없음');
     assert.equal(unitRows(0, unit), null);
     assert.equal(unitRows(144000, null), null);
+  } },
+);
+tests.push(
+  { name: '1,000원 단위 상품 주소는 tools/imweb/links.json의 U-1000과 같음', fn() {
+    const lj = JSON.parse(fs.readFileSync(new URL('../imweb/links.json', import.meta.url), 'utf8'));
+    assert.equal(UNIT_PRODUCT.url, lj['U-1000'] || '');
+    assert.equal(UNIT_PRODUCT.price, 1000);
   } },
 );
